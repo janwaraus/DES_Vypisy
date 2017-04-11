@@ -152,26 +152,37 @@ var
   GpcInputFile : TextFile;
   GpcFileLine : string;
   tempPlatbaPrichozi : TPlatbaPrichozi;
+  Pocet: integer;
 begin
-
+// *** naètení GPC na základì dialogu
+  NactiGpcDialog.InitialDir := 'J:\Eurosignal\HB\';
+  NactiGpcDialog.Filter := 'Bankovní výpisy (*.gpc)|*.gpc';
+	if NactiGpcDialog.Execute then try
+    Screen.Cursor := crHourGlass;
+    asgMain.ClearNormalCells;   //clear ostatnich todo
+    btnNacti.Enabled := False;
+    Application.ProcessMessages;
+    AssignFile(GpcInputFile, NactiGpcDialog.Filename);
 
   { // naètení GPC na základì dialogu
   NactiGpcDialog.InitialDir := ExtractFilePath(ParamStr(0));
   if NactiGpcDialog.Execute then
   begin
     AssignFile(GpcInputFile, NactiGpcDialog.Filename);
-  }
+{
   // naètení GPC na základì vstupního pole
   if FileExists(PROGRAM_PATH  + 'HB\' +  EditVstupniSoubor.Text) then
   begin
     AssignFile(GpcInputFile, PROGRAM_PATH + 'HB\' + EditVstupniSoubor.Text);
-
+}
 
     Reset(GpcInputFile);
     PlatbaPrichoziList := TList.Create;
-
+    Pocet := 0;
     while not Eof(GpcInputFile) do
     begin
+      Inc(Pocet);
+      btnNacti.Caption := IntToStr(Pocet);
       ReadLn(GpcInputFile, GpcFileLine);
       
       if copy(GpcFileLine, 1, 3) = '074' then //hlavicka vypisu
@@ -187,7 +198,6 @@ begin
       end;
 
     end;
-    CloseFile(GpcInputFile);
 
 
     //MessageDlg('ccc ' + inttostr(PlatbaPrichoziList.count), mtInformation, [mbOk], 0);
@@ -199,9 +209,14 @@ begin
       CurrPlatbaPrichozi := TPlatbaPrichozi(PlatbaPrichoziList[0]);
       vyplnPrichoziPlatby;
     end;
+  finally
+    btnNacti.Enabled := True;
+    btnNacti.Caption := 'Naèti GPC';
+    CloseFile(GpcInputFile);
+    sparujVsechnyPrichoziPlatby;
+    Screen.Cursor := crDefault;
   end;
 
-  sparujVsechnyPrichoziPlatby;
 
 end;
 
@@ -213,8 +228,15 @@ var
   vysledek  : string;
 
 begin
-  vysledek := Parovatko.zapisDoAbry();
-
+// ***
+  Screen.Cursor := crHourGlass;
+  btnZapisDoAbry.Enabled := False;
+  try
+    vysledek := Parovatko.zapisDoAbry();
+  finally
+    btnZapisDoAbry.Enabled := True;
+    Screen.Cursor := crDefault;
+  end;
   Memo1.Lines.Add(vysledek);
 
   AssignFile(OutputFile, PROGRAM_PATH + EditVystupniSoubor.Text);
@@ -238,6 +260,7 @@ begin
   begin
     ClearNormalCells;
     RowCount := PlatbaPrichoziList.Count + 1;
+    Row := 1;
 
     for i := 0 to PlatbaPrichoziList.Count - 1 do
     begin
@@ -253,11 +276,6 @@ begin
       Cells[4, i+1] := iPlatbaPrichozi.cisloUctuBezNul;
       Cells[5, i+1] := iPlatbaPrichozi.nazevKlienta;
       Cells[6, i+1] := DateToStr(iPlatbaPrichozi.Datum);
-
-
-
-
-
 
       //Memo1.Lines.Add(removeLeadingZeros(TPlatbaPrichozi(platbaPrichoziList[i]).castka)
 
