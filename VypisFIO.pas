@@ -200,11 +200,10 @@ begin
     end;
 
 
-    //MessageDlg('ccc ' + inttostr(PlatbaPrichoziList.count), mtInformation, [mbOk], 0);
-
     if (PlatbaPrichoziList.Count > 0) then
     begin
       //PlatbaPrichoziList.Sort(@CCompareCreditFirst);
+      Vypis.Datum := TPlatbaPrichozi(PlatbaPrichoziList[PlatbaPrichoziList.Count - 1]).Datum; //datum vypisy se urci jako datum poslední platby
       DebetyDozadu(PlatbaPrichoziList);
       CurrPlatbaPrichozi := TPlatbaPrichozi(PlatbaPrichoziList[0]);
       vyplnPrichoziPlatby;
@@ -226,18 +225,24 @@ procedure TForm1.btnZapisDoAbryClick(Sender: TObject);
 var
   OutputFile : TextFile;
   vysledek  : string;
+  casStart, dobaZapisu: double;
 
 begin
 // ***
   Screen.Cursor := crHourGlass;
   btnZapisDoAbry.Enabled := False;
+  casStart := Now;
   try
     vysledek := Parovatko.zapisDoAbry();
   finally
     btnZapisDoAbry.Enabled := True;
     Screen.Cursor := crDefault;
   end;
+
+
   Memo1.Lines.Add(vysledek);
+  dobaZapisu := (Now - casStart) * 24 * 3600;
+  Memo1.Lines.Add('Doba trvání: ' + floattostr(RoundTo(dobaZapisu, -2)) + ' s (' + floattostr(RoundTo(dobaZapisu / 60, -2)) + ' min)');
 
   AssignFile(OutputFile, PROGRAM_PATH + EditVystupniSoubor.Text);
   ReWrite(OutputFile);
@@ -310,7 +315,7 @@ begin
   for i := 0 to PlatbaPrichoziList.Count - 1 do
     sparujPrichoziPlatbu(i);
 
-  Memo1.Lines.Add(Parovatko.getPDParyAsText);
+  //Memo1.Lines.Add(Parovatko.getPDParyAsText);
 
   Memo1.Lines.Add('Vypis porad. cislo: ' + IntToStr(Vypis.PoradoveCislo));
 end;
@@ -323,7 +328,8 @@ begin
   vyplnDoklady;
 
   Memo2.Clear;
-  Memo2.Lines.Add(Parovatko.getPDParyPlatbyAsText(CurrPlatbaPrichozi));  
+  Memo2.Lines.Add(Parovatko.getPDParyPlatbyAsText(CurrPlatbaPrichozi));
+  Memo2.Lines.Add(CurrPlatbaPrichozi.nazevKlienta);
 end;
 
 

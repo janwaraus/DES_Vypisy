@@ -53,8 +53,7 @@ type
     procedure loadPredchoziPlatby(pocetPlateb : integer);
     procedure loadDokladyPodleVS(jenNezaplacene : boolean);
     function getVSbyBankAccount() : string;
-    function getCount() : integer;
-    class function CompareCreditFirst(Item1, Item2: Pointer): Integer;    
+    function isPayuProvize() : boolean;
   end;
 
   TVypis = class
@@ -143,18 +142,38 @@ implementation
 procedure DebetyDozadu(mPlatbaPrichoziList: TList);
 var
   i : integer;
-  iPP : TPlatbaPrichozi;
+  iPP, payuProvizePP : TPlatbaPrichozi;
+  payuProvize : currency;
 begin
+  payuProvize := 0;
 
   for i := mPlatbaPrichoziList.Count - 1 downto 0 do
   begin
     iPP := TPlatbaPrichozi(mPlatbaPrichoziList[i]);
-    if iPP.debet then begin
+
+    if iPP.isPayuProvize then
+    begin
+      payuProvizePP := iPP;
+      payuProvize := payuProvize + iPP.castka;
+      mPlatbaPrichoziList.Delete(i);
+    end
+    else if iPP.debet then
+    begin
       mPlatbaPrichoziList.Delete(i);
       mPlatbaPrichoziList.Add(iPP);
     end;
+
   end;
+
+  if payuProvize > 0 then
+  begin
+    payuProvizePP.castka := payuProvize;
+    payuProvizePP.nazevKlienta := formatdatetime('myy', payuProvizePP.datum) + ' suma provize';
+    mPlatbaPrichoziList.Add(payuProvizePP);
+  end;
+
 end;
+
 
 function CCompareCreditFirst(Item1, Item2: Pointer): Integer;
 var
@@ -211,6 +230,7 @@ begin
   self.Datum := Str6digitsToDate(copy(gpcLine, 123, 6));
   self.kredit := true;
 
+
   if self.kodUctovani = '1' then self.kredit := false;
   if self.kodUctovani = '2' then self.kredit := true;
   self.debet := not self.kredit;
@@ -223,6 +243,10 @@ begin
   if debet AND (cisloUctuBezNul = '2100098382/2010') then nazevKlienta := 'na BÚ';
   if debet AND (cisloUctuBezNul = '2800098383/2010') then nazevKlienta := 'na SÚ';
   if debet AND (cisloUctuBezNul = '171336270/0300 ') then nazevKlienta := 'na ÈSOB';
+
+  //if debet AND (self.cisloUctuMoje = '2389210008000000') AND (self.castka < 1000)then //PayU debet
+  if isPayuProvize then
+    self.nazevKlienta := formatdatetime('myy', self.datum);
 
 
 
@@ -315,7 +339,7 @@ begin
     Close;
 
     // cteni s IssuedDInvoices - zalohove listy
-    SQLiiSelect :=
+    SQLiiSelect :=                                                       // ZL je D.DOCUMENTTYPE 10, Faktura je D.DOCUMENTTYPE 03
               'SELECT ii.ID, ii.DOCQUEUE_ID, ii.DOCDATE$DATE, ii.FIRM_ID, ii.DESCRIPTION, D.DOCUMENTTYPE, '
             + 'D.Code || ''-'' || II.OrdNumber || ''/'' || substring(P.Code from 3 for 2) as CisloDokladu, '
             + 'ii.LOCALAMOUNT, ii.LOCALPAIDAMOUNT, 0 as LOCALCREDITAMOUNT, 0 as LOCALPAIDCREDITAMOUNT, '
@@ -404,22 +428,14 @@ begin
 end;
 
 
-class function TPlatbaPrichozi.CompareCreditFirst(Item1, Item2: Pointer): Integer;
-var
-i: integer;
+function TPlatbaPrichozi.isPayuProvize() : boolean;
 begin
-i :=3;
-  if (TPlatbaPrichozi(Item1).kredit AND TPlatbaPrichozi(Item2).debet) then
-    Result := 1
+  if self.debet AND (self.castka < 1000) AND
+    (self.cisloUctuMoje = '2389210008000000') then
+    result := true
   else
-    Result := -1;
-//  MessageDlg('Compare ' + TMyClass(Item1).MyString + ' to ' + TMyClass(Item2).MyString,
-//                 mtInformation, [mbOk], 0);
-end;
+    result := false;
 
-function TPlatbaPrichozi.getCount() : integer;
-begin
-  result := 1;
 end;
 
 {** class TPredchoziPlatba **}
@@ -502,7 +518,7 @@ begin
     zbyvaCastka := Platba.Castka;
 
     if (dokladyCount = 0) then begin
-      Platba.zprava := 'žádný doklad, pøeplatek ' + FloatToStr(zbyvaCastka) + ' Kè, VS ' + Platba.VS;
+      Platba.zprava := 'žádný doklad, pøep. ' + FloatToStr(zbyvaCastka) + ' Kè, VS ' + Platba.VS;
       Result := 0;
       vytvorPDPar(Platba, iDoklad, zbyvaCastka, 'pøepl. | ' + Platba.VS + ' |', false);
       Exit;
@@ -522,23 +538,25 @@ begin
           Platba.zprava := 'vše použito';
           Result := 1;
           Exit;
-        end else
+        end;
 
-        if (kNaparovani > zbyvaCastka) then
+        if (kNaparovani > zbyvaCastka) AND not(iDoklad.DocumentType = '10') then
+        //if (kNaparovani > zbyvaCastka) then
         begin
           vytvorPDPar(Platba, iDoklad, zbyvaCastka, 'èást. ' + floattostr(zbyvaCastka) + ' z ' + floattostr(kNaparovani) + ' Kè |', true);
           Platba.zprava := 'vše použito';
           Result := 1;
           Exit;
-        end else
+        end;
 
+        if (kNaparovani < zbyvaCastka) then
         begin
           vytvorPDPar(Platba, iDoklad, kNaparovani, '', true); //pøesnì (rozpad) |
           zbyvaCastka := zbyvaCastka - kNaparovani;
         end;
       end;
     end;
-    Platba.zprava := 'pøeplatek ' + FloatToStr(zbyvaCastka) + ' Kè';
+    Platba.zprava := 'pøepl. ' + FloatToStr(zbyvaCastka) + ' Kè';
     Result := 2;
     vytvorPDPar(Platba, iDoklad, zbyvaCastka, 'pøepl. | ' + Platba.VS + ' |' , false);
   end;
@@ -578,6 +596,7 @@ begin
 end;
 
 
+
 function TParovatko.zapisDoAbry() : string;
 var
   i : integer;
@@ -592,9 +611,8 @@ var
 begin
 
   if (listPlatbaDokladPar.Count = 0) then Exit;
-  //iPDPar := TPlatbaDokladPar(listPlatbaDokladPar[0]);
 
-  Result := 'Zapsán do ABRY výpis pro úèet ' + removeLeadingZeros(iPDPar.Platba.cisloUctuMoje);
+  Result := 'Zapsán do ABRY výpis pro úèet ' + removeLeadingZeros(self.Vypis.CisloUctuMoje);
 
   DocQueues_IDs := TStringList.Create;
   DocQueues_IDs.Values['2100098382'] := '2S00000101'; //BF Fio
@@ -615,10 +633,10 @@ begin
   BStatement_Data.ValueByName('Period_ID') := '1L20000101'; //rok 2017, TODO automatika
 
   BStatement_Data.ValueByName('BankAccount_ID') := BankAccounts_IDs.Values[removeLeadingZeros(self.Vypis.CisloUctuMoje)];
-  BStatement_Data.ValueByName('ExternalNumber') := IntToStr(self.Vypis.PoradoveCislo);
+  BStatement_Data.ValueByName('ExternalNumber') := self.Vypis.PoradoveCislo;
 
 
-  BStatement_Data.ValueByName('DocDate$DATE') := TPlatbaDokladPar(listPlatbaDokladPar[listPlatbaDokladPar.Count - 1]).Platba.Datum; //datum podle data poslední položky výpisu
+  BStatement_Data.ValueByName('DocDate$DATE') := self.Vypis.Datum;
   BStatement_Data.ValueByName('CreatedAt$DATE') := IntToStr(Trunc(Date));
 
   BStatementRow_Object := AbraOLE.CreateObject('@BankStatementRow');
@@ -659,14 +677,11 @@ begin
       BStatementRow_Data.ValueByName('VarSymbol') := iPDPar.Platba.VS; //pro debety aby vždy zùstal VS
     end;
 
-    //BStatementRow_Data.ValueByName('Division_ID') := '1000000101';
-    //BStatementRow_Data.ValueByName('Currency_ID') := '0000CZK000';
-
     BStatementRow_Coll.Add(BStatementRow_Data);
   end;
 
   try
-    NewID := BStatement_Object.CreateNewFromValues(BStatement_Data);
+    NewID := BStatement_Object.CreateNewFromValues(BStatement_Data); //NewID je ID Abry v BANKSTATEMENTS
   except on E: exception do
     begin
       Application.MessageBox(PChar('Problemmm ' + ^M + E.Message), 'AbraOLE');
