@@ -42,6 +42,8 @@ type
     debet: boolean;
     zprava : string;
 
+    vysledekParovani: integer;
+
     PredchoziPlatbyList : TList;
     PredchoziPlatbyVsList : TList;
     DokladyList : TList;
@@ -49,7 +51,7 @@ type
     constructor create(gpcLine : string; qrAbra : TZQuery);
 
   published
-    procedure init(pocetPredcozichPlateb : integer);
+    procedure init(pocetPredchozichPlateb : integer);
     procedure loadPredchoziPlatby(pocetPlateb : integer);
     procedure loadDokladyPodleVS(jenNezaplacene : boolean);
     function getVSbyBankAccount() : string;
@@ -168,6 +170,8 @@ begin
   if payuProvize > 0 then
   begin
     payuProvizePP.castka := payuProvize;
+    payuProvizePP.VS := '';
+    payuProvizePP.init(0);
     payuProvizePP.nazevKlienta := formatdatetime('myy', payuProvizePP.datum) + ' suma provize';
     mPlatbaPrichoziList.Add(payuProvizePP);
   end;
@@ -180,21 +184,13 @@ var
 it1 : TPlatbaPrichozi;
 
 begin
-//MessageDlg('p1 ' + booltostr(assigned(Item1), true), mtInformation, [mbOk], 0);
-//dumpobject(Item1);
-{
-MessageDlg('I1 ' + booltostr(TPlatbaPrichozi(Item1).debet)
-+ ' val ' + floattostr(TPlatbaPrichozi(Item1).castka), mtInformation, [mbOk], 0);
-}
   if (TPlatbaPrichozi(Item1).kredit AND TPlatbaPrichozi(Item2).debet) then
     Result := -1
   else if (TPlatbaPrichozi(Item1).debet AND TPlatbaPrichozi(Item2).kredit) then
     Result := 1
   else
     Result := 0
-
-//  MessageDlg('Compare ' + TMyClass(Item1).MyString + ' to ' + TMyClass(Item2).MyString,
-//                 mtInformation, [mbOk], 0);
+//  MessageDlg('Compare ' + MyString, mtInformation, [mbOk], 0);
 end;
 
 constructor TVypis.create(gpcLine : string; qrAbra : TZQuery);
@@ -253,9 +249,9 @@ begin
 
 end;
 
-procedure TPlatbaPrichozi.init(pocetPredcozichPlateb : integer);
+procedure TPlatbaPrichozi.init(pocetPredchozichPlateb : integer);
 begin
-  self.loadPredchoziPlatby(pocetPredcozichPlateb);
+  self.loadPredchoziPlatby(pocetPredchozichPlateb);
   self.loadDokladyPodleVS(true);
 end;
 
@@ -503,7 +499,7 @@ begin
   if Platba.debet then //platba je Debet
   begin
       Platba.zprava := 'debet ' + FloatToStr(Platba.Castka) + ' Kè';
-      Result := 0;
+      Platba.vysledekParovani := 0;
       vytvorPDPar(Platba, iDoklad, Platba.Castka, '', false);
   end else
   begin //platba je Kredit
@@ -519,7 +515,8 @@ begin
 
     if (dokladyCount = 0) then begin
       Platba.zprava := 'žádný doklad, pøep. ' + FloatToStr(zbyvaCastka) + ' Kè, VS ' + Platba.VS;
-      Result := 0;
+      Platba.vysledekParovani := 0;
+      Result := Platba.vysledekParovani;
       vytvorPDPar(Platba, iDoklad, zbyvaCastka, 'pøepl. | ' + Platba.VS + ' |', false);
       Exit;
     end;
@@ -536,7 +533,8 @@ begin
         begin
           vytvorPDPar(Platba, iDoklad, zbyvaCastka, '', true); //pøesnì |
           Platba.zprava := 'vše použito';
-          Result := 1;
+          Platba.vysledekParovani := 1;
+          Result := Platba.vysledekParovani;
           Exit;
         end;
 
@@ -545,7 +543,8 @@ begin
         begin
           vytvorPDPar(Platba, iDoklad, zbyvaCastka, 'èást. ' + floattostr(zbyvaCastka) + ' z ' + floattostr(kNaparovani) + ' Kè |', true);
           Platba.zprava := 'vše použito';
-          Result := 1;
+          Platba.vysledekParovani := 1;
+          Result := Platba.vysledekParovani;
           Exit;
         end;
 
@@ -557,9 +556,11 @@ begin
       end;
     end;
     Platba.zprava := 'pøepl. ' + FloatToStr(zbyvaCastka) + ' Kè';
-    Result := 2;
+    Platba.vysledekParovani := 2;
     vytvorPDPar(Platba, iDoklad, zbyvaCastka, 'pøepl. | ' + Platba.VS + ' |' , false);
   end;
+
+  Result := Platba.vysledekParovani;
 end;
 
 procedure TParovatko.odparujPlatbu(currPlatba : TPlatbaPrichozi);

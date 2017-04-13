@@ -32,6 +32,7 @@ type
     btnReconnect: TButton;
     Memo2: TMemo;
     Button2: TButton;
+    chbSkrytBP: TCheckBox;
 
     procedure btnNactiClick(Sender: TObject);
     procedure btnZapisDoAbryClick(Sender: TObject);
@@ -55,6 +56,7 @@ type
     procedure Button2Click(Sender: TObject);
     procedure asgPredchoziPlatbyButtonClick(Sender: TObject; ACol,
       ARow: Integer);
+    procedure chbSkrytBPClick(Sender: TObject);
 
   public
     procedure vyplnPrichoziPlatby;
@@ -282,8 +284,6 @@ begin
       Cells[5, i+1] := iPlatbaPrichozi.nazevKlienta;
       Cells[6, i+1] := DateToStr(iPlatbaPrichozi.Datum);
 
-      //Memo1.Lines.Add(removeLeadingZeros(TPlatbaPrichozi(platbaPrichoziList[i]).castka)
-
     end;
   end;
 end;
@@ -303,6 +303,7 @@ begin
     2: asgMain.Colors[2, i+1] := $FFAAAA;
   end;
 
+
   asgMain.Cells[7, i+1] := iPlatbaPrichozi.zprava;
   
 end;
@@ -318,6 +319,7 @@ begin
   //Memo1.Lines.Add(Parovatko.getPDParyAsText);
 
   Memo1.Lines.Add('Vypis porad. cislo: ' + IntToStr(Vypis.PoradoveCislo));
+
 end;
 
 
@@ -329,7 +331,6 @@ begin
 
   Memo2.Clear;
   Memo2.Lines.Add(Parovatko.getPDParyPlatbyAsText(CurrPlatbaPrichozi));
-  Memo2.Lines.Add(CurrPlatbaPrichozi.nazevKlienta);
 end;
 
 
@@ -374,7 +375,7 @@ begin
 
         Cells[0, i+1] := tempPredchoziPlatba.VS;
         Cells[1, i+1] := format('%m', [tempPredchoziPlatba.Castka]);
-        if tempPredchoziPlatba.Castka < 0 then asgPredchoziPlatbyVs.FontColors[2, i+1] := clRed;
+        if tempPredchoziPlatba.Castka < 0 then asgPredchoziPlatbyVs.FontColors[1, i+1] := clRed;
         Cells[2, i+1] := DateToStr(tempPredchoziPlatba.Datum);
         Cells[3, i+1] := removeLeadingZeros(tempPredchoziPlatba.cisloUctu);
         Cells[4, i+1] := tempPredchoziPlatba.FirmName;
@@ -544,6 +545,23 @@ begin
 
   Memo2.Clear;
   Memo2.Lines.Add(Parovatko.getPDParyPlatbyAsText(CurrPlatbaPrichozi));  
+end;
+
+procedure TForm1.chbSkrytBPClick(Sender: TObject);
+var
+  i : integer;
+  iPlatbaPrichozi : TPlatbaPrichozi;
+begin
+
+  for i := 0 to platbaPrichoziList.Count - 1 do
+  begin
+    iPlatbaPrichozi := TPlatbaPrichozi(platbaPrichoziList[i]);
+    if chbSkrytBP.Checked AND (iPlatbaPrichozi.vysledekParovani = 1) then
+      asgMain.RowHeights[i+1] := 0
+    else
+      asgMain.RowHeights[i+1] := 22;
+  end;
+
 end;
 
 end.

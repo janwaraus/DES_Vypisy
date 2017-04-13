@@ -1,8 +1,8 @@
 object Form1: TForm1
-  Left = 54
-  Top = 6
-  Width = 1351
-  Height = 704
+  Left = 96
+  Top = 56
+  Width = 1318
+  Height = 741
   Caption = '='
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -17,7 +17,7 @@ object Form1: TForm1
   TextHeight = 13
   object labelNalezeneDoklady: TLabel
     Left = 16
-    Top = 328
+    Top = 544
     Width = 85
     Height = 13
     Caption = 'Doklady podle VS'
@@ -63,17 +63,17 @@ object Form1: TForm1
     Text = 'vypis_export.txt'
   end
   object Memo1: TMemo
-    Left = 8
-    Top = 488
-    Width = 377
-    Height = 169
+    Left = 776
+    Top = 448
+    Width = 521
+    Height = 81
     TabOrder = 4
   end
   object asgMain: TAdvStringGrid
     Left = 8
     Top = 48
-    Width = 849
-    Height = 265
+    Width = 761
+    Height = 489
     Cursor = crDefault
     ColCount = 8
     FixedCols = 0
@@ -196,7 +196,7 @@ object Form1: TForm1
       132
       135
       64
-      262)
+      167)
     RowHeights = (
       22
       22
@@ -205,13 +205,13 @@ object Form1: TForm1
       22)
   end
   object asgPredchoziPlatby: TAdvStringGrid
-    Left = 864
+    Left = 776
     Top = 48
     Width = 417
-    Height = 281
+    Height = 193
     Cursor = crDefault
     FixedCols = 0
-    RowCount = 6
+    RowCount = 8
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -325,12 +325,13 @@ object Form1: TForm1
       161)
   end
   object asgPredchoziPlatbyVs: TAdvStringGrid
-    Left = 808
-    Top = 344
+    Left = 776
+    Top = 248
     Width = 521
-    Height = 201
+    Height = 193
     Cursor = crDefault
     FixedCols = 0
+    RowCount = 8
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -444,9 +445,9 @@ object Form1: TForm1
   end
   object asgNalezeneDoklady: TAdvStringGrid
     Left = 8
-    Top = 344
-    Width = 793
-    Height = 137
+    Top = 552
+    Width = 825
+    Height = 145
     Cursor = crDefault
     ColCount = 9
     FixedCols = 0
@@ -571,7 +572,7 @@ object Form1: TForm1
   end
   object chbVsechnyDoklady: TCheckBox
     Left = 232
-    Top = 328
+    Top = 544
     Width = 113
     Height = 17
     Caption = 'v'#353'echny doklady'
@@ -579,7 +580,7 @@ object Form1: TForm1
     OnClick = chbVsechnyDokladyClick
   end
   object btnSparujPlatby: TButton
-    Left = 208
+    Left = 872
     Top = 8
     Width = 75
     Height = 25
@@ -588,7 +589,7 @@ object Form1: TForm1
     OnClick = btnSparujPlatbyClick
   end
   object btnSparuj1Platbu: TButton
-    Left = 288
+    Left = 216
     Top = 8
     Width = 81
     Height = 25
@@ -614,22 +615,31 @@ object Form1: TForm1
     OnClick = btnReconnectClick
   end
   object Memo2: TMemo
-    Left = 392
-    Top = 488
-    Width = 361
-    Height = 169
+    Left = 848
+    Top = 552
+    Width = 441
+    Height = 113
     Lines.Strings = (
       'Memo2')
     TabOrder = 14
   end
   object Button2: TButton
-    Left = 872
+    Left = 960
     Top = 8
     Width = 97
     Height = 25
     Caption = 'Uka'#382' sp'#225'rov'#225'n'#237
     TabOrder = 15
     OnClick = Button2Click
+  end
+  object chbSkrytBP: TCheckBox
+    Left = 312
+    Top = 16
+    Width = 153
+    Height = 17
+    Caption = 'skr'#253't bezprobl'#233'mov'#233
+    TabOrder = 16
+    OnClick = chbSkrytBPClick
   end
   object NactiGpcDialog: TOpenDialog
     Left = 24
@@ -640,13 +650,13 @@ object Form1: TForm1
     AutoEncodeStrings = False
     Port = 0
     Protocol = 'firebirdd-2.1'
-    Left = 432
-    Top = 8
+    Left = 80
+    Top = 208
   end
   object qrAbra: TZQuery
     Connection = dbAbra
     Params = <>
-    Left = 464
-    Top = 8
+    Left = 120
+    Top = 176
   end
 end
