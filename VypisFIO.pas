@@ -281,7 +281,7 @@ begin
       Cells[2, i+1] := iPlatbaPrichozi.VS;
       Cells[3, i+1] := iPlatbaPrichozi.SS;
       Cells[4, i+1] := iPlatbaPrichozi.cisloUctuBezNul;
-      Cells[5, i+1] := iPlatbaPrichozi.nazevKlienta;
+      Cells[5, i+1] := inttostr(iPlatbaPrichozi.getPocetPredchozichPlatebNaStejnyVS()) + ' ' + iPlatbaPrichozi.nazevKlienta; 
       Cells[6, i+1] := DateToStr(iPlatbaPrichozi.Datum);
 
     end;
@@ -454,6 +454,7 @@ begin
   begin
      asgMain.Colors[asgMain.col, asgMain.row] := clMoneyGreen;
      TPlatbaPrichozi(platbaPrichoziList[asgMain.row - 1]).VS := asgMain.Cells[2, asgMain.row]; //do pøíslušného objektu platby zapíšu zmìnìný VS
+     TPlatbaPrichozi(platbaPrichoziList[asgMain.row - 1]).loadPredchoziPlatby(StrToInt(editPocetPredchPlateb.text)); //naèíst znova pøedchozí platby kvùli zmìnìnému VS (staèilo by jen pr.pl podle vs ale neni to rozdelene)
   end;
 
 end;
@@ -556,10 +557,11 @@ begin
   for i := 0 to platbaPrichoziList.Count - 1 do
   begin
     iPlatbaPrichozi := TPlatbaPrichozi(platbaPrichoziList[i]);
-    if chbSkrytBP.Checked AND (iPlatbaPrichozi.vysledekParovani = 1) then
+    if chbSkrytBP.Checked AND (iPlatbaPrichozi.vysledekParovani = 1)
+    AND (iPlatbaPrichozi.getPocetPredchozichPlatebNaStejnyVS() > 1) then
       asgMain.RowHeights[i+1] := 0
     else
-      asgMain.RowHeights[i+1] := 22;
+      asgMain.RowHeights[i+1] := asgMain.DefaultRowHeight;
   end;
 
 end;

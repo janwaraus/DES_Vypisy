@@ -43,6 +43,7 @@ type
     zprava : string;
 
     vysledekParovani: integer;
+    //pocetPredchozichPlatebNaStejnyVS : integer;
 
     PredchoziPlatbyList : TList;
     PredchoziPlatbyVsList : TList;
@@ -55,6 +56,7 @@ type
     procedure loadPredchoziPlatby(pocetPlateb : integer);
     procedure loadDokladyPodleVS(jenNezaplacene : boolean);
     function getVSbyBankAccount() : string;
+    function getPocetPredchozichPlatebNaStejnyVS() : integer;
     function isPayuProvize() : boolean;
   end;
 
@@ -198,7 +200,7 @@ begin
   self.qrAbra := qrAbra;
 
   self.PoradoveCislo := StrToInt(copy(gpcLine, 106, 3));
-  self.CisloUctuMoje := copy(gpcLine, 4, 16);
+  self.CisloUctuMoje := removeLeadingZeros(copy(gpcLine, 4, 16));
   self.ObratDebet := StrToInt(copy(gpcLine, 76, 14)) / 100;
   self.ObratKredit := StrToInt(copy(gpcLine, 91, 14)) / 100;
   self.Datum := Str6digitsToDate(copy(gpcLine, 109, 6));
@@ -209,7 +211,7 @@ begin
   self.qrAbra := qrAbra;
 
   self.typZaznamu := copy(gpcLine, 1, 3);
-  self.cisloUctuMoje := copy(gpcLine, 4, 16);
+  self.cisloUctuMoje := removeLeadingZeros(copy(gpcLine, 4, 16));
   self.cisloUctu := copy(gpcLine, 20, 16) + '/' + copy(gpcLine, 74, 4);
   self.cisloUctuBezNul := removeLeadingZeros(self.cisloUctu);
   self.cisloDokladu := copy(gpcLine, 36, 13);
@@ -432,6 +434,21 @@ begin
   else
     result := false;
 
+end;
+
+
+
+function TPlatbaPrichozi.getPocetPredchozichPlatebNaStejnyVS() : integer;
+var
+  i : integer;
+  tempPredchoziPlatba : TPredchoziPlatba;
+begin
+  Result := 0;
+  if self.PredchoziPlatbyList.Count > 0 then
+  begin
+    for i := 0 to PredchoziPlatbyList.Count - 1 do
+      if TPredchoziPlatba(self.PredchoziPlatbyList[i]).VS = self.VS then Inc(Result);
+  end;
 end;
 
 {** class TPredchoziPlatba **}

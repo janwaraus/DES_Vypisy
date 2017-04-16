@@ -1,6 +1,6 @@
 object Form1: TForm1
-  Left = 96
-  Top = 56
+  Left = 194
+  Top = 1
   Width = 1318
   Height = 741
   Caption = '='
@@ -76,6 +76,7 @@ object Form1: TForm1
     Height = 489
     Cursor = crDefault
     ColCount = 8
+    DefaultRowHeight = 20
     FixedCols = 0
     RowCount = 5
     Font.Charset = DEFAULT_CHARSET
@@ -142,7 +143,7 @@ object Form1: TForm1
       'Not equal'
       'Clear')
     FixedColWidth = 20
-    FixedRowHeight = 22
+    FixedRowHeight = 20
     FixedFont.Charset = DEFAULT_CHARSET
     FixedFont.Color = clWindowText
     FixedFont.Height = -11
@@ -197,12 +198,6 @@ object Form1: TForm1
       135
       64
       167)
-    RowHeights = (
-      22
-      22
-      22
-      22
-      22)
   end
   object asgPredchoziPlatby: TAdvStringGrid
     Left = 776
@@ -210,6 +205,7 @@ object Form1: TForm1
     Width = 417
     Height = 193
     Cursor = crDefault
+    DefaultRowHeight = 20
     FixedCols = 0
     RowCount = 8
     Font.Charset = DEFAULT_CHARSET
@@ -271,7 +267,7 @@ object Form1: TForm1
       'Not equal'
       'Clear')
     FixedColWidth = 28
-    FixedRowHeight = 22
+    FixedRowHeight = 20
     FixedFont.Charset = DEFAULT_CHARSET
     FixedFont.Color = clWindowText
     FixedFont.Height = -11
@@ -330,6 +326,7 @@ object Form1: TForm1
     Width = 521
     Height = 193
     Cursor = crDefault
+    DefaultRowHeight = 20
     FixedCols = 0
     RowCount = 8
     Font.Charset = DEFAULT_CHARSET
@@ -390,7 +387,7 @@ object Form1: TForm1
       'Not equal'
       'Clear')
     FixedColWidth = 72
-    FixedRowHeight = 22
+    FixedRowHeight = 20
     FixedFont.Charset = DEFAULT_CHARSET
     FixedFont.Color = clWindowText
     FixedFont.Height = -11
@@ -445,11 +442,12 @@ object Form1: TForm1
   end
   object asgNalezeneDoklady: TAdvStringGrid
     Left = 8
-    Top = 552
+    Top = 568
     Width = 825
-    Height = 145
+    Height = 129
     Cursor = crDefault
     ColCount = 9
+    DefaultRowHeight = 20
     FixedCols = 0
     RowCount = 8
     Font.Charset = DEFAULT_CHARSET
@@ -513,7 +511,7 @@ object Form1: TForm1
       'Not equal'
       'Clear')
     FixedColWidth = 89
-    FixedRowHeight = 22
+    FixedRowHeight = 20
     FixedFont.Charset = DEFAULT_CHARSET
     FixedFont.Color = clWindowText
     FixedFont.Height = -11
