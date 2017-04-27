@@ -11,6 +11,7 @@ function LeftPad(value:integer; length:integer=8; pad:char='0'): string; overloa
 function LeftPad(value: string; length:integer=8; pad:char='0'): string; overload;
 function Str6digitsToDate(datum : string) : double;
 function IndexByName(DataObject: variant; Name: ShortString): integer;
+function pocetRadkuTxtSouboru(SName: string): integer;
 //function DumpObject( YourObjectInstance : tObject ) : ansistring;
 
 
@@ -20,25 +21,6 @@ const
 
 implementation
 
-{
-function DumpObject( YourObjectInstance : tObject ) : ansistring;
-var
-  PropList: PPropList;
-  PropCnt: integer;
-  iX: integer;
-  vValue: Variant;
-  sValue: String;
-begin
-result := '';
-  PropCnt := GetPropList(YourObjectInstance,PropList);
-  for iX := 0 to PropCnt-1 do
-    begin
-      vValue := GetPropValue(YourObjectInstance,PropList[ix].Name,True);
-      sValue := VarToStr( vValue );
-      result := result + PropList[ix].Name+' = '+sValue+';'
-    end;
-end;
-}
 
 // odstraní ze stringu nuly na zaèátku
 function removeLeadingZeros(const Value: string): string;
@@ -85,6 +67,16 @@ begin
     end;
     Inc(i);
   end;
+end;
+
+function pocetRadkuTxtSouboru(SName: string): integer;
+var
+  oSL : TStringlist;
+begin
+  oSL := TStringlist.Create;
+  oSL.LoadFromFile(SName);
+  Result := oSL.Count;
+  oSL.Free;
 end;
 
 end.
