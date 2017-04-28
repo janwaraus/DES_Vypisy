@@ -34,6 +34,7 @@ type
     chbZobrazitBezproblemove: TCheckBox;
     lblHlavicka: TLabel;
     chbZobrazitDebety: TCheckBox;
+    chbZobrazitStandardni: TCheckBox;
 
     procedure btnNactiClick(Sender: TObject);
     procedure btnZapisDoAbryClick(Sender: TObject);
@@ -61,6 +62,7 @@ type
       var CanEdit: Boolean);
     procedure asgMainKeyUp(Sender: TObject; var Key: Word;
       Shift: TShiftState);
+    procedure chbZobrazitStandardniClick(Sender: TObject);
 
   public
     procedure vyplnPrichoziPlatby;
@@ -226,21 +228,24 @@ begin
       begin
         Vypis.init();
         currPlatbaZVypisu := TPlatbaZVypisu(Vypis.Platby[0]);
-        vyplnPrichoziPlatby;
         sparujVsechnyPrichoziPlatby;
+        Vypis.setridit();
+        vyplnPrichoziPlatby;
+        filtrujZobrazeniPlateb;
+        lblHlavicka.Caption := Vypis.abraBankaccount.name + ', ' + Vypis.abraBankaccount.number + ', è.'
+                        + IntToStr(Vypis.poradoveCislo) + ' (max è. je ' + IntToStr(Vypis.maxExistujiciPoradoveCislo) + '). Plateb: '
+                        + IntToStr(Vypis.Platby.Count);
+        if not Vypis.isNavazujeNaRadu() then
+          Dialogs.MessageDlg('Doklad è. '+ IntToStr(Vypis.poradoveCislo) + ' nenavazuje na øadu!',mtInformation, [mbOK], 0);
+
+        asgMainClick(nil);
       end;
   finally
     btnNacti.Enabled := true;
     btnZapisDoAbry.Enabled := true;
     CloseFile(GpcInputFile);
     Screen.Cursor := crDefault;
-    lblHlavicka.Caption := Vypis.abraBankaccount.name + ', ' + Vypis.abraBankaccount.number + ', è.'
-                    + IntToStr(Vypis.poradoveCislo) + ' (max è. je ' + IntToStr(Vypis.maxExistujiciPoradoveCislo) + '). Plateb: '
-                    + IntToStr(Vypis.Platby.Count);
-    if not Vypis.isNavazujeNaRadu() then
-      Dialogs.MessageDlg('Doklad è. '+ IntToStr(Vypis.poradoveCislo) + ' nenavazuje na øadu!',mtInformation, [mbOK], 0);
 
-    asgMainClick(nil);                  
   end;
 
 end;
@@ -270,14 +275,25 @@ begin
       if iPlatbaZVypisu.debet then asgMain.FontColors[1, i+1] := clRed;
       Cells[2, i+1] := iPlatbaZVypisu.VS;
       Cells[3, i+1] := iPlatbaZVypisu.SS;
-      Cells[4, i+1] := iPlatbaZVypisu.cisloUctuBezNul;
+      Cells[4, i+1] := iPlatbaZVypisu.cisloUctuKZobrazeni;
+      //Cells[5, i+1] := Format('%8.2f', [iPlatbaZVypisu.getProcentoPredchozichPlatebNaStejnyVS]) + Format('%8.2f', [iPlatbaZVypisu.getProcentoPredchozichPlatebZeStejnehoUctu]) + iPlatbaZVypisu.nazevKlienta;
       Cells[5, i+1] := iPlatbaZVypisu.nazevKlienta;
       Cells[6, i+1] := DateToStr(iPlatbaZVypisu.Datum);
 
+      if iPlatbaZVypisu.rozdeleniPlatby > 0 then
+        asgMain.Cells[7, i+1] := IntToStr (iPlatbaZVypisu.rozdeleniPlatby) + ' dìlení, ' + iPlatbaZVypisu.zprava
+      else
+        asgMain.Cells[7, i+1] := iPlatbaZVypisu.zprava;
+
+      case iPlatbaZVypisu.problemLevel of
+        0: asgMain.Colors[2, i+1] := $AAFFAA;
+        1: asgMain.Colors[2, i+1] := $cdfaff;
+        2: asgMain.Colors[2, i+1] := $bbbbff;
+      end;
+      
+
     end;
   end;
-
-  filtrujZobrazeniPlateb;
 
 end;
 
@@ -291,14 +307,22 @@ begin
   for i := 0 to Vypis.Platby.Count - 1 do
   begin
     iPlatbaZVypisu := TPlatbaZVypisu(Vypis.Platby[i]);
-    zobrazitRadek := true;
+    zobrazitRadek := false;
 
-    if not chbZobrazitBezproblemove.Checked AND (iPlatbaZVypisu.vysledekParovani = 1)
-    AND (iPlatbaZVypisu.getPocetPredchozichPlatebNaStejnyVS() > 1) then
-      zobrazitRadek := false;
+    if iPlatbaZVypisu.problemLevel > 1 then
+      zobrazitRadek := true;
 
-    if not chbZobrazitDebety.Checked AND iPlatbaZVypisu.debet then
-      zobrazitRadek := false;
+    if chbZobrazitBezproblemove.Checked AND (iPlatbaZVypisu.problemLevel = 0) then
+      zobrazitRadek := true;
+
+    if chbZobrazitStandardni.Checked AND (iPlatbaZVypisu.problemLevel = 1) then
+      zobrazitRadek := true;
+
+    if iPlatbaZVypisu.debet then
+      if chbZobrazitDebety.Checked then
+        zobrazitRadek := true
+      else
+        zobrazitRadek := false;
 
     if zobrazitRadek then
       asgMain.RowHeights[i+1] := asgMain.DefaultRowHeight
@@ -311,19 +335,21 @@ end;
 procedure TForm1.sparujPrichoziPlatbu(i : integer);
 var
   iPlatbaZVypisu : TPlatbaZVypisu;
-  VysledekParovani : integer;
 begin
   iPlatbaZVypisu := TPlatbaZVypisu(Vypis.Platby[i]);
 
-  VysledekParovani := Parovatko.sparujPlatbu(iPlatbaZVypisu);
+  Parovatko.sparujPlatbu(iPlatbaZVypisu);
 
-  case VysledekParovani of
-    0: asgMain.Colors[2, i+1] := $AAAAFF;
-    1: asgMain.Colors[2, i+1] := $AAFFAA;
-    2: asgMain.Colors[2, i+1] := $FFAAAA;
+  case iPlatbaZVypisu.problemLevel of
+    0: asgMain.Colors[2, i+1] := $AAFFAA;
+    1: asgMain.Colors[2, i+1] := $cdfaff;
+    2: asgMain.Colors[2, i+1] := $bbbbff;
   end;
 
-  asgMain.Cells[7, i+1] := iPlatbaZVypisu.zprava;
+  if iPlatbaZVypisu.rozdeleniPlatby > 0 then
+    asgMain.Cells[7, i+1] := IntToStr (iPlatbaZVypisu.rozdeleniPlatby) + ' dìlení, ' + iPlatbaZVypisu.zprava
+  else
+    asgMain.Cells[7, i+1] := iPlatbaZVypisu.zprava;
   
 end;
 
@@ -351,7 +377,7 @@ begin
     begin
       RowCount := currPlatbaZVypisu.PredchoziPlatbyList.Count + 1;
       for i := 0 to RowCount - 2 do begin
-        iPredchoziPlatba := TPredchoziPlatba(currPlatbaZVypisu.PredchoziPlatbyList[RowCount - 2 - i]);
+        iPredchoziPlatba := TPredchoziPlatba(currPlatbaZVypisu.PredchoziPlatbyList[i]);
         //Cells[0, i+1] := IntToStr(i+1);
         AddButton(0,i+1,25,18,'<--',haCenter,vaCenter);
         Cells[1, i+1] := iPredchoziPlatba.VS;
@@ -371,13 +397,13 @@ begin
     begin
       RowCount := currPlatbaZVypisu.PredchoziPlatbyVsList.Count + 1;
       for i := 0 to RowCount - 2 do begin
-        iPredchoziPlatba := TPredchoziPlatba(currPlatbaZVypisu.PredchoziPlatbyVsList[RowCount - 2 - i]);
+        iPredchoziPlatba := TPredchoziPlatba(currPlatbaZVypisu.PredchoziPlatbyVsList[i]);
 
         Cells[0, i+1] := iPredchoziPlatba.VS;
         Cells[1, i+1] := format('%m', [iPredchoziPlatba.Castka]);
         if iPredchoziPlatba.Castka < 0 then asgPredchoziPlatbyVs.FontColors[1, i+1] := clRed;
         Cells[2, i+1] := DateToStr(iPredchoziPlatba.Datum);
-        Cells[3, i+1] := removeLeadingZeros(iPredchoziPlatba.cisloUctu);
+        Cells[3, i+1] := iPredchoziPlatba.cisloUctuKZobrazeni;
         Cells[4, i+1] := iPredchoziPlatba.FirmName;
       end;
     end else
@@ -526,7 +552,7 @@ procedure TForm1.asgPredchoziPlatbyButtonClick(Sender: TObject; ACol,
   ARow: Integer);
 begin
   urciCurrPlatbaZVypisu();
-  currPlatbaZVypisu.VS := TPredchoziPlatba(currPlatbaZVypisu.PredchoziPlatbyList[currPlatbaZVypisu.PredchoziPlatbyList.Count - ARow]).VS;
+  currPlatbaZVypisu.VS := TPredchoziPlatba(currPlatbaZVypisu.PredchoziPlatbyList[ARow - 1]).VS;
   asgMain.Cells[2, asgMain.row] := currPlatbaZVypisu.VS;
   provedAkcePoZmeneVS;
 end;
@@ -628,6 +654,11 @@ begin
   filtrujZobrazeniPlateb;
 end;
 
+procedure TForm1.chbZobrazitStandardniClick(Sender: TObject);
+begin
+  filtrujZobrazeniPlateb;
+end;
+
 procedure TForm1.asgMainCanEditCell(Sender: TObject; ARow, ACol: Integer;
   var CanEdit: Boolean);
 begin
@@ -635,7 +666,5 @@ begin
     1: CanEdit := false;
   end;
 end;
-
-
 
 end.

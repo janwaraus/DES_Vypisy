@@ -654,13 +654,11 @@ object Form1: TForm1
     Width = 105
     Height = 17
     Caption = 'bezprobl'#233'mov'#233
-    Checked = True
-    State = cbChecked
     TabOrder = 15
     OnClick = chbZobrazitBezproblemoveClick
   end
   object chbZobrazitDebety: TCheckBox
-    Left = 208
+    Left = 296
     Top = 32
     Width = 65
     Height = 17
@@ -669,6 +667,17 @@ object Form1: TForm1
     State = cbChecked
     TabOrder = 16
     OnClick = chbZobrazitDebetyClick
+  end
+  object chbZobrazitStandardni: TCheckBox
+    Left = 192
+    Top = 32
+    Width = 97
+    Height = 17
+    Caption = 'standardn'#237
+    Checked = True
+    State = cbChecked
+    TabOrder = 17
+    OnClick = chbZobrazitStandardniClick
   end
   object NactiGpcDialog: TOpenDialog
     Left = 24

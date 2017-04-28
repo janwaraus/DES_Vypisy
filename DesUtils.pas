@@ -6,6 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, StrUtils;
   //RTTI;
 
+function prevedCisloUctuNaText(cisloU : string) : string;
 function removeLeadingZeros(const Value: string): string;
 function LeftPad(value:integer; length:integer=8; pad:char='0'): string; overload;
 function LeftPad(value: string; length:integer=8; pad:char='0'): string; overload;
@@ -21,6 +22,17 @@ const
 
 implementation
 
+
+function prevedCisloUctuNaText(cisloU : string) : string;
+begin
+  Result := cisloU;
+  if cisloU = '/0000' then Result := '0';
+  if cisloU = '2100098382/2010' then Result := 'DES Fio bìžný';
+  if cisloU = '2800098383/2010' then Result := 'DES Fio spoøící';
+  if cisloU = '171336270/0300' then Result := 'DES ÈSOB';
+  if cisloU = '2107333410/2700' then Result := 'PayU';
+  if cisloU = '160987123/0300' then Result := 'Èeská Pošta';
+end;
 
 // odstraní ze stringu nuly na zaèátku
 function removeLeadingZeros(const Value: string): string;
