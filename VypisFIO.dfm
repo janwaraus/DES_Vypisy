@@ -1,8 +1,8 @@
 object Form1: TForm1
-  Left = 194
-  Top = 1
+  Left = 317
+  Top = 124
   Width = 1318
-  Height = 741
+  Height = 799
   Caption = '='
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -13,6 +13,9 @@ object Form1: TForm1
   OldCreateOrder = False
   OnClose = FormClose
   OnShow = FormShow
+  DesignSize = (
+    1302
+    760)
   PixelsPerInch = 96
   TextHeight = 13
   object labelNalezeneDoklady: TLabel
@@ -28,6 +31,23 @@ object Form1: TForm1
     Font.Style = []
     ParentFont = False
   end
+  object lblHlavicka: TLabel
+    Left = 88
+    Top = 9
+    Width = 15
+    Height = 18
+    Anchors = [akLeft, akTop, akRight, akBottom]
+    Caption = '...'
+    Color = clMoneyGreen
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -15
+    Font.Name = 'Verdana'
+    Font.Style = []
+    ParentColor = False
+    ParentFont = False
+    Layout = tlBottom
+  end
   object btnNacti: TButton
     Left = 8
     Top = 8
@@ -38,7 +58,7 @@ object Form1: TForm1
     OnClick = btnNactiClick
   end
   object btnZapisDoAbry: TButton
-    Left = 504
+    Left = 680
     Top = 8
     Width = 83
     Height = 25
@@ -47,17 +67,17 @@ object Form1: TForm1
     OnClick = btnZapisDoAbryClick
   end
   object editVstupniSoubor: TEdit
-    Left = 96
-    Top = 8
-    Width = 89
+    Left = 632
+    Top = 544
+    Width = 73
     Height = 21
     TabOrder = 2
     Text = 'vypis_t5.gpc'
   end
   object editVystupniSoubor: TEdit
-    Left = 592
-    Top = 8
-    Width = 97
+    Left = 712
+    Top = 544
+    Width = 81
     Height = 21
     TabOrder = 3
     Text = 'vypis_export.txt'
@@ -75,6 +95,7 @@ object Form1: TForm1
     Width = 761
     Height = 489
     Cursor = crDefault
+    Anchors = [akLeft, akBottom]
     ColCount = 8
     DefaultRowHeight = 20
     FixedCols = 0
@@ -89,8 +110,10 @@ object Form1: TForm1
     ScrollBars = ssBoth
     TabOrder = 5
     OnClick = asgMainClick
+    OnKeyUp = asgMainKeyUp
     HoverRowCells = [hcNormal, hcSelected]
     OnGetAlignment = asgMainGetAlignment
+    OnCanEditCell = asgMainCanEditCell
     OnCellsChanged = asgMainCellsChanged
     ActiveCellFont.Charset = DEFAULT_CHARSET
     ActiveCellFont.Color = clWindowText
@@ -578,38 +601,29 @@ object Form1: TForm1
     OnClick = chbVsechnyDokladyClick
   end
   object btnSparujPlatby: TButton
-    Left = 872
-    Top = 8
+    Left = 552
+    Top = 544
     Width = 75
-    Height = 25
+    Height = 17
     Caption = 'Sp'#225'ruj platby'
     TabOrder = 10
     OnClick = btnSparujPlatbyClick
-  end
-  object btnSparuj1Platbu: TButton
-    Left = 216
-    Top = 8
-    Width = 81
-    Height = 25
-    Caption = 'Sp'#225'ruj 1 platbu'
-    TabOrder = 11
-    OnClick = btnSparuj1PlatbuClick
   end
   object editPocetPredchPlateb: TEdit
     Left = 808
     Top = 16
     Width = 33
     Height = 21
-    TabOrder = 12
+    TabOrder = 11
     Text = '6'
   end
   object btnReconnect: TButton
-    Left = 696
+    Left = 1216
     Top = 8
-    Width = 75
+    Width = 65
     Height = 25
     Caption = 'Reconnect'
-    TabOrder = 13
+    TabOrder = 12
     OnClick = btnReconnectClick
   end
   object Memo2: TMemo
@@ -619,25 +633,38 @@ object Form1: TForm1
     Height = 113
     Lines.Strings = (
       'Memo2')
-    TabOrder = 14
+    TabOrder = 13
   end
   object Button2: TButton
-    Left = 960
-    Top = 8
+    Left = 848
+    Top = 536
     Width = 97
-    Height = 25
+    Height = 17
     Caption = 'Uka'#382' sp'#225'rov'#225'n'#237
-    TabOrder = 15
+    TabOrder = 14
     OnClick = Button2Click
   end
-  object chbSkrytBP: TCheckBox
-    Left = 312
-    Top = 16
-    Width = 153
+  object chbZobrazitBezproblemove: TCheckBox
+    Left = 88
+    Top = 32
+    Width = 105
     Height = 17
-    Caption = 'skr'#253't bezprobl'#233'mov'#233
+    Caption = 'bezprobl'#233'mov'#233
+    Checked = True
+    State = cbChecked
+    TabOrder = 15
+    OnClick = chbZobrazitBezproblemoveClick
+  end
+  object chbZobrazitDebety: TCheckBox
+    Left = 208
+    Top = 32
+    Width = 65
+    Height = 17
+    Caption = 'debety'
+    Checked = True
+    State = cbChecked
     TabOrder = 16
-    OnClick = chbSkrytBPClick
+    OnClick = chbZobrazitDebetyClick
   end
   object NactiGpcDialog: TOpenDialog
     Left = 24

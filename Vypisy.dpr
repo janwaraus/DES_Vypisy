@@ -3,8 +3,11 @@ program Vypisy;
 uses
   Forms,
   VypisFIO in 'VypisFIO.pas' {Form1},
-  classPlatbaPrichozi in 'classPlatbaPrichozi.pas' {PlatbaPrichozi: TDataModule},
-  DesUtils in 'DesUtils.pas';
+  DesUtils in 'DesUtils.pas',
+  uTVypis in 'uTVypis.pas',
+  uTPlatbaZVypisu in 'uTPlatbaZVypisu.pas',
+  uTParovatko in 'uTParovatko.pas',
+  AbraEntities in 'AbraEntities.pas';
 
 {$R *.res}
 
@@ -12,6 +15,5 @@ begin
   Application.Initialize;
   Application.Title := 'Vypisy';
   Application.CreateForm(TForm1, Form1);
-  Application.CreateForm(TPlatbaPrichozi, PlatbaPrichozi);
   Application.Run;
 end.
