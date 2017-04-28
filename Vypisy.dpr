@@ -14,6 +14,6 @@ uses
 begin
   Application.Initialize;
   Application.Title := 'Vypisy';
-  Application.CreateForm(TForm1, Form1);
+  Application.CreateForm(TfmMain, fmMain);
   Application.Run;
 end.

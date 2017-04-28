@@ -10,7 +10,7 @@ uses
   uTVypis, uTPlatbaZVypisu, uTParovatko, DesUtils;
 
 type
-  TForm1 = class(TForm)
+  TfmMain = class(TForm)
 
     btnNacti: TButton;
     btnZapisDoAbry: TButton;
@@ -78,7 +78,7 @@ type
   end;
 
 var
-  Form1 : TForm1;
+  fmMain : TfmMain;
   Vypis : TVypis;
   currPlatbaZVypisu : TPlatbaZVypisu;
   PROGRAM_PATH: string;
@@ -91,7 +91,7 @@ uses AbraEntities;
 
 {$R *.dfm}
 
-procedure TForm1.FormShow(Sender: TObject);
+procedure TfmMain.FormShow(Sender: TObject);
 var
   FIIni: TIniFile;
 begin
@@ -150,7 +150,7 @@ begin
   end;
 end;
 
-procedure TForm1.FormClose(Sender: TObject; var Action: TCloseAction);
+procedure TfmMain.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   if assigned (Vypis) then
     if assigned (Vypis.Platby) then
@@ -158,7 +158,7 @@ begin
 end;
 
 
-procedure TForm1.btnNactiClick(Sender: TObject);
+procedure TfmMain.btnNactiClick(Sender: TObject);
 var
   GpcInputFile : TextFile;
   GpcFileLine : string;
@@ -251,7 +251,7 @@ begin
 end;
 
 
-procedure TForm1.vyplnPrichoziPlatby;
+procedure TfmMain.vyplnPrichoziPlatby;
 var
   i : integer;
   iPlatbaZVypisu : TPlatbaZVypisu;
@@ -297,7 +297,7 @@ begin
 
 end;
 
-procedure TForm1.filtrujZobrazeniPlateb;
+procedure TfmMain.filtrujZobrazeniPlateb;
 var
   i : integer;
   iPlatbaZVypisu : TPlatbaZVypisu;
@@ -332,7 +332,7 @@ begin
 
 end;
 
-procedure TForm1.sparujPrichoziPlatbu(i : integer);
+procedure TfmMain.sparujPrichoziPlatbu(i : integer);
 var
   iPlatbaZVypisu : TPlatbaZVypisu;
 begin
@@ -353,7 +353,7 @@ begin
   
 end;
 
-procedure TForm1.sparujVsechnyPrichoziPlatby;
+procedure TfmMain.sparujVsechnyPrichoziPlatby;
 var
   i : integer;
 begin
@@ -364,7 +364,7 @@ end;
 
 
 
-procedure TForm1.vyplnPredchoziPlatby;
+procedure TfmMain.vyplnPredchoziPlatby;
 var
   i : integer;
   iPredchoziPlatba : TPredchoziPlatba;
@@ -412,7 +412,7 @@ begin
 end;
 
 
-procedure TForm1.vyplnDoklady;
+procedure TfmMain.vyplnDoklady;
 var
   tempList : TList;
   iDoklad : TDoklad;
@@ -459,7 +459,7 @@ begin
 end;
 
 
-procedure TForm1.urciCurrPlatbaZVypisu();
+procedure TfmMain.urciCurrPlatbaZVypisu();
 begin
   if assigned(Vypis) then
     if assigned(Vypis.Platby[asgMain.row - 1]) then
@@ -467,7 +467,7 @@ begin
 end;
 
 
-procedure TForm1.btnZapisDoAbryClick(Sender: TObject);
+procedure TfmMain.btnZapisDoAbryClick(Sender: TObject);
 var
   OutputFile : TextFile;
   vysledek  : string;
@@ -505,7 +505,7 @@ begin
 end;
 
 
-procedure TForm1.provedAkcePoZmeneVS;
+procedure TfmMain.provedAkcePoZmeneVS;
 begin
     currPlatbaZVypisu.loadPredchoziPlatby(StrToInt(editPocetPredchPlateb.text));
     vyplnPredchoziPlatby;
@@ -521,7 +521,7 @@ end;
 
 {*********************** akce Input elementù **********************************}
 
-procedure TForm1.asgMainClick(Sender: TObject);
+procedure TfmMain.asgMainClick(Sender: TObject);
 begin
   urciCurrPlatbaZVypisu();
   vyplnPredchoziPlatby;
@@ -532,7 +532,7 @@ begin
 end;
 
 
-procedure TForm1.asgMainCellsChanged(Sender: TObject; R: TRect);
+procedure TfmMain.asgMainCellsChanged(Sender: TObject; R: TRect);
 begin
   if asgMain.col = 2 then //zmìna VS
   begin
@@ -548,7 +548,7 @@ begin
   end;
 end;
 
-procedure TForm1.asgPredchoziPlatbyButtonClick(Sender: TObject; ACol,
+procedure TfmMain.asgPredchoziPlatbyButtonClick(Sender: TObject; ACol,
   ARow: Integer);
 begin
   urciCurrPlatbaZVypisu();
@@ -557,7 +557,7 @@ begin
   provedAkcePoZmeneVS;
 end;
 
-procedure TForm1.asgMainKeyUp(Sender: TObject; var Key: Word;
+procedure TfmMain.asgMainKeyUp(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
  //showmessage('Stisknuto: ' + IntToStr(Key));
@@ -570,19 +570,19 @@ begin
 end;
 
 
-procedure TForm1.chbVsechnyDokladyClick(Sender: TObject);
+procedure TfmMain.chbVsechnyDokladyClick(Sender: TObject);
 begin
   vyplnDoklady;
 end;
 
 
-procedure TForm1.btnSparujPlatbyClick(Sender: TObject);
+procedure TfmMain.btnSparujPlatbyClick(Sender: TObject);
 begin
   sparujVsechnyPrichoziPlatby;
 end;
 
 
-procedure TForm1.Zprava(TextZpravy: string);
+procedure TfmMain.Zprava(TextZpravy: string);
 // do listboxu a logfile uloží èas a text zprávy
 begin
   Memo1.Lines.Add(FormatDateTime('dd.mm.yy hh:nn  ', Now) + TextZpravy);
@@ -593,7 +593,7 @@ begin
   CloseFile(F);  }
 end;
 
-procedure TForm1.asgMainGetAlignment(Sender: TObject; ARow, ACol: Integer;
+procedure TfmMain.asgMainGetAlignment(Sender: TObject; ARow, ACol: Integer;
   var HAlign: TAlignment; var VAlign: TVAlignment);
 begin
   if (ARow = 0) then HAlign := taCenter
@@ -604,7 +604,7 @@ begin
   end;
 end;
 
-procedure TForm1.asgNalezeneDokladyGetAlignment(Sender: TObject; ARow,
+procedure TfmMain.asgNalezeneDokladyGetAlignment(Sender: TObject; ARow,
   ACol: Integer; var HAlign: TAlignment; var VAlign: TVAlignment);
 begin
   if (ARow = 0) then HAlign := taCenter
@@ -615,7 +615,7 @@ begin
   end;
 end;
 
-procedure TForm1.asgPredchoziPlatbyGetAlignment(Sender: TObject; ARow,
+procedure TfmMain.asgPredchoziPlatbyGetAlignment(Sender: TObject; ARow,
   ACol: Integer; var HAlign: TAlignment; var VAlign: TVAlignment);
 begin
   case ACol of
@@ -623,7 +623,7 @@ begin
   end;
 end;
 
-procedure TForm1.asgPredchoziPlatbyVsGetAlignment(Sender: TObject; ARow,
+procedure TfmMain.asgPredchoziPlatbyVsGetAlignment(Sender: TObject; ARow,
   ACol: Integer; var HAlign: TAlignment; var VAlign: TVAlignment);
 begin
   case ACol of
@@ -631,35 +631,35 @@ begin
   end;
 end;
 
-procedure TForm1.btnReconnectClick(Sender: TObject);
+procedure TfmMain.btnReconnectClick(Sender: TObject);
 begin
     dbAbra.Reconnect;
 end;
 
 
-procedure TForm1.Button2Click(Sender: TObject);
+procedure TfmMain.Button2Click(Sender: TObject);
 begin
   Memo2.Clear;
   Memo2.Lines.Add(Parovatko.getPDParyAsText());
 end;
 
 
-procedure TForm1.chbZobrazitBezproblemoveClick(Sender: TObject);
+procedure TfmMain.chbZobrazitBezproblemoveClick(Sender: TObject);
 begin
   filtrujZobrazeniPlateb;
 end;
 
-procedure TForm1.chbZobrazitDebetyClick(Sender: TObject);
+procedure TfmMain.chbZobrazitDebetyClick(Sender: TObject);
 begin
   filtrujZobrazeniPlateb;
 end;
 
-procedure TForm1.chbZobrazitStandardniClick(Sender: TObject);
+procedure TfmMain.chbZobrazitStandardniClick(Sender: TObject);
 begin
   filtrujZobrazeniPlateb;
 end;
 
-procedure TForm1.asgMainCanEditCell(Sender: TObject; ARow, ACol: Integer;
+procedure TfmMain.asgMainCanEditCell(Sender: TObject; ARow, ACol: Integer;
   var CanEdit: Boolean);
 begin
   case ACol of
