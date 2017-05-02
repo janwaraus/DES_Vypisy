@@ -7,12 +7,12 @@ uses
   Dialogs, StdCtrls, Grids, AdvObj, BaseGrid, AdvGrid, StrUtils,
   DB, ComObj, AdvEdit, DateUtils, Math, ExtCtrls,
   ZAbstractRODataset, ZAbstractDataset, ZDataset, ZAbstractConnection, ZConnection,
-  DesUtils;
+  VypisyMain, DesUtils;
 
 type
   TfmPrirazeniPnp = class(TForm)
     asgPNP: TAdvStringGrid;
-    btnNactiVypis: TButton;
+    btnNactiPnp: TButton;
     btnNajdiPNP: TButton;
     Label1: TLabel;
     Edit1: TEdit;
@@ -20,8 +20,9 @@ type
     Edit2: TEdit;
     btnZmenRadekVypisu: TButton;
     MemoPNP: TMemo;
-    procedure btnNactiVypisClick(Sender: TObject);
+    procedure btnNactiPnpClick(Sender: TObject);
     procedure btnZmenRadekVypisuClick(Sender: TObject);
+    procedure asgPNPButtonClick(Sender: TObject; ACol, ARow: Integer);
   private
     { Private declarations }
   public
@@ -35,7 +36,7 @@ implementation
 
 {$R *.dfm}
 
-procedure TfmPrirazeniPnp.btnNactiVypisClick(Sender: TObject);
+procedure TfmPrirazeniPnp.btnNactiPnpClick(Sender: TObject);
 var
   SQLStr: AnsiString;
   Radek: integer;
@@ -75,12 +76,13 @@ begin
   + ' JOIN DocQueues D ON ii.DocQueue_ID = D.ID'
   + ' JOIN Periods P ON ii.Period_ID = P.ID'
 
-  + ' WHERE preplatkyVypis.amount <= (ii.LOCALAMOUNT - ii.LOCALPAIDAMOUNT - ii.LOCALCREDITAMOUNT + ii.LOCALPAIDCREDITAMOUNT) ' //èástka PNP je menší nebo rovna dluhu
+  //+ ' WHERE preplatkyVypis.amount <= (ii.LOCALAMOUNT - ii.LOCALPAIDAMOUNT - ii.LOCALCREDITAMOUNT + ii.LOCALPAIDCREDITAMOUNT) ' //èástka PNP je menší nebo rovna dluhu
++ ' WHERE preplatkyVypis.amount <= (ii.LOCALAMOUNT - ii.LOCALPAIDAMOUNT - ii.LOCALCREDITAMOUNT + ii.LOCALPAIDCREDITAMOUNT) ' //èástka PNP je menší nebo rovna dluhu
 
   ;
 
 
-  with qrAbra, asgPNP do begin
+  with fmMain.qrAbra, asgPNP do begin
     ClearNormalCells;
     RowCount := 2;
     Radek := 0;
@@ -131,5 +133,19 @@ begin
 
 end;
 
+
+procedure TfmPrirazeniPnp.asgPNPButtonClick(Sender: TObject; ACol,
+  ARow: Integer);
+begin
+  with asgPNP do begin
+    if ACol = 7 then begin
+      opravRadekVypisuPomociPDocument_ID(AbraOLE, Cells[4, ARow], Cells[6, ARow]);
+      MessageDlg('Oprava pøiøazením èísla dokladu hotová', mtInformation, [mbOk], 0);
+    end else begin
+      opravRadekVypisuPomociVS(AbraOLE, Cells[4, ARow], Cells[8, ARow]);
+      MessageDlg('Oprava pøiøazením VS hotová', mtInformation, [mbOk], 0);
+    end;
+  end;
+end;
 
 end.

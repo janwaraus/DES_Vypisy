@@ -2,7 +2,7 @@ program Vypisy;
 
 uses
   Forms,
-  VypisFIO in 'VypisFIO.pas' {fmMain},
+  VypisyMain in 'VypisyMain.pas' {fmMain},
   DesUtils in 'DesUtils.pas',
   uTVypis in 'uTVypis.pas',
   uTPlatbaZVypisu in 'uTPlatbaZVypisu.pas',
@@ -16,5 +16,6 @@ begin
   Application.Initialize;
   Application.Title := 'Vypisy';
   Application.CreateForm(TfmMain, fmMain);
+  Application.CreateForm(TfmPrirazeniPnp, fmPrirazeniPnp);
   Application.Run;
 end.

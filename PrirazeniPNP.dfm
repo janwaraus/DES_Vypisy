@@ -1,6 +1,6 @@
 object fmPrirazeniPnp: TfmPrirazeniPnp
-  Left = 817
-  Top = 277
+  Left = 337
+  Top = 9
   Width = 1207
   Height = 612
   Caption = 'P'#345'i'#345'azen'#237' PNP'
@@ -13,7 +13,7 @@ object fmPrirazeniPnp: TfmPrirazeniPnp
   OldCreateOrder = False
   DesignSize = (
     1191
-    574)
+    573)
   PixelsPerInch = 96
   TextHeight = 13
   object Label1: TLabel
@@ -54,6 +54,7 @@ object fmPrirazeniPnp: TfmPrirazeniPnp
     ScrollBars = ssBoth
     TabOrder = 0
     HoverRowCells = [hcNormal, hcSelected]
+    OnButtonClick = asgPNPButtonClick
     ActiveCellFont.Charset = DEFAULT_CHARSET
     ActiveCellFont.Color = clWindowText
     ActiveCellFont.Height = -11
@@ -182,14 +183,14 @@ object fmPrirazeniPnp: TfmPrirazeniPnp
       67
       68)
   end
-  object btnNactiVypis: TButton
+  object btnNactiPnp: TButton
     Left = 8
     Top = 16
     Width = 75
     Height = 25
     Caption = 'NactiPNP'
     TabOrder = 1
-    OnClick = btnNactiVypisClick
+    OnClick = btnNactiPnpClick
   end
   object btnNajdiPNP: TButton
     Left = 608

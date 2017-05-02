@@ -8,6 +8,8 @@ uses
 
 function prevedCisloUctuNaText(cisloU : string) : string;
 procedure opravRadekVypisuPomociPDocument_ID(AbraOLE : variant; Radek_ID : string; PDocument_ID : string);
+procedure opravRadekVypisuPomociPDocument_IDaVS(AbraOLE : variant;
+      Radek_ID : string; PDocument_ID : string; VS : string);
 procedure opravRadekVypisuPomociVS(AbraOLE : variant; Radek_ID : string; VS : string);
 function removeLeadingZeros(const Value: string): string;
 function LeftPad(value:integer; length:integer=8; pad:char='0'): string; overload;
@@ -46,6 +48,29 @@ var
 begin
   BStatementRow_Object := AbraOLE.CreateObject('@BankStatementRow');
   BStatementRow_Data := AbraOLE.CreateValues('@BankStatementRow');
+  
+  BStatementRow_Data := BStatementRow_Object.GetValues(Radek_ID);
+  BStatementRow_Data.ValueByName('PDocument_ID') := PDocument_ID;
+  BStatementRow_Object.UpdateValues(Radek_ID, BStatementRow_Data);
+end;
+
+procedure opravRadekVypisuPomociPDocument_IDaVS(AbraOLE : variant;
+      Radek_ID : string; PDocument_ID : string; VS : string);
+var
+  BStatement_Object,
+  BStatement_Data,
+  BStatementRow_Object,
+  BStatementRow_Data,
+  BStatementRow_Coll : variant;
+begin
+  BStatementRow_Object := AbraOLE.CreateObject('@BankStatementRow');
+  BStatementRow_Data := AbraOLE.CreateValues('@BankStatementRow');
+
+  BStatementRow_Data := BStatementRow_Object.GetValues(Radek_ID);
+  BStatementRow_Data.ValueByName('VarSymbol') := ''; //odstranit VS aby se Abra chytla pøi pøiøazení
+  BStatementRow_Object.UpdateValues(Radek_ID, BStatementRow_Data);
+
+
   BStatementRow_Data := BStatementRow_Object.GetValues(Radek_ID);
   BStatementRow_Data.ValueByName('PDocument_ID') := PDocument_ID;
   BStatementRow_Object.UpdateValues(Radek_ID, BStatementRow_Data);
