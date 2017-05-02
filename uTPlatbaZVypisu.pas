@@ -7,7 +7,7 @@ uses
   Dialogs, StdCtrls, Grids, AdvObj, BaseGrid, AdvGrid, StrUtils,
   DB, ComObj, AdvEdit, DateUtils, Math, ExtCtrls,
   ZAbstractRODataset, ZAbstractDataset, ZDataset, ZAbstractConnection, ZConnection,
-  DesUtils;
+  AbraEntities, DesUtils;
 
 {
   SysUtils, Classes, DB, StrUtils, ZAbstractRODataset, ZAbstractDataset, ZDataset,
@@ -66,7 +66,6 @@ type
   end;
 
 
-
   TPredchoziPlatba = class
   public
     VS : string[10];
@@ -76,26 +75,6 @@ type
     cisloUctuKZobrazeni : string[21];
     Datum  : double;
     FirmName : string;
-    constructor create(qrAbra : TZQuery);
-  end;
-
-  TDoklad = class
-  public
-    ID : string[10];
-    DocQueue_ID : string[10];
-    Firm_ID : string[10];
-    FirmName : string[100];
-    DatumDokladu  : double;
-    DatumSplatnosti  : double;
-    //AccDocQueue_ID : string[10];
-    //FirmOffice_ID : string[10];
-    //DocUUID : string[26];
-    DocumentType : string[2];
-    Castka  : Currency;
-    CastkaZaplaceno  : Currency;
-    CastkaDobropisovano  : Currency;
-    CastkaNezaplaceno  : Currency;
-    CisloDokladu : string[20];
     constructor create(qrAbra : TZQuery);
   end;
 
@@ -232,9 +211,9 @@ begin
             + 'firms.Name as FirmName '
             + 'FROM ISSUEDINVOICES ii ';
     SQLiiJoin :=
-              'JOIN Firms ON ii.Firm_ID = Firms.Id '
-            + 'JOIN DocQueues D ON ii.DocQueue_ID = D.Id '
-            + 'JOIN Periods P ON ii.Period_ID = P.Id ';
+              'JOIN Firms ON ii.Firm_ID = Firms.ID '
+            + 'JOIN DocQueues D ON ii.DocQueue_ID = D.ID '
+            + 'JOIN Periods P ON ii.Period_ID = P.ID ';
     SQLiiWhere := 'WHERE ii.VarSymbol = ''' + self.VS  + ''' ';
     SQLiiJenNezaplacene :=  'AND (ii.LOCALAMOUNT - ii.LOCALPAIDAMOUNT - ii.LOCALCREDITAMOUNT + ii.LOCALPAIDCREDITAMOUNT) <> 0 ';
     SQLiiOrder := 'order by ii.DocDate$Date DESC';
@@ -259,9 +238,9 @@ begin
             + 'firms.Name as FirmName '
             + 'FROM ISSUEDDINVOICES ii ';
     SQLiiJoin :=
-              'JOIN Firms ON ii.Firm_ID = Firms.Id '
-            + 'JOIN DocQueues D ON ii.DocQueue_ID = D.Id '
-            + 'JOIN Periods P ON ii.Period_ID = P.Id ';
+              'JOIN Firms ON ii.Firm_ID = Firms.ID '
+            + 'JOIN DocQueues D ON ii.DocQueue_ID = D.ID '
+            + 'JOIN Periods P ON ii.Period_ID = P.ID ';
     SQLiiWhere := 'WHERE ii.VarSymbol = ''' + self.VS  + ''' ';
     SQLiiJenNezaplacene :=  'AND (ii.LOCALAMOUNT - ii.LOCALPAIDAMOUNT) <> 0 ';
     SQLiiOrder := 'order by ii.DocDate$Date DESC';
@@ -289,9 +268,9 @@ begin
             + 'ii.DUEDATE$DATE, ii.ACCDOCQUEUE_ID, ii.FIRMOFFICE_ID, ii.DOCUUID, firms.Name as FirmName '
             + 'FROM ISSUEDINVOICES ii ';
     SQLStr := SQLStr
-            + 'JOIN Firms ON ii.Firm_ID = Firms.Id '
-            + 'JOIN DocQueues D ON ii.DocQueue_ID = D.Id '
-            + 'JOIN Periods P ON ii.Period_ID = P.Id '
+            + 'JOIN Firms ON ii.Firm_ID = Firms.ID '
+            + 'JOIN DocQueues D ON ii.DocQueue_ID = D.ID '
+            + 'JOIN Periods P ON ii.Period_ID = P.ID '
             + 'WHERE ii.VarSymbol = ''' + self.VS  + ''' ';
     SQLStr := SQLStr + 'order by ii.DocDate$Date DESC';
     SQL.Text := SQLStr;
@@ -404,23 +383,5 @@ begin
  end;
 end;
 
-{** class TDoklad **}
-
-constructor TDoklad.create(qrAbra : TZQuery);
-begin
- with qrAbra do begin
-  self.ID := FieldByName('ID').AsString;
-  self.Firm_ID := FieldByName('Firm_ID').AsString;
-  self.FirmName := FieldByName('FirmName').AsString;
-  self.DatumDokladu := FieldByName('DocDate$Date').asFloat;
-  self.Castka := FieldByName('LocalAmount').AsCurrency;
-  self.CastkaZaplaceno := FieldByName('LocalPaidAmount').AsCurrency
-                                - FieldByName('LocalPaidCreditAmount').AsCurrency;;
-  self.CastkaDobropisovano := FieldByName('LocalCreditAmount').AsCurrency;
-  self.CastkaNezaplaceno := self.Castka - self.CastkaZaplaceno - self.CastkaDobropisovano;
-  self.CisloDokladu := FieldByName('CisloDokladu').AsString;
-  self.DocumentType := FieldByName('DocumentType').AsString;
- end; 
-end;
 
 end.

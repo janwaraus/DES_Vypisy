@@ -5,7 +5,7 @@ interface
 uses
   SysUtils, Variants, Classes, Controls, StrUtils,
   Windows, Messages, Dialogs, Forms,
-  uTVypis, uTPlatbaZVypisu, DesUtils;
+  uTVypis, uTPlatbaZVypisu, AbraEntities, DesUtils;
 
 
 type

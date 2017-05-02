@@ -7,6 +7,8 @@ uses
   //RTTI;
 
 function prevedCisloUctuNaText(cisloU : string) : string;
+procedure opravRadekVypisuPomociPDocument_ID(AbraOLE : variant; Radek_ID : string; PDocument_ID : string);
+procedure opravRadekVypisuPomociVS(AbraOLE : variant; Radek_ID : string; VS : string);
 function removeLeadingZeros(const Value: string): string;
 function LeftPad(value:integer; length:integer=8; pad:char='0'): string; overload;
 function LeftPad(value: string; length:integer=8; pad:char='0'): string; overload;
@@ -32,6 +34,36 @@ begin
   if cisloU = '171336270/0300' then Result := 'DES ÈSOB';
   if cisloU = '2107333410/2700' then Result := 'PayU';
   if cisloU = '160987123/0300' then Result := 'Èeská Pošta';
+end;
+
+procedure opravRadekVypisuPomociPDocument_ID(AbraOLE : variant; Radek_ID : string; PDocument_ID : string);
+var
+  BStatement_Object,
+  BStatement_Data,
+  BStatementRow_Object,
+  BStatementRow_Data,
+  BStatementRow_Coll : variant;
+begin
+  BStatementRow_Object := AbraOLE.CreateObject('@BankStatementRow');
+  BStatementRow_Data := AbraOLE.CreateValues('@BankStatementRow');
+  BStatementRow_Data := BStatementRow_Object.GetValues(Radek_ID);
+  BStatementRow_Data.ValueByName('PDocument_ID') := PDocument_ID;
+  BStatementRow_Object.UpdateValues(Radek_ID, BStatementRow_Data);
+end;
+
+procedure opravRadekVypisuPomociVS(AbraOLE : variant; Radek_ID : string; VS : string);
+var
+  BStatement_Object,
+  BStatement_Data,
+  BStatementRow_Object,
+  BStatementRow_Data,
+  BStatementRow_Coll : variant;
+begin
+  BStatementRow_Object := AbraOLE.CreateObject('@BankStatementRow');
+  BStatementRow_Data := AbraOLE.CreateValues('@BankStatementRow');
+  BStatementRow_Data := BStatementRow_Object.GetValues(Radek_ID);
+  BStatementRow_Data.ValueByName('VarSymbol') := VS;
+  BStatementRow_Object.UpdateValues(Radek_ID, BStatementRow_Data);
 end;
 
 // odstraní ze stringu nuly na zaèátku
