@@ -7,7 +7,7 @@ uses
   Dialogs, StdCtrls, Grids, AdvObj, BaseGrid, AdvGrid, StrUtils, //DEShelpers
   DB, ComObj, AdvEdit, DateUtils, Math, ExtCtrls,
   ZAbstractRODataset, ZAbstractDataset, ZDataset, ZAbstractConnection, ZConnection,
-  uTVypis, uTPlatbaZVypisu, uTParovatko, DesUtils;
+  uTVypis, uTPlatbaZVypisu, uTParovatko;
 
 type
   TfmMain = class(TForm)
@@ -45,6 +45,7 @@ type
     Edit2: TEdit;
     Label1: TLabel;
     Label2: TLabel;
+    btnShowPrirazeniPnpForm: TButton;
 
     procedure btnNactiClick(Sender: TObject);
     procedure btnZapisDoAbryClick(Sender: TObject);
@@ -81,6 +82,7 @@ type
     procedure btnNactiVypisClick(Sender: TObject);
     procedure btnNactiRadekVypisuClick(Sender: TObject);
     procedure asgPNPButtonClick(Sender: TObject; ACol, ARow: Integer);
+    procedure btnShowPrirazeniPnpFormClick(Sender: TObject);
 
   public
     procedure vyplnPrichoziPlatby;
@@ -105,7 +107,7 @@ var
 
 implementation
 
-uses AbraEntities;
+uses AbraEntities, DesUtils, PrirazeniPNP;
 
 {$R *.dfm}
 
@@ -813,7 +815,9 @@ begin
   + ' JOIN DocQueues D ON ii.DocQueue_ID = D.ID'
   + ' JOIN Periods P ON ii.Period_ID = P.ID'
 
-  + ' WHERE (ii.LOCALAMOUNT - ii.LOCALPAIDAMOUNT - ii.LOCALCREDITAMOUNT + ii.LOCALPAIDCREDITAMOUNT) <> 0';
+  + ' WHERE (ii.LOCALAMOUNT - ii.LOCALPAIDAMOUNT - ii.LOCALCREDITAMOUNT + ii.LOCALPAIDCREDITAMOUNT) <> 0'
+  + ' AND preplatkyVypis.amount <= (ii.LOCALAMOUNT - ii.LOCALPAIDAMOUNT - ii.LOCALCREDITAMOUNT + ii.LOCALPAIDCREDITAMOUNT)'
+  ;
 
 
   with qrAbra, asgPNP do begin
@@ -900,14 +904,14 @@ begin
 
   //BStatementRow_Data.ValueByName('PDocument_ID') := '69HT000101';  //hartman - staci rict na ktery doklad se má párovat a VS a firma se už zmìní/doplní v Abøe automaticky
 
-  //BStatementRow_Data.ValueByName('PDocument_ID') := Edit2.Text;
+  BStatementRow_Data.ValueByName('PDocument_ID') := Edit2.Text;
                                                                     
 
   //BStatementRow_Data.ValueByName('BankStatementRow_ID') := '';
 
-  BStatementRow_Data.ValueByName('VarSymbol') := '2016021429'; //mleziva
+  //BStatementRow_Data.ValueByName('VarSymbol') := '2016021429'; //mleziva
 
-  Memo2.Lines.Add(BStatementRow_Data.Value[IndexByName(BStatementRow_Data, 'Amount')]);
+  //Memo2.Lines.Add(BStatementRow_Data.Value[IndexByName(BStatementRow_Data, 'Amount')]);
 
 
 
@@ -918,5 +922,15 @@ begin
 
 end;
 
+
+procedure TfmMain.btnShowPrirazeniPnpFormClick(Sender: TObject);
+begin
+  with fmPrirazeniPnp.Create(self) do
+  try
+    ShowModal;
+  finally
+    Free;
+  end;
+end;
 
 end.

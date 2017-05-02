@@ -1,6 +1,6 @@
 object fmMain: TfmMain
-  Left = 512
-  Top = 41
+  Left = 917
+  Top = 108
   Width = 1468
   Height = 1192
   Caption = 'Na'#269'ten'#237', oprava a ulo'#382'en'#237' bankovn'#237'ho v'#253'pisu'
@@ -23,7 +23,7 @@ object fmMain: TfmMain
   object lblHlavicka: TLabel
     Left = 111
     Top = 2
-    Width = 115
+    Width = 15
     Height = 16
     Anchors = [akLeft, akTop, akRight, akBottom]
     Caption = '...'
@@ -805,7 +805,7 @@ object fmMain: TfmMain
       Width = 97
       Height = 21
       TabOrder = 13
-      Text = '4MPD000101'
+      Text = 'VJMD000101'
     end
     object Edit2: TEdit
       Left = 8
@@ -813,7 +813,16 @@ object fmMain: TfmMain
       Width = 97
       Height = 21
       TabOrder = 14
-      Text = 'GNET000101'
+      Text = '2AIT000101'
+    end
+    object btnShowPrirazeniPnpForm: TButton
+      Left = 8
+      Top = 456
+      Width = 81
+      Height = 25
+      Caption = 'P'#345'i'#345'azen'#237' PNP'
+      TabOrder = 15
+      OnClick = btnShowPrirazeniPnpFormClick
     end
   end
   object asgPNP: TAdvStringGrid

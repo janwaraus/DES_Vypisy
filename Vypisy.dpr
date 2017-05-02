@@ -2,12 +2,13 @@ program Vypisy;
 
 uses
   Forms,
-  VypisFIO in 'VypisFIO.pas' {Form1},
+  VypisFIO in 'VypisFIO.pas' {fmMain},
   DesUtils in 'DesUtils.pas',
   uTVypis in 'uTVypis.pas',
   uTPlatbaZVypisu in 'uTPlatbaZVypisu.pas',
   uTParovatko in 'uTParovatko.pas',
-  AbraEntities in 'AbraEntities.pas';
+  AbraEntities in 'AbraEntities.pas',
+  PrirazeniPNP in 'PrirazeniPNP.pas' {fmPrirazeniPnp};
 
 {$R *.res}
 
