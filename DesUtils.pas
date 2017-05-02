@@ -61,6 +61,11 @@ var
 begin
   BStatementRow_Object := AbraOLE.CreateObject('@BankStatementRow');
   BStatementRow_Data := AbraOLE.CreateValues('@BankStatementRow');
+
+  BStatementRow_Data := BStatementRow_Object.GetValues(Radek_ID);
+  BStatementRow_Data.ValueByName('VarSymbol') := ''; //odstranit VS aby se Abra chytla pøi pøiøazení
+  BStatementRow_Object.UpdateValues(Radek_ID, BStatementRow_Data);
+
   BStatementRow_Data := BStatementRow_Object.GetValues(Radek_ID);
   BStatementRow_Data.ValueByName('VarSymbol') := VS;
   BStatementRow_Object.UpdateValues(Radek_ID, BStatementRow_Data);

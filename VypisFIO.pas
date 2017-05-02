@@ -849,7 +849,6 @@ begin
       opravRadekVypisuPomociPDocument_ID(AbraOLE, Cells[4, ARow], Cells[6, ARow]);
       MessageDlg('Oprava pøiøazením èísla dokladu hotová', mtInformation, [mbOk], 0);
     end else begin
-      opravRadekVypisuPomociVS(AbraOLE, Cells[4, ARow], '');
       opravRadekVypisuPomociVS(AbraOLE, Cells[4, ARow], Cells[8, ARow]);
       MessageDlg('Oprava pøiøazením VS hotová', mtInformation, [mbOk], 0);
     end;
