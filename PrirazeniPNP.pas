@@ -75,8 +75,8 @@ begin
   + ' JOIN DocQueues D ON ii.DocQueue_ID = D.ID'
   + ' JOIN Periods P ON ii.Period_ID = P.ID'
 
-  + ' WHERE (ii.LOCALAMOUNT - ii.LOCALPAIDAMOUNT - ii.LOCALCREDITAMOUNT + ii.LOCALPAIDCREDITAMOUNT) <> 0'
-  + ' AND preplatkyVypis.amount <= (ii.LOCALAMOUNT - ii.LOCALPAIDAMOUNT - ii.LOCALCREDITAMOUNT + ii.LOCALPAIDCREDITAMOUNT)'
+  + ' WHERE preplatkyVypis.amount <= (ii.LOCALAMOUNT - ii.LOCALPAIDAMOUNT - ii.LOCALCREDITAMOUNT + ii.LOCALPAIDCREDITAMOUNT) ' //èástka PNP je menší nebo rovna dluhu
+
   ;
 
 
