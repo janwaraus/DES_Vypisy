@@ -99,11 +99,27 @@ begin
       Cells[4, Radek] := FieldByName('RadekVypisu_ID').AsString;
       Cells[5, Radek] := FieldByName('CisloDokladu').AsString;
       Cells[6, Radek] := FieldByName('Doklad_ID').AsString;
-      AddButton(7,Radek,45,18,'zmìò d',haCenter,vaCenter);
-      Cells[8, Radek] := FieldByName('Doklad_VS').AsString;
-      AddButton(9,Radek,45,18,'zmìò VS',haCenter,vaCenter);
+      Cells[7, Radek] := FieldByName('DocumentType').AsString;
+      AddButton(8,Radek,45,18,'zmìò d',haCenter,vaCenter);
+      Cells[9, Radek] := FieldByName('Doklad_VS').AsString;
+      AddButton(10,Radek,45,18,'zmìò VS',haCenter,vaCenter);
       Application.ProcessMessages;
       Next;
+    end;
+  end;
+end;
+
+
+procedure TfmPrirazeniPnp.asgPNPButtonClick(Sender: TObject; ACol,
+  ARow: Integer);
+begin
+  with asgPNP do begin
+    if ACol = 8 then begin
+      opravRadekVypisuPomociPDocument_ID(AbraOLE, Cells[4, ARow], Cells[6, ARow], Cells[7, ARow]);
+      MessageDlg('Oprava pøiøazením èísla dokladu hotová', mtInformation, [mbOk], 0);
+    end else begin
+      opravRadekVypisuPomociVS(AbraOLE, Cells[4, ARow], Cells[9, ARow]);
+      MessageDlg('Oprava pøiøazením VS hotová', mtInformation, [mbOk], 0);
     end;
   end;
 end;
@@ -131,21 +147,6 @@ begin
 
   BStatementRow_Object.UpdateValues(RadekVypisuID, BStatementRow_Data);
 
-end;
-
-
-procedure TfmPrirazeniPnp.asgPNPButtonClick(Sender: TObject; ACol,
-  ARow: Integer);
-begin
-  with asgPNP do begin
-    if ACol = 7 then begin
-      opravRadekVypisuPomociPDocument_ID(AbraOLE, Cells[4, ARow], Cells[6, ARow]);
-      MessageDlg('Oprava pøiøazením èísla dokladu hotová', mtInformation, [mbOk], 0);
-    end else begin
-      opravRadekVypisuPomociVS(AbraOLE, Cells[4, ARow], Cells[8, ARow]);
-      MessageDlg('Oprava pøiøazením VS hotová', mtInformation, [mbOk], 0);
-    end;
-  end;
 end;
 
 end.

@@ -7,7 +7,7 @@ uses
   //RTTI;
 
 function prevedCisloUctuNaText(cisloU : string) : string;
-procedure opravRadekVypisuPomociPDocument_ID(AbraOLE : variant; Radek_ID : string; PDocument_ID : string);
+procedure opravRadekVypisuPomociPDocument_ID(AbraOLE : variant; Radek_ID, PDocument_ID, DocumentType : string);
 procedure opravRadekVypisuPomociPDocument_IDaVS(AbraOLE : variant;
       Radek_ID : string; PDocument_ID : string; VS : string);
 procedure opravRadekVypisuPomociVS(AbraOLE : variant; Radek_ID : string; VS : string);
@@ -38,7 +38,7 @@ begin
   if cisloU = '160987123/0300' then Result := 'Èeská Pošta';
 end;
 
-procedure opravRadekVypisuPomociPDocument_ID(AbraOLE : variant; Radek_ID : string; PDocument_ID : string);
+procedure opravRadekVypisuPomociPDocument_ID(AbraOLE : variant; Radek_ID, PDocument_ID, DocumentType : string);
 var
   BStatement_Object,
   BStatement_Data,
@@ -50,8 +50,14 @@ begin
   BStatementRow_Data := AbraOLE.CreateValues('@BankStatementRow');
   
   BStatementRow_Data := BStatementRow_Object.GetValues(Radek_ID);
+  BStatementRow_Data.ValueByName('PDocumentType') := DocumentType;
   BStatementRow_Data.ValueByName('PDocument_ID') := PDocument_ID;
-  BStatementRow_Object.UpdateValues(Radek_ID, BStatementRow_Data);
+  try
+    BStatementRow_Object.UpdateValues(Radek_ID, BStatementRow_Data);
+  except
+    on E: Exception do begin
+    end;
+  end;
 end;
 
 procedure opravRadekVypisuPomociPDocument_IDaVS(AbraOLE : variant;
