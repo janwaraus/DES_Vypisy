@@ -54,7 +54,7 @@ begin
   self.DatumDokladu := FieldByName('DocDate$Date').asFloat;
   self.Castka := FieldByName('LocalAmount').AsCurrency;
   self.CastkaZaplaceno := FieldByName('LocalPaidAmount').AsCurrency
-                                - FieldByName('LocalPaidCreditAmount').AsCurrency;;
+                                - FieldByName('LocalPaidCreditAmount').AsCurrency;
   self.CastkaDobropisovano := FieldByName('LocalCreditAmount').AsCurrency;
   self.CastkaNezaplaceno := self.Castka - self.CastkaZaplaceno - self.CastkaDobropisovano;
   self.CisloDokladu := FieldByName('CisloDokladu').AsString;

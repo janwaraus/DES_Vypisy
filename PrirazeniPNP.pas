@@ -13,20 +13,30 @@ type
   TfmPrirazeniPnp = class(TForm)
     asgPNP: TAdvStringGrid;
     btnNactiPnp: TButton;
-    btnNajdiPNP: TButton;
+    btnPriradPnp: TButton;
     Label1: TLabel;
     Edit1: TEdit;
     Label2: TLabel;
     Edit2: TEdit;
     btnZmenRadekVypisu: TButton;
     MemoPNP: TMemo;
+    btnNactiPnpInfo: TButton;
+    chbNacistPnp: TCheckBox;
     procedure btnNactiPnpClick(Sender: TObject);
+    procedure btnNactiPnpInfoClick(Sender: TObject);
     procedure btnZmenRadekVypisuClick(Sender: TObject);
     procedure asgPNPButtonClick(Sender: TObject; ACol, ARow: Integer);
-  private
-    { Private declarations }
+
+    procedure asgPNPGetCellColor(Sender: TObject; ARow, ACol: Integer;
+      AState: TGridDrawState; ABrush: TBrush; AFont: TFont);
+    procedure asgPNPGetAlignment(Sender: TObject; ARow, ACol: Integer;
+      var HAlign: TAlignment; var VAlign: TVAlignment);
+    procedure FormShow(Sender: TObject);
+    procedure btnPriradPnpClick(Sender: TObject);
   public
-    { Public declarations }
+    procedure nactiPNPinfo;
+    procedure nactiPNP;
+    procedure priradPNP;
   end;
 
 var
@@ -36,7 +46,209 @@ implementation
 
 {$R *.dfm}
 
-procedure TfmPrirazeniPnp.btnNactiPnpClick(Sender: TObject);
+
+
+{
+  try
+    BStatementRow_Object.UpdateValues(Radek_ID, BStatementRow_Data);
+  except
+    on E: Exception do begin
+     MessageDlg('Oprava pøiøazením èísla dokladu se posrala', mtInformation, [mbOk], 0);
+    end;
+  end;
+    }
+
+procedure TfmPrirazeniPnp.asgPNPButtonClick(Sender: TObject; ACol,
+  ARow: Integer);
+begin
+  with asgPNP do begin
+    if ACol = 8 then
+    try
+      opravRadekVypisuPomociPDocument_ID(AbraOLE, Cells[4, ARow], Cells[6, ARow], Cells[7, ARow]);
+      MessageDlg('Oprava pøiøazením èísla dokladu hotová', mtInformation, [mbOk], 0);
+    except
+      on E: Exception do
+        MessageDlg('Oprava pøiøazením èísla dokladu SELHALA', mtInformation, [mbOk], 0);
+    end else begin
+      opravRadekVypisuPomociVS(AbraOLE, Cells[4, ARow], Cells[9, ARow]);
+      MessageDlg('Oprava pøiøazením VS hotová', mtInformation, [mbOk], 0);
+    end;
+  end;
+end;
+
+procedure TfmPrirazeniPnp.btnZmenRadekVypisuClick(Sender: TObject);
+var
+  i : integer;
+  RadekVypisuID : string;
+  BStatement_Object,
+  BStatement_Data,
+  BStatementRow_Object,
+  BStatementRow_Data,
+  BStatementRow_Coll  : variant;
+begin
+
+  RadekVypisuID := Edit1.Text;
+
+  BStatementRow_Object := AbraOLE.CreateObject('@BankStatementRow');
+  BStatementRow_Data := AbraOLE.CreateValues('@BankStatementRow');
+  BStatementRow_Data := BStatementRow_Object.GetValues(RadekVypisuID);
+  BStatementRow_Data.ValueByName('PDocument_ID') := Edit2.Text;
+
+  for i := 0 to BStatementRow_Data.Count - 1 do
+    MemoPNP.Lines.Add(inttostr(i) + 'r ' + BStatementRow_Data.Names[i] + ': ' + vartostr( BStatementRow_Data.Value[i]));
+
+  BStatementRow_Object.UpdateValues(RadekVypisuID, BStatementRow_Data);
+
+end;
+
+procedure TfmPrirazeniPnp.nactiPNP;
+var
+  SQLStr: AnsiString;
+  radek, sloupec: integer;
+begin
+// nalezení zákazníkù s pøeplatky na 325 z Abry
+
+  SQLStr := 'SELECT ADQ.Code || ''-'' || G1.OrdNumber || ''/'' || P.Code AS DokladVypis, G1.Amount, F.Name, G1.Text,'
+  + ' bs.ID as Vypis_ID, bs2.ID as RadekVypisu_ID,  bs2.FIRM_ID, bs2.varsymbol as RadekVypisu_VS'
+  + ' FROM GENERALLEDGER G1, BANKSTATEMENTS bs, BANKSTATEMENTS2 bs2,'
+  + '   AccDocQueues ADQ, Periods P, Firms F'
+  + ' WHERE G1.CreditAccount_ID = ''A300000101'''
+  + ' AND NOT EXISTS (SELECT * FROM GENERALLEDGER G2 WHERE G2.AccGroup_ID = G1.AccGroup_ID AND G2.ID <> G1.ID)'
+  + ' AND ADQ.Id = G1.AccDocQueue_ID'
+  + ' AND P.Id = G1.Period_ID'
+  + ' AND F.Id = G1.Firm_ID'
+
+  + ' AND G1.AccDocQueue_ID = bs.AccDocQueue_ID'
+  + ' AND G1.Period_ID = bs.Period_ID'
+  + ' AND G1.ORDNUMBER = bs.ORDNUMBER'
+
+  + ' AND bs2.PARENT_ID = bs.ID'
+  + ' AND bs2.FIRM_ID = G1.FIRM_ID'
+  + ' AND bs2.AMOUNT = G1.AMOUNT'
+  + ' AND bs2.PDOCUMENT_ID IS NULL'
+  + ' AND bs2.ISMULTIPAYMENTROW = ''N'''
+  + ' AND bs2.Amount > 5'
+  ;
+
+
+  with fmMain.qrAbra, asgPNP do begin
+    ClearNormalCells;
+    RowCount := 2;
+    radek := 0;
+    SQL.Text := SQLStr;
+    Open;
+    while not EOF do begin
+      //opravRadekVypisuPomociPDocument_ID(AbraOLE, FieldByName('RadekVypisu_ID').AsString, FieldByName('Doklad_ID').AsString);
+      Inc(radek);
+      RowCount := radek + 1;
+      Cells[0, radek] := FieldByName('DokladVypis').AsString; //ucetni doklad
+      //Cells[1, radek] := format('%m', [FieldByName('Amount').AsCurrency]);
+      //Cells[1, radek] := FieldByName('Amount').AsString;
+      Floats[1, radek] := FieldByName('Amount').AsFloat;
+      Cells[2, radek] := FieldByName('Name').AsString;
+      Cells[3, radek] := FieldByName('Text').AsString;
+      //Cells[2, radek] := floattostr(Floats[1, radek]);
+      //Cells[3, radek] := Cells[1, radek];
+      Cells[4, radek] := FieldByName('RadekVypisu_ID').AsString;
+      Cells[5, radek] := FieldByName('FIRM_ID').AsString;
+
+      Application.ProcessMessages;
+      Next;
+    end;
+    Close;
+
+    for radek := 1 to RowCount - 1 do begin
+      SQLStr :=   'SELECT'
+      + ' ii.ID as Doklad_ID, ii.DOCQUEUE_ID, ii.DOCDATE$DATE, ii.VARSYMBOL as Doklad_VS, ii.FIRM_ID, ii.DESCRIPTION,'
+      + ' D.Code || ''-'' || II.OrdNumber || ''/'' || substring(P.Code from 3 for 2) as CisloDokladu, D.DOCUMENTTYPE,'
+      + ' (ii.LOCALAMOUNT - ii.LOCALPAIDAMOUNT - ii.LOCALCREDITAMOUNT + ii.LOCALPAIDCREDITAMOUNT) as Dluh,'
+      + ' (ii.LOCALPAIDAMOUNT - ii.LOCALPAIDCREDITAMOUNT) as Zaplaceno, ii.LOCALAMOUNT'
+      + ' from ISSUEDINVOICES ii'
+
+      + ' JOIN DocQueues D ON ii.DocQueue_ID = D.ID'
+      + ' JOIN Periods P ON ii.Period_ID = P.ID'
+
+      + ' WHERE ii.Firm_ID = ''' + Cells[5, Radek] + ''''
+      + ' AND (ii.LOCALAMOUNT - ii.LOCALPAIDAMOUNT - ii.LOCALCREDITAMOUNT + ii.LOCALPAIDCREDITAMOUNT)*100 >= ';
+      if not chbNacistPnp.Checked then
+        SQLStr := SQLStr + FloatToStr(Floats[1, radek]*100) //dluh je vìtší èi roven pøeplatku
+      else
+        SQLStr := SQLStr + '0.01'; //dluh je vìtší èi roven pøeplatku
+      SQLStr := SQLStr + ' ORDER BY dluh';
+
+      SQL.Text := SQLStr;
+      Open;
+      if not EOF then begin
+
+        Cells[6, radek] := FieldByName('CisloDokladu').AsString;
+        Cells[7, radek] := FieldByName('Doklad_ID').AsString;
+        Cells[8, Radek] := FieldByName('Doklad_VS').AsString;
+        Cells[9, Radek] := DateToStr(FieldByName('DOCDATE$DATE').AsFloat);
+        //Cells[7, Radek] := FieldByName('DocumentType').AsString;
+        //AddButton(9,Radek,45,18,'zmìò d',haCenter,vaCenter);
+
+        Cells[10, radek] := format('%m', [FieldByName('LocalAmount').AsCurrency]);
+        Cells[11, radek] := format('%m', [FieldByName('Zaplaceno').AsCurrency]);
+        Cells[12, radek] := format('%m', [FieldByName('Dluh').AsCurrency]);
+
+        for sloupec := 7 to 12 do asgPNP.Colors[sloupec, radek] := clCream;
+
+        Application.ProcessMessages;
+        Next;
+      end;
+    end;
+    Close;
+
+  end;
+end;
+
+
+procedure TfmPrirazeniPnp.priradPNP;
+var
+  SQLStr: AnsiString;
+  Radek: integer;
+begin
+
+  with fmMain.qrAbra, asgPNP do begin
+
+    for radek := 1 to RowCount - 1 do
+    if Cells[6, radek] <> '' then begin
+      try
+        opravRadekVypisuPomociPDocument_ID(AbraOLE, Cells[4, radek], Cells[7, radek], '03'); //DocumentTypr je vždy 03 pro faktury
+        Cells[13, radek] := 'opr. ok';
+      except
+        on E: Exception do
+        Cells[13, radek] := 'opr. fail';
+      end;
+      Application.ProcessMessages;
+    end;
+
+    fmMain.dbAbra.Reconnect;
+    for radek := 1 to RowCount - 1 do begin
+      SQLStr :=   'SELECT'
+      + ' (ii.LOCALPAIDAMOUNT - ii.LOCALPAIDCREDITAMOUNT) as Zaplaceno,'
+      + ' (ii.LOCALAMOUNT - ii.LOCALPAIDAMOUNT - ii.LOCALCREDITAMOUNT + ii.LOCALPAIDCREDITAMOUNT) as Dluh'
+      + ' from ISSUEDINVOICES ii'
+      + ' WHERE ii.ID = ''' + Cells[7, radek]  + ''''
+      ;
+
+      SQL.Text := SQLStr;
+      Open;
+      if not EOF then begin
+
+        Cells[14, radek] := format('%m', [FieldByName('Zaplaceno').AsCurrency]);
+        Cells[15, radek] := format('%m', [FieldByName('Dluh').AsCurrency]);
+
+        Application.ProcessMessages;
+        Next;
+      end;
+    end;
+    Close;
+
+  end;
+end;
+
+procedure TfmPrirazeniPnp.nactiPNPinfo;
 var
   SQLStr: AnsiString;
   Radek: integer;
@@ -76,8 +288,8 @@ begin
   + ' JOIN DocQueues D ON ii.DocQueue_ID = D.ID'
   + ' JOIN Periods P ON ii.Period_ID = P.ID'
 
-  //+ ' WHERE preplatkyVypis.amount <= (ii.LOCALAMOUNT - ii.LOCALPAIDAMOUNT - ii.LOCALCREDITAMOUNT + ii.LOCALPAIDCREDITAMOUNT) ' //èástka PNP je menší nebo rovna dluhu
-+ ' WHERE preplatkyVypis.amount <= (ii.LOCALAMOUNT - ii.LOCALPAIDAMOUNT - ii.LOCALCREDITAMOUNT + ii.LOCALPAIDCREDITAMOUNT) ' //èástka PNP je menší nebo rovna dluhu
+  + ' WHERE 0 < (ii.LOCALAMOUNT - ii.LOCALPAIDAMOUNT - ii.LOCALCREDITAMOUNT + ii.LOCALPAIDCREDITAMOUNT) ' // dluh vìtší než nula
+  // + ' WHERE preplatkyVypis.amount <= (ii.LOCALAMOUNT - ii.LOCALPAIDAMOUNT - ii.LOCALCREDITAMOUNT + ii.LOCALPAIDCREDITAMOUNT) ' //èástka PNP je menší nebo rovna dluhu
 
   ;
 
@@ -93,16 +305,23 @@ begin
       Inc(Radek);
       RowCount := Radek + 1;
       Cells[0, Radek] := FieldByName('DokladVypis').AsString; //ucetni doklad
-      Floats[1, Radek] := FieldByName('Amount').AsFloat;
+      Cells[1, radek] := format('%m', [FieldByName('Amount').AsCurrency]);
       Cells[2, Radek] := FieldByName('Name').AsString;
       Cells[3, Radek] := FieldByName('Text').AsString;
       Cells[4, Radek] := FieldByName('RadekVypisu_ID').AsString;
-      Cells[5, Radek] := FieldByName('CisloDokladu').AsString;
-      Cells[6, Radek] := FieldByName('Doklad_ID').AsString;
-      Cells[7, Radek] := FieldByName('DocumentType').AsString;
-      AddButton(8,Radek,45,18,'zmìò d',haCenter,vaCenter);
-      Cells[9, Radek] := FieldByName('Doklad_VS').AsString;
-      AddButton(10,Radek,45,18,'zmìò VS',haCenter,vaCenter);
+      Cells[5, radek] := FieldByName('FIRM_ID').AsString;
+      Cells[6, radek] := FieldByName('CisloDokladu').AsString;
+      Cells[7, radek] := FieldByName('Doklad_ID').AsString;
+      Cells[8, Radek] := FieldByName('Doklad_VS').AsString;
+      //Cells[7, Radek] := FieldByName('DocumentType').AsString;
+      Cells[9, Radek] := DateToStr(FieldByName('DOCDATE$DATE').AsFloat);
+      Cells[10, radek] := format('%m', [FieldByName('LocalAmount').AsCurrency]);
+      Cells[11, radek] := format('%m', [FieldByName('LocalPaidAmount').AsCurrency
+                                - FieldByName('LocalPaidCreditAmount').AsCurrency]);
+      Cells[12, radek] := format('%m', [FieldByName('Dluh').AsCurrency]);
+
+
+      //AddButton(12,Radek,45,18,'zmìò VS',haCenter,vaCenter);
       Application.ProcessMessages;
       Next;
     end;
@@ -110,43 +329,56 @@ begin
 end;
 
 
-procedure TfmPrirazeniPnp.asgPNPButtonClick(Sender: TObject; ACol,
-  ARow: Integer);
+{*********************** akce Input elementù **********************************}
+
+procedure TfmPrirazeniPnp.btnNactiPnpClick(Sender: TObject);
 begin
-  with asgPNP do begin
-    if ACol = 8 then begin
-      opravRadekVypisuPomociPDocument_ID(AbraOLE, Cells[4, ARow], Cells[6, ARow], Cells[7, ARow]);
-      MessageDlg('Oprava pøiøazením èísla dokladu hotová', mtInformation, [mbOk], 0);
-    end else begin
-      opravRadekVypisuPomociVS(AbraOLE, Cells[4, ARow], Cells[9, ARow]);
-      MessageDlg('Oprava pøiøazením VS hotová', mtInformation, [mbOk], 0);
+  nactiPNP;
+end;
+
+procedure TfmPrirazeniPnp.btnNactiPnpInfoClick(Sender: TObject);
+begin
+  nactiPNPinfo;
+end;
+
+procedure TfmPrirazeniPnp.btnPriradPnpClick(Sender: TObject);
+begin
+  priradPNP;
+end;
+
+
+
+procedure TfmPrirazeniPnp.asgPNPGetCellColor(Sender: TObject; ARow,
+  ACol: Integer; AState: TGridDrawState; ABrush: TBrush; AFont: TFont);
+begin
+  if (ARow > 0) then begin
+    case ACol of
+      1,12: AFont.Style := [fsBold];
+    end;
+    case ACol of
+      1: AFont.Color := clBlue;
+    end;
+    case ACol of
+      12: AFont.Color := clFuchsia;
+    end;
+    case ACol of
+      7..8:// asgPNP.Colors[ACol, ARow] := clCream;
     end;
   end;
 end;
 
-procedure TfmPrirazeniPnp.btnZmenRadekVypisuClick(Sender: TObject);
-var
-  i : integer;
-  RadekVypisuID : string;
-  BStatement_Object,
-  BStatement_Data,
-  BStatementRow_Object,
-  BStatementRow_Data,
-  BStatementRow_Coll  : variant;
+procedure TfmPrirazeniPnp.asgPNPGetAlignment(Sender: TObject; ARow,
+  ACol: Integer; var HAlign: TAlignment; var VAlign: TVAlignment);
 begin
-
-  RadekVypisuID := Edit1.Text;
-
-  BStatementRow_Object := AbraOLE.CreateObject('@BankStatementRow');
-  BStatementRow_Data := AbraOLE.CreateValues('@BankStatementRow');
-  BStatementRow_Data := BStatementRow_Object.GetValues(RadekVypisuID);
-  BStatementRow_Data.ValueByName('PDocument_ID') := Edit2.Text;
-
-  for i := 0 to BStatementRow_Data.Count - 1 do
-    MemoPNP.Lines.Add(inttostr(i) + 'r ' + BStatementRow_Data.Names[i] + ': ' + vartostr( BStatementRow_Data.Value[i]));
-
-  BStatementRow_Object.UpdateValues(RadekVypisuID, BStatementRow_Data);
-
+  case ACol of
+    0,1,6,9..12: HAlign := taRightJustify;
+  end;
 end;
+
+procedure TfmPrirazeniPnp.FormShow(Sender: TObject);
+begin
+  nactiPNP;
+end;
+
 
 end.

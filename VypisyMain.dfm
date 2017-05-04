@@ -1,8 +1,8 @@
 object fmMain: TfmMain
-  Left = 147
-  Top = 9
-  Width = 1372
-  Height = 806
+  Left = 394
+  Top = 126
+  Width = 1326
+  Height = 870
   Caption = 'Na'#269'ten'#237', oprava a ulo'#382'en'#237' bankovn'#237'ho v'#253'pisu'
   Color = clBtnFace
   Constraints.MinHeight = 721
@@ -16,16 +16,15 @@ object fmMain: TfmMain
   OnClose = FormClose
   OnShow = FormShow
   DesignSize = (
-    1356
-    767)
+    1310
+    832)
   PixelsPerInch = 96
   TextHeight = 13
   object lblHlavicka: TLabel
-    Left = 111
-    Top = 2
-    Width = -81
-    Height = -58
-    Anchors = [akLeft, akTop, akRight, akBottom]
+    Left = 112
+    Top = 5
+    Width = 745
+    Height = 19
     Caption = '...'
     Color = clMoneyGreen
     Font.Charset = EASTEUROPE_CHARSET
@@ -40,12 +39,13 @@ object fmMain: TfmMain
   object asgMain: TAdvStringGrid
     Left = 110
     Top = 26
-    Width = 763
-    Height = 587
+    Width = 753
+    Height = 651
     Cursor = crDefault
     Anchors = [akLeft, akTop, akBottom]
     ColCount = 8
     DefaultRowHeight = 20
+    Enabled = False
     FixedCols = 0
     RowCount = 5
     Font.Charset = DEFAULT_CHARSET
@@ -174,8 +174,8 @@ object fmMain: TfmMain
   end
   object pnBottom: TPanel
     Left = 0
-    Top = 621
-    Width = 1356
+    Top = 686
+    Width = 1310
     Height = 146
     Align = alBottom
     TabOrder = 1
@@ -200,6 +200,7 @@ object fmMain: TfmMain
       Cursor = crDefault
       ColCount = 9
       DefaultRowHeight = 20
+      Enabled = False
       FixedCols = 0
       RowCount = 7
       Font.Charset = DEFAULT_CHARSET
@@ -332,14 +333,14 @@ object fmMain: TfmMain
     end
   end
   object pnRight: TPanel
-    Left = 883
+    Left = 863
     Top = 0
-    Width = 473
-    Height = 621
+    Width = 447
+    Height = 686
     Align = alRight
     TabOrder = 2
     object lblPrechoziPlatbyZUctu: TLabel
-      Left = 9
+      Left = 6
       Top = 10
       Width = 129
       Height = 13
@@ -352,14 +353,14 @@ object fmMain: TfmMain
       ParentFont = False
     end
     object lbPocetPlateb: TLabel
-      Left = 333
-      Top = 8
+      Left = 354
+      Top = 9
       Width = 60
       Height = 13
       Caption = 'Po'#269'et plateb'
     end
     object lblPrechoziPlatbySVs: TLabel
-      Left = 5
+      Left = 2
       Top = 217
       Width = 120
       Height = 13
@@ -372,19 +373,20 @@ object fmMain: TfmMain
       ParentFont = False
     end
     object Memo1: TMemo
-      Left = 6
+      Left = 3
       Top = 406
       Width = 435
-      Height = 27
+      Height = 131
       TabOrder = 0
     end
     object asgPredchoziPlatby: TAdvStringGrid
-      Left = 4
+      Left = 1
       Top = 28
       Width = 417
       Height = 183
       Cursor = crDefault
       DefaultRowHeight = 20
+      Enabled = False
       FixedCols = 0
       RowCount = 8
       Font.Charset = DEFAULT_CHARSET
@@ -501,13 +503,14 @@ object fmMain: TfmMain
         161)
     end
     object asgPredchoziPlatbyVs: TAdvStringGrid
-      Left = 5
+      Left = 2
       Top = 233
       Width = 444
       Height = 169
       Cursor = crDefault
       ColCount = 4
       DefaultRowHeight = 20
+      Enabled = False
       FixedCols = 0
       RowCount = 8
       Font.Charset = DEFAULT_CHARSET
@@ -621,18 +624,18 @@ object fmMain: TfmMain
         150)
     end
     object editPocetPredchPlateb: TEdit
-      Left = 402
-      Top = 5
+      Left = 423
+      Top = 6
       Width = 13
       Height = 21
       TabOrder = 3
       Text = '7'
     end
     object Memo2: TMemo
-      Left = 13
-      Top = 448
+      Left = 2
+      Top = 552
       Width = 436
-      Height = 665
+      Height = 129
       Lines.Strings = (
         'Memo2')
       TabOrder = 4
@@ -642,29 +645,15 @@ object fmMain: TfmMain
     Left = 0
     Top = 0
     Width = 109
-    Height = 621
+    Height = 686
     Align = alLeft
     TabOrder = 3
     object lbZobrazit: TLabel
       Left = 8
-      Top = 96
+      Top = 72
       Width = 38
       Height = 13
       Caption = 'Zobrazit'
-    end
-    object Label1: TLabel
-      Left = 8
-      Top = 488
-      Width = 74
-      Height = 13
-      Caption = 'ID radku vypisu'
-    end
-    object Label2: TLabel
-      Left = 8
-      Top = 536
-      Width = 52
-      Height = 13
-      Caption = 'ID dokladu'
     end
     object btnNacti: TButton
       Left = 22
@@ -683,10 +672,11 @@ object fmMain: TfmMain
     end
     object btnZapisDoAbry: TButton
       Left = 22
-      Top = 188
+      Top = 164
       Width = 65
       Height = 21
       Caption = '&Do Abry'
+      Enabled = False
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
@@ -698,7 +688,7 @@ object fmMain: TfmMain
     end
     object editVstupniSoubor: TEdit
       Left = 22
-      Top = 388
+      Top = 444
       Width = 73
       Height = 21
       TabOrder = 2
@@ -706,7 +696,7 @@ object fmMain: TfmMain
     end
     object btnSparujPlatby: TButton
       Left = 12
-      Top = 338
+      Top = 394
       Width = 75
       Height = 17
       Caption = 'Sp'#225'ruj platby'
@@ -715,7 +705,7 @@ object fmMain: TfmMain
     end
     object btnReconnect: TButton
       Left = 24
-      Top = 306
+      Top = 362
       Width = 65
       Height = 25
       Caption = 'Reconnect'
@@ -724,7 +714,7 @@ object fmMain: TfmMain
     end
     object Button2: TButton
       Left = 6
-      Top = 362
+      Top = 418
       Width = 97
       Height = 17
       Caption = 'Uka'#382' sp'#225'rov'#225'n'#237
@@ -733,7 +723,7 @@ object fmMain: TfmMain
     end
     object chbZobrazitBezproblemove: TCheckBox
       Left = 8
-      Top = 118
+      Top = 94
       Width = 93
       Height = 17
       Caption = 'bezprobl'#233'mov'#233
@@ -744,7 +734,7 @@ object fmMain: TfmMain
     end
     object chbZobrazitDebety: TCheckBox
       Left = 8
-      Top = 152
+      Top = 128
       Width = 65
       Height = 17
       Caption = 'debety'
@@ -755,7 +745,7 @@ object fmMain: TfmMain
     end
     object chbZobrazitStandardni: TCheckBox
       Left = 8
-      Top = 134
+      Top = 110
       Width = 93
       Height = 17
       Caption = 'standardn'#237
@@ -764,46 +754,19 @@ object fmMain: TfmMain
       TabOrder = 8
       OnClick = chbZobrazitStandardniClick
     end
-    object btnBold: TButton
-      Left = 16
-      Top = 408
-      Width = 75
-      Height = 25
-      Caption = 'btnBold'
-      TabOrder = 9
-    end
-    object btnNactiRadekVypisu: TButton
-      Left = 8
-      Top = 576
-      Width = 97
-      Height = 25
-      Caption = 'zm'#283'nRadekVypisu'
-      TabOrder = 10
-      OnClick = btnNactiRadekVypisuClick
-    end
-    object Edit1: TEdit
-      Left = 8
-      Top = 504
-      Width = 97
-      Height = 21
-      TabOrder = 11
-      Text = '3CCD000101'
-    end
-    object Edit2: TEdit
-      Left = 8
-      Top = 552
-      Width = 97
-      Height = 21
-      TabOrder = 12
-      Text = '2AIT000101'
-    end
     object btnShowPrirazeniPnpForm: TButton
-      Left = 16
-      Top = 216
-      Width = 81
+      Left = 8
+      Top = 256
+      Width = 89
       Height = 25
       Caption = 'P'#345'i'#345'azen'#237' PNP'
-      TabOrder = 13
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clBlue
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = [fsBold]
+      ParentFont = False
+      TabOrder = 9
       OnClick = btnShowPrirazeniPnpFormClick
     end
   end

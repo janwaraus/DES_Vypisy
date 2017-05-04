@@ -32,10 +32,12 @@ type
     procedure vytvorPDPar(Platba : TPlatbaZVypisu; Doklad : TDoklad;
                 Castka: currency; popis : string; vazbaNaDoklad : boolean);
     function zapisDoAbry() : string;
+    function zapisDoAbryNadvakrat() : string;    
     function getUzSparovano(Doklad_ID : string) : currency;
     function getPDParyAsText() : AnsiString;
     function getPDParyPlatbyAsText(currPlatba : TPlatbaZVypisu) : AnsiString;
     function getPDPar(currPlatba : TPlatbaZVypisu; currDoklad_ID: string) : TPlatbaDokladPar;
+    procedure postOprava();
 
   end;
 
@@ -186,51 +188,51 @@ begin
 end;
 
 
-function TParovatko.zapisDoAbry() : string;
+function TParovatko.zapisDoAbryNadvakrat() : string;
 var
-  i : integer;
+  i, j : integer;
   iPDPar : TPlatbaDokladPar;
   BStatement_Object,
   BStatement_Data,
   BStatementRow_Object,
   BStatementRow_Data,
-  BStatementRow_Coll,
-  NewID : variant;
+  BStatement_Data_Coll,
+  newID, newRadekID  : variant;
+  mmm : ansistring;
 begin
 
   if (listPlatbaDokladPar.Count = 0) then Exit;
 
-  Result := 'Zaps·n do ABRY v˝pis pro ˙Ëet ' + removeLeadingZeros(self.Vypis.abraBankaccount.name);
-
-  {
-  DocQueues_IDs := TStringList.Create;
-  DocQueues_IDs.Values['2100098382'] := '2S00000101'; //BF Fio
-  DocQueues_IDs.Values['171336270'] :='N000000101'; //BV »SOB
-  DocQueues_IDs.Values['2800098383'] := '1U00000101'; //BS Fio spo¯ÌcÌ
-  DocQueues_IDs.Values['2389210008000000'] := '1Z00000101'; //BP PayU
-
-  BankAccounts_IDs := TStringList.Create;
-  BankAccounts_IDs.Values['2100098382'] := '1400000101'; //BF Fio
-  BankAccounts_IDs.Values['171336270'] :='1000000101'; //BV »SOB
-  BankAccounts_IDs.Values['2800098383'] := '1500000101'; //BS Fio spo¯ÌcÌ
-  BankAccounts_IDs.Values['2389210008000000'] := '1800000101'; //BP PayU
-  }
+  Result := 'Z·pis do ABRY v˝pisu pro ˙Ëet ' + removeLeadingZeros(self.Vypis.abraBankaccount.name);
 
   BStatement_Object:= AbraOLE.CreateObject('@BankStatement');
   BStatement_Data:= AbraOLE.CreateValues('@BankStatement');
   BStatement_Object.PrefillValues(BStatement_Data);
   BStatement_Data.ValueByName('DocQueue_ID') := self.Vypis.abraBankaccount.bankStatementDocqueueId;
   BStatement_Data.ValueByName('Period_ID') := '1L20000101'; //rok 2017, TODO automatika
-
   BStatement_Data.ValueByName('BankAccount_ID') := self.Vypis.abraBankaccount.id;
   BStatement_Data.ValueByName('ExternalNumber') := self.Vypis.PoradoveCislo;
-
-
   BStatement_Data.ValueByName('DocDate$DATE') := self.Vypis.Datum;
   BStatement_Data.ValueByName('CreatedAt$DATE') := IntToStr(Trunc(Date));
+  try begin
+      newID := BStatement_Object.CreateNewFromValues(BStatement_Data); //NewID je ID Abry v BANKSTATEMENTS
+      Result := Result + ' »Ìslo v˝pisu je ' + NewID;
+    end;
+  except on E: exception do
+    begin
+      Application.MessageBox(PChar('Problemmm ' + ^M + E.Message), 'AbraOLE');
+    end;
+  end;
+
+  BStatement_Object:= AbraOLE.CreateObject('@BankStatement'); //mozna nemusi byt uz mame
+  BStatement_Data:= AbraOLE.CreateValues('@BankStatement');
+  BStatement_Data := BStatement_Object.GetValues(newID);
 
   BStatementRow_Object := AbraOLE.CreateObject('@BankStatementRow');
-  BStatementRow_Coll := BStatement_Data.Value[IndexByName(BStatement_Data, 'Rows')];
+  BStatement_Data_Coll := BStatement_Data.Value[IndexByName(BStatement_Data, 'Rows')];
+
+
+
 
   for i := 0 to listPlatbaDokladPar.Count - 1 do
   begin
@@ -250,36 +252,184 @@ begin
       BStatementRow_Data.ValueByName('Firm_ID') := iPDPar.Doklad.Firm_ID
     else // if iPDPar.Platba.Debet then
       BStatementRow_Data.ValueByName('Firm_ID') := '3Y90000101';  // DES
-    
+
     if iPDPar.vazbaNaDoklad AND Assigned(iPDPar.Doklad) then //Doklad vyplnime jen jestli chceme vazbu. Doklad m·me i kdyû vazbu nechceme - kv˘li Firm_ID
     begin
-      BStatementRow_Data.ValueByName('VarSymbol') := iPDPar.Platba.VS;
+      //BStatementRow_Data.ValueByName('VarSymbol') := iPDPar.Platba.VS;
       //BStatementRow_Data.ValueByName('PAmount') := iPDPar.CastkaPouzita;
-      //BStatementRow_Data.ValueByName('PDocument_ID') := iPDPar.Doklad.ID;
-      //BStatementRow_Data.ValueByName('PDocumentType') := iPDPar.Doklad.DocumentType; //todo
-      //BStatementRow_Data.ValueByName('BusOrder_ID') := '8D00000101'; //todo
-      //BStatementRow_Data.ValueByName('BusTransaction_ID') := '4L00000101'; //todo
-      //BStatementRow_Data.ValueByName('SpecSymbol') := iPDPar.Platba.SS;
+      BStatementRow_Data.ValueByName('PDocumentType') := iPDPar.Doklad.DocumentType;
+      BStatementRow_Data.ValueByName('PDocument_ID') := iPDPar.Doklad.ID;
     end;
+
+
+    for j := 0 to BStatementRow_Data.Count - 1 do begin
+      mmm := mmm + inttostr(j) + 'r ' + BStatementRow_Data.Names[j] + ': ' + vartostr( BStatementRow_Data.Value[j]) + sLineBreak;
+    end;
+    //MessageDlg(mmm, mtInformation, [mbOk], 0);
 
     if iPDPar.Platba.Debet then
     begin
       BStatementRow_Data.ValueByName('VarSymbol') := iPDPar.Platba.VS; //pro debety aby vûdy z˘stal VS
     end;
 
-    BStatementRow_Coll.Add(BStatementRow_Data);
+    BStatement_Data_Coll.Add(BStatementRow_Data);
   end;
 
-  try
-    NewID := BStatement_Object.CreateNewFromValues(BStatement_Data); //NewID je ID Abry v BANKSTATEMENTS
+  try begin
+      BStatement_Object.UpdateValues(newID, BStatement_Data);
+      //MessageDlg('Updatnul jsem', mtInformation, [mbOk], 0);
+    end;
   except on E: exception do
     begin
-      Application.MessageBox(PChar('Problemmm ' + ^M + E.Message), 'AbraOLE');
-      Application.Terminate;
+      MessageDlg('Problem - neupdatnul jsem', mtInformation, [mbOk], 0);
     end;
   end;
 
-  Result := Result + ' »Ìslo v˝pisu je ' + NewID;
+  {
+  //opravit ¯·dky v Ab¯e kde se nesp·rovalo
+  for i := 0 to listPlatbaDokladPar.Count - 1 do
+  try
+    iPDPar := TPlatbaDokladPar(listPlatbaDokladPar[i]);
+    if iPDPar.vazbaNaDoklad AND Assigned(iPDPar.Doklad) then
+    begin
+      opravRadekVypisuPomociPDocument_ID(AbraOLE, iPDPar.AbraBS2_ID, iPDPar.Doklad.ID, iPDPar.Doklad.ID);
+      MessageDlg('ÿ·dek ' + iPDPar.AbraBS2_ID + ' byl opraven', mtInformation, [mbOk], 0);
+    end;
+  except
+    on E: Exception do
+    MessageDlg('Oprava ¯·dku ' + iPDPar.AbraBS2_ID + ' se nepovedla!', mtInformation, [mbOk], 0);
+  end;
+  }
+
+end;
+
+function TParovatko.zapisDoAbry() : string;
+var
+  i, j : integer;
+  iPDPar : TPlatbaDokladPar;
+  BStatement_Object,
+  BStatement_Data,
+  BStatementRow_Object,
+  BStatementRow_Data,
+  BStatement_Data_Coll,
+  NewID : variant;
+  mmm : ansistring;
+begin
+
+  if (listPlatbaDokladPar.Count = 0) then Exit;
+
+  Result := 'Z·pis do ABRY v˝pisu pro ˙Ëet ' + self.Vypis.abraBankaccount.name + '.';
+
+  BStatement_Object:= AbraOLE.CreateObject('@BankStatement');
+  BStatement_Data:= AbraOLE.CreateValues('@BankStatement');
+  BStatement_Object.PrefillValues(BStatement_Data);
+  BStatement_Data.ValueByName('DocQueue_ID') := self.Vypis.abraBankaccount.bankStatementDocqueueId;
+  BStatement_Data.ValueByName('Period_ID') := '1L20000101'; //rok 2017, TODO automatika
+  BStatement_Data.ValueByName('BankAccount_ID') := self.Vypis.abraBankaccount.id;
+  BStatement_Data.ValueByName('ExternalNumber') := self.Vypis.PoradoveCislo;
+  BStatement_Data.ValueByName('DocDate$DATE') := self.Vypis.Datum;
+  BStatement_Data.ValueByName('CreatedAt$DATE') := IntToStr(Trunc(Date));
+
+  BStatementRow_Object := AbraOLE.CreateObject('@BankStatementRow');
+  BStatement_Data_Coll := BStatement_Data.Value[IndexByName(BStatement_Data, 'Rows')];
+
+  for i := 0 to listPlatbaDokladPar.Count - 1 do
+  begin
+    iPDPar := TPlatbaDokladPar(listPlatbaDokladPar[i]);
+
+    BStatementRow_Data := AbraOLE.CreateValues('@BankStatementRow');
+    BStatementRow_Object.PrefillValues(BStatementRow_Data);
+    BStatementRow_Data.ValueByName('Amount') := iPDPar.CastkaPouzita;
+    BStatementRow_Data.ValueByName('Credit') := IfThen(iPDPar.Platba.Kredit,'1','0');
+    BStatementRow_Data.ValueByName('BankAccount') := iPDPar.Platba.cisloUctu;
+    BStatementRow_Data.ValueByName('Text') := iPDPar.popis + ' ' + iPDPar.Platba.nazevKlienta;
+    BStatementRow_Data.ValueByName('SpecSymbol') := iPDPar.Platba.SS;
+    BStatementRow_Data.ValueByName('DocDate$DATE') := iPDPar.Platba.Datum;
+    BStatementRow_Data.ValueByName('AccDate$DATE') := iPDPar.Platba.Datum;
+
+    if Assigned(iPDPar.Doklad) then
+      BStatementRow_Data.ValueByName('Firm_ID') := iPDPar.Doklad.Firm_ID
+    else
+      BStatementRow_Data.ValueByName('Firm_ID') := '3Y90000101';  // pokud nenÌ doklad, tak aù je firma DES. jinak se tam d· jako default "drobn˝ n·kup"
+
+    if iPDPar.vazbaNaDoklad AND Assigned(iPDPar.Doklad) then //Doklad vyplnime jen jestli chceme vazbu. Doklad m·me i kdyû vazbu nechceme - kv˘li Firm_ID
+    begin
+      //BStatementRow_Data.ValueByName('VarSymbol') := iPDPar.Platba.VS;
+      //BStatementRow_Data.ValueByName('PAmount') := iPDPar.CastkaPouzita;
+      BStatementRow_Data.ValueByName('PDocumentType') := iPDPar.Doklad.DocumentType;
+      BStatementRow_Data.ValueByName('PDocument_ID') := iPDPar.Doklad.ID;
+    end;
+
+    if iPDPar.Platba.Debet then
+      BStatementRow_Data.ValueByName('VarSymbol') := iPDPar.Platba.VS; //pro debety aby vûdy z˘stal VS
+
+    {
+    mmm := 'ID novÈho ¯·dku: ' + iPDPar.AbraBS2_ID + sLineBreak;
+    for j := 0 to BStatementRow_Data.Count - 1 do begin
+      mmm := mmm + inttostr(j) + 'r ' + BStatementRow_Data.Names[j] + ': ' + vartostr( BStatementRow_Data.Value[j]) + sLineBreak;
+    end;
+    MessageDlg(mmm, mtInformation, [mbOk], 0);
+    }
+
+    BStatement_Data_Coll.Add(BStatementRow_Data);
+  end;
+
+  try begin
+    NewID := BStatement_Object.CreateNewFromValues(BStatement_Data); //NewID je ID Abry v BANKSTATEMENTS
+    Result := Result + ' »Ìslo v˝pisu je ' + NewID;
+  end;
+  except on E: exception do
+    begin
+      Application.MessageBox(PChar('Problemmm ' + ^M + E.Message), 'AbraOLE');
+      Result := 'Chyba p¯i zakl·d·nÌ v˝pisu';
+    end;
+  end;
+
+
+  //opravit ¯·dky v Ab¯e kde se nesp·rovalo
+  {
+  for i := 0 to listPlatbaDokladPar.Count - 1 do
+  try
+    iPDPar := TPlatbaDokladPar(listPlatbaDokladPar[i]);
+    if iPDPar.vazbaNaDoklad AND Assigned(iPDPar.Doklad) then
+    begin
+      opravRadekVypisuPomociPDocument_ID(AbraOLE, iPDPar.AbraBS2_ID, iPDPar.Doklad.ID, iPDPar.Doklad.ID);
+      MessageDlg('ÿ·dek ' + iPDPar.AbraBS2_ID + ' byl opraven', mtInformation, [mbOk], 0);
+    end;
+  except
+    on E: Exception do
+    MessageDlg('Oprava ¯·dku ' + iPDPar.AbraBS2_ID + ' se nepovedla!', mtInformation, [mbOk], 0);
+  end;
+  }
+
+end;
+
+
+procedure TParovatko.postOprava();
+var
+  i, j : integer;
+  iPDPar : TPlatbaDokladPar;
+  BStatement_Object,
+  BStatement_Data,
+  BStatementRow_Object,
+  BStatementRow_Data,
+  BStatement_Data_Coll,
+  NewID : variant;
+  mmm : ansistring;
+begin
+  //opravit ¯·dky v Ab¯e kde se nesp·rovalo
+  for i := 0 to listPlatbaDokladPar.Count - 1 do
+  try
+    iPDPar := TPlatbaDokladPar(listPlatbaDokladPar[i]);
+    if iPDPar.vazbaNaDoklad AND Assigned(iPDPar.Doklad) then
+    begin
+      opravRadekVypisuPomociPDocument_ID(AbraOLE, '', iPDPar.Doklad.ID, iPDPar.Doklad.ID);
+      //MessageDlg('ÿ·dek ' + iPDPar.AbraBS2_ID + ' byl opraven', mtInformation, [mbOk], 0);
+    end;
+  except
+    on E: Exception do
+    //MessageDlg('Oprava ¯·dku ' + iPDPar.AbraBS2_ID + ' se nepovedla!', mtInformation, [mbOk], 0);
+  end;
 end;
 
 

@@ -3,7 +3,7 @@ unit DesUtils;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, StrUtils;
+  Windows, Messages, SysUtils, Variants, Classes, StrUtils,Dialogs, StdCtrls, Grids, AdvObj;
   //RTTI;
 
 function prevedCisloUctuNaText(cisloU : string) : string;
@@ -52,12 +52,16 @@ begin
   BStatementRow_Data := BStatementRow_Object.GetValues(Radek_ID);
   BStatementRow_Data.ValueByName('PDocumentType') := DocumentType;
   BStatementRow_Data.ValueByName('PDocument_ID') := PDocument_ID;
+  BStatementRow_Object.UpdateValues(Radek_ID, BStatementRow_Data);
+  {
   try
     BStatementRow_Object.UpdateValues(Radek_ID, BStatementRow_Data);
   except
     on E: Exception do begin
+     MessageDlg('Oprava pøiøazením èísla dokladu se posrala', mtInformation, [mbOk], 0);
     end;
   end;
+  }
 end;
 
 procedure opravRadekVypisuPomociPDocument_IDaVS(AbraOLE : variant;

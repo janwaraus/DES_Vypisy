@@ -35,13 +35,7 @@ type
     chbZobrazitStandardni: TCheckBox;
     lblPrechoziPlatbySVs: TLabel;
     lblPrechoziPlatbyZUctu: TLabel;
-    btnBold: TButton;
     Memo2: TMemo;
-    btnNactiRadekVypisu: TButton;
-    Edit1: TEdit;
-    Edit2: TEdit;
-    Label1: TLabel;
-    Label2: TLabel;
     btnShowPrirazeniPnpForm: TButton;
 
     procedure btnNactiClick(Sender: TObject);
@@ -75,7 +69,6 @@ type
       var AEditor: TEditorType);
     procedure asgMainGetCellColor(Sender: TObject; ARow, ACol: Integer;
       AState: TGridDrawState; ABrush: TBrush; AFont: TFont);
-    procedure btnNactiRadekVypisuClick(Sender: TObject);
     procedure btnShowPrirazeniPnpFormClick(Sender: TObject);
 
   public
@@ -250,7 +243,7 @@ begin
                         + IntToStr(Vypis.poradoveCislo) + ' (max è. je ' + IntToStr(Vypis.maxExistujiciPoradoveCislo) + '). Plateb: '
                         + IntToStr(Vypis.Platby.Count);
         if not Vypis.isNavazujeNaRadu() then
-          Dialogs.MessageDlg('Doklad è. '+ IntToStr(Vypis.poradoveCislo) + ' nenavazuje na øadu!',mtInformation, [mbOK], 0);
+         //todo Dialogs.MessageDlg('Doklad è. '+ IntToStr(Vypis.poradoveCislo) + ' nenavazuje na øadu!',mtInformation, [mbOK], 0);
 
         asgMainClick(nil);
       end;
@@ -704,60 +697,6 @@ begin
 end;
 
 
-
-
-procedure TfmMain.btnNactiRadekVypisuClick(Sender: TObject);
-var
-  i : integer;
-  RadekVypisuID : string;
-  BStatement_Object,
-  BStatement_Data,
-  BStatementRow_Object,
-  BStatementRow_Data,
-  BStatementRow_Coll  : variant;
-begin
-
-  //BStatement_Object := AbraOLE.CreateObject('@BankStatement');
-  //BStatement_Data := AbraOLE.CreateValues('@BankStatement');
-  //BStatement_Data := BStatement_Object.GetValues('29E2000101');
-
-
-
-  //Memo2.Lines.Add(BStatementRow_Data.Value[IndexByName(BStatementRow_Data, 'Amount')]);
-  //BStatementRow_Data.ValueByName('Amount') := '746';
-  //BStatementRow_Data.ValueByName('VarSymbol') := '20082931';  ///kraus
-  //BStatementRow_Data.ValueByName('VarSymbol') := '2012020090';  ///dvoracek
-  //BStatementRow_Data.ValueByName('VarSymbol') := '20092830';  ///benes 2 nezaplacene
-
-
-
-  //BStatementRow_Data.ValueByName('Firm_ID') := 'DPG0000101';  //husner
-
-  //BStatementRow_Data.ValueByName('PDocument_ID') := '884T000101';  //benes leden FO1-1332/17
-  //BStatementRow_Data.ValueByName('PDocument_ID') := 'GNET000101';  //benes unor FO1-6908/17
-
-  //BStatementRow_Data.ValueByName('PDocument_ID') := '69HT000101';  //hartman - staci rict na ktery doklad se má párovat a VS a firma se už zmìní/doplní v Abøe automaticky
-
-  //BStatementRow_Data.ValueByName('PDocument_ID') := Edit2.Text;
-
-
-  RadekVypisuID := Edit1.Text;
-  BStatementRow_Object := AbraOLE.CreateObject('@BankStatementRow');
-  BStatementRow_Data := AbraOLE.CreateValues('@BankStatementRow');
-  BStatementRow_Data := BStatementRow_Object.GetValues(RadekVypisuID);
-
-  //opravRadekVypisuPomociPDocument_ID(AbraOLE, Edit1.Text, Edit2.Text);
-  opravRadekVypisuPomociVS(AbraOLE, Edit1.Text, '20092830');
-
-  //BStatementRow_Data.ValueByName('BankStatementRow_ID') := '';
-  //BStatementRow_Data.ValueByName('VarSymbol') := '2016021429'; //mleziva
-  //Memo2.Lines.Add(BStatementRow_Data.Value[IndexByName(BStatementRow_Data, 'Amount')]);
-
-  for i := 0 to BStatementRow_Data.Count - 1 do
-    Memo2.Lines.Add(inttostr(i) + 'r ' + BStatementRow_Data.Names[i] + ': ' + vartostr( BStatementRow_Data.Value[i]));
-
-
-end;
 
 
 procedure TfmMain.btnShowPrirazeniPnpFormClick(Sender: TObject);

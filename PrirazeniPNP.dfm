@@ -1,8 +1,8 @@
 object fmPrirazeniPnp: TfmPrirazeniPnp
-  Left = 337
-  Top = 9
-  Width = 1207
-  Height = 612
+  Left = 510
+  Top = 120
+  Width = 1599
+  Height = 648
   Caption = 'P'#345'i'#345'azen'#237' PNP'
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -11,34 +11,35 @@ object fmPrirazeniPnp: TfmPrirazeniPnp
   Font.Name = 'MS Sans Serif'
   Font.Style = []
   OldCreateOrder = False
+  OnShow = FormShow
   DesignSize = (
-    1191
-    573)
+    1583
+    610)
   PixelsPerInch = 96
   TextHeight = 13
   object Label1: TLabel
-    Left = 8
-    Top = 520
+    Left = 864
+    Top = 8
     Width = 74
     Height = 13
     Caption = 'ID radku vypisu'
   end
   object Label2: TLabel
-    Left = 120
-    Top = 520
+    Left = 976
+    Top = 8
     Width = 52
     Height = 13
     Caption = 'ID dokladu'
   end
   object asgPNP: TAdvStringGrid
-    Left = 5
+    Left = -3
     Top = 50
-    Width = 868
-    Height = 452
+    Width = 1326
+    Height = 556
     Cursor = crDefault
     Anchors = [akLeft, akTop, akRight, akBottom]
     BorderStyle = bsNone
-    ColCount = 10
+    ColCount = 16
     Ctl3D = True
     DefaultRowHeight = 18
     FixedCols = 0
@@ -54,6 +55,8 @@ object fmPrirazeniPnp: TfmPrirazeniPnp
     ScrollBars = ssBoth
     TabOrder = 0
     HoverRowCells = [hcNormal, hcSelected]
+    OnGetCellColor = asgPNPGetCellColor
+    OnGetAlignment = asgPNPGetAlignment
     OnButtonClick = asgPNPButtonClick
     ActiveCellFont.Charset = DEFAULT_CHARSET
     ActiveCellFont.Color = clWindowText
@@ -62,15 +65,22 @@ object fmPrirazeniPnp: TfmPrirazeniPnp
     ActiveCellFont.Style = [fsBold]
     ActiveCellColor = 15387318
     ColumnHeaders.Strings = (
-      ' doklad v'#253'pis'
-      ' '#269#225'stka'
-      ' z'#225'kazn'#237'k'
-      ' text'
-      ' radek vypisu'
-      ' cislo faktury'
-      ' id faktury'
-      ''
-      ' vs faktury')
+      #268#237'slo v'#253'pisu'
+      'P'#345'epl. (pnp)'
+      'Z'#225'kazn'#237'k'
+      'Text'
+      #344#225'dek v'#253'pisu ID'
+      'Firma ID'
+      #268#237'slo dokladu'
+      'ID dokladu'
+      'VS dokladu'
+      'Datum'
+      'P'#345'edpis'
+      'Zaplaceno'
+      'Nezaplac.'
+      'vysledek'
+      'zaplaceno'
+      'nezaplac.')
     ColumnSize.StretchColumn = 0
     ControlLook.FixedGradientFrom = clWhite
     ControlLook.FixedGradientTo = clSilver
@@ -115,14 +125,14 @@ object fmPrirazeniPnp: TfmPrirazeniPnp
       'Equal'
       'Not equal'
       'Clear')
-    FixedColWidth = 86
+    FixedColWidth = 81
     FixedRowHeight = 18
     FixedRowAlways = True
     FixedFont.Charset = EASTEUROPE_CHARSET
     FixedFont.Color = clWindowText
     FixedFont.Height = -11
     FixedFont.Name = 'MS Sans Serif'
-    FixedFont.Style = []
+    FixedFont.Style = [fsBold]
     FloatFormat = '%.2f'
     HoverButtons.Buttons = <>
     HoverButtons.Position = hbLeftFromColumnLeft
@@ -172,53 +182,60 @@ object fmPrirazeniPnp: TfmPrirazeniPnp
     VAlignment = vtaCenter
     Version = '7.4.2.0'
     ColWidths = (
-      86
-      64
+      81
+      75
       121
       119
-      87
-      89
-      85
+      80
+      80
+      91
+      77
+      77
+      65
       64
-      67
-      68)
+      72
+      72
+      64
+      72
+      72)
   end
   object btnNactiPnp: TButton
     Left = 8
     Top = 16
     Width = 75
     Height = 25
-    Caption = 'NactiPNP'
+    Caption = 'Na'#269'ti data'
     TabOrder = 1
     OnClick = btnNactiPnpClick
   end
-  object btnNajdiPNP: TButton
-    Left = 608
+  object btnPriradPnp: TButton
+    Left = 392
     Top = 16
-    Width = 75
+    Width = 161
     Height = 25
-    Caption = 'Oprav PNP'
+    Caption = 'P'#345'i'#345'a'#271' doklady k PNP platb'#225'm'
     TabOrder = 2
+    OnClick = btnPriradPnpClick
   end
   object Edit1: TEdit
-    Left = 8
-    Top = 536
+    Left = 864
+    Top = 24
     Width = 97
     Height = 21
     TabOrder = 3
     Text = 'VJMD000101'
   end
   object Edit2: TEdit
-    Left = 120
-    Top = 536
+    Left = 976
+    Top = 24
     Width = 97
     Height = 21
     TabOrder = 4
     Text = '2AIT000101'
   end
   object btnZmenRadekVypisu: TButton
-    Left = 232
-    Top = 528
+    Left = 1088
+    Top = 16
     Width = 97
     Height = 25
     Caption = 'zm'#283'nRadekVypisu'
@@ -226,12 +243,30 @@ object fmPrirazeniPnp: TfmPrirazeniPnp
     OnClick = btnZmenRadekVypisuClick
   end
   object MemoPNP: TMemo
-    Left = 880
+    Left = 1330
     Top = 48
-    Width = 305
+    Width = 245
     Height = 521
+    Anchors = [akTop, akRight]
     Lines.Strings = (
       '')
     TabOrder = 6
+  end
+  object btnNactiPnpInfo: TButton
+    Left = 1240
+    Top = 16
+    Width = 89
+    Height = 25
+    Caption = 'alternativn'#237' data'
+    TabOrder = 7
+    OnClick = btnNactiPnpInfoClick
+  end
+  object chbNacistPnp: TCheckBox
+    Left = 96
+    Top = 24
+    Width = 289
+    Height = 17
+    Caption = 'vyhledat i doklady s '#269#225'stkou men'#353#237' ne'#382' p'#345'eplatek'
+    TabOrder = 8
   end
 end
