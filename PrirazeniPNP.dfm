@@ -1,8 +1,8 @@
 object fmPrirazeniPnp: TfmPrirazeniPnp
-  Left = 510
-  Top = 120
-  Width = 1599
-  Height = 648
+  Left = 348
+  Top = 81
+  Width = 1422
+  Height = 731
   Caption = 'P'#345'i'#345'azen'#237' PNP'
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -13,8 +13,8 @@ object fmPrirazeniPnp: TfmPrirazeniPnp
   OldCreateOrder = False
   OnShow = FormShow
   DesignSize = (
-    1583
-    610)
+    1406
+    693)
   PixelsPerInch = 96
   TextHeight = 13
   object Label1: TLabel
@@ -34,10 +34,10 @@ object fmPrirazeniPnp: TfmPrirazeniPnp
   object asgPNP: TAdvStringGrid
     Left = -3
     Top = 50
-    Width = 1326
-    Height = 556
+    Width = 1292
+    Height = 639
     Cursor = crDefault
-    Anchors = [akLeft, akTop, akRight, akBottom]
+    Anchors = [akLeft, akTop, akBottom]
     BorderStyle = bsNone
     ColCount = 16
     Ctl3D = True
@@ -243,10 +243,10 @@ object fmPrirazeniPnp: TfmPrirazeniPnp
     OnClick = btnZmenRadekVypisuClick
   end
   object MemoPNP: TMemo
-    Left = 1330
+    Left = 1297
     Top = 48
-    Width = 245
-    Height = 521
+    Width = 103
+    Height = 329
     Anchors = [akTop, akRight]
     Lines.Strings = (
       '')

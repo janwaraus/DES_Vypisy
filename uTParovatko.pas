@@ -37,7 +37,6 @@ type
     function getPDParyAsText() : AnsiString;
     function getPDParyPlatbyAsText(currPlatba : TPlatbaZVypisu) : AnsiString;
     function getPDPar(currPlatba : TPlatbaZVypisu; currDoklad_ID: string) : TPlatbaDokladPar;
-    procedure postOprava();
 
   end;
 
@@ -402,34 +401,6 @@ begin
   end;
   }
 
-end;
-
-
-procedure TParovatko.postOprava();
-var
-  i, j : integer;
-  iPDPar : TPlatbaDokladPar;
-  BStatement_Object,
-  BStatement_Data,
-  BStatementRow_Object,
-  BStatementRow_Data,
-  BStatement_Data_Coll,
-  NewID : variant;
-  mmm : ansistring;
-begin
-  //opravit øádky v Abøe kde se nespárovalo
-  for i := 0 to listPlatbaDokladPar.Count - 1 do
-  try
-    iPDPar := TPlatbaDokladPar(listPlatbaDokladPar[i]);
-    if iPDPar.vazbaNaDoklad AND Assigned(iPDPar.Doklad) then
-    begin
-      opravRadekVypisuPomociPDocument_ID(AbraOLE, '', iPDPar.Doklad.ID, iPDPar.Doklad.ID);
-      //MessageDlg('Øádek ' + iPDPar.AbraBS2_ID + ' byl opraven', mtInformation, [mbOk], 0);
-    end;
-  except
-    on E: Exception do
-    //MessageDlg('Oprava øádku ' + iPDPar.AbraBS2_ID + ' se nepovedla!', mtInformation, [mbOk], 0);
-  end;
 end;
 
 

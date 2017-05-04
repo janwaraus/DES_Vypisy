@@ -2,7 +2,7 @@ object fmMain: TfmMain
   Left = 394
   Top = 126
   Width = 1326
-  Height = 870
+  Height = 839
   Caption = 'Na'#269'ten'#237', oprava a ulo'#382'en'#237' bankovn'#237'ho v'#253'pisu'
   Color = clBtnFace
   Constraints.MinHeight = 721
@@ -17,14 +17,14 @@ object fmMain: TfmMain
   OnShow = FormShow
   DesignSize = (
     1310
-    832)
+    801)
   PixelsPerInch = 96
   TextHeight = 13
   object lblHlavicka: TLabel
     Left = 112
     Top = 5
-    Width = 745
-    Height = 19
+    Width = 15
+    Height = 16
     Caption = '...'
     Color = clMoneyGreen
     Font.Charset = EASTEUROPE_CHARSET
@@ -40,7 +40,7 @@ object fmMain: TfmMain
     Left = 110
     Top = 26
     Width = 753
-    Height = 651
+    Height = 628
     Cursor = crDefault
     Anchors = [akLeft, akTop, akBottom]
     ColCount = 8
@@ -174,7 +174,7 @@ object fmMain: TfmMain
   end
   object pnBottom: TPanel
     Left = 0
-    Top = 686
+    Top = 655
     Width = 1310
     Height = 146
     Align = alBottom
@@ -323,7 +323,7 @@ object fmMain: TfmMain
         110)
     end
     object chbVsechnyDoklady: TCheckBox
-      Left = 254
+      Left = 278
       Top = 4
       Width = 103
       Height = 17
@@ -336,7 +336,7 @@ object fmMain: TfmMain
     Left = 863
     Top = 0
     Width = 447
-    Height = 686
+    Height = 655
     Align = alRight
     TabOrder = 2
     object lblPrechoziPlatbyZUctu: TLabel
@@ -645,7 +645,7 @@ object fmMain: TfmMain
     Left = 0
     Top = 0
     Width = 109
-    Height = 686
+    Height = 655
     Align = alLeft
     TabOrder = 3
     object lbZobrazit: TLabel
