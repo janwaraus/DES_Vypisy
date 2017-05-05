@@ -121,14 +121,13 @@ begin
           vytvorPDPar(Platba, iDoklad, zbyvaCastka, '', true); //pøesnì |
           Platba.zprava := 'pøesnì';
           if Platba.rozdeleniPlatby > 0 then
-            Platba.problemLevel := 1
+            Platba.problemLevel := 0 //bylo 1
           else
             Platba.problemLevel := 0;
           Exit;
         end;
 
         if (kNaparovani > zbyvaCastka) AND not(iDoklad.DocumentType = '10') then
-        //if (kNaparovani > zbyvaCastka) then
         begin
           vytvorPDPar(Platba, iDoklad, zbyvaCastka, 'èást. ' + floattostr(zbyvaCastka) + ' z ' + floattostr(kNaparovani) + ' Kè |', true);
           Platba.zprava := 'èásteèná úhrada';
@@ -242,10 +241,14 @@ begin
     BStatementRow_Data.ValueByName('Amount') := iPDPar.CastkaPouzita;
     BStatementRow_Data.ValueByName('Credit') := IfThen(iPDPar.Platba.Kredit,'1','0');
     BStatementRow_Data.ValueByName('BankAccount') := iPDPar.Platba.cisloUctu;
-    BStatementRow_Data.ValueByName('Text') := iPDPar.popis + ' ' + iPDPar.Platba.nazevKlienta;
     BStatementRow_Data.ValueByName('SpecSymbol') := iPDPar.Platba.SS;
     BStatementRow_Data.ValueByName('DocDate$DATE') := iPDPar.Platba.Datum;
     BStatementRow_Data.ValueByName('AccDate$DATE') := iPDPar.Platba.Datum;
+
+    if iPDPar.popis = '' then
+      BStatementRow_Data.ValueByName('Text') := iPDPar.Platba.nazevKlienta
+    else
+      BStatementRow_Data.ValueByName('Text') := iPDPar.popis + ' ' + iPDPar.Platba.nazevKlienta;
 
     if Assigned(iPDPar.Doklad) then
       BStatementRow_Data.ValueByName('Firm_ID') := iPDPar.Doklad.Firm_ID

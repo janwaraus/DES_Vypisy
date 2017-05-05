@@ -56,7 +56,7 @@ type
     procedure init(pocetPredchozichPlateb : integer);
     procedure loadPredchoziPlatby(pocetPlateb : integer);
     procedure loadDokladyPodleVS(jenNezaplacene : boolean);
-    function getVSbyBankAccount() : string;
+    function getVSzMinulostiByBankAccount() : string;
     function getPocetPredchozichPlatebNaStejnyVS() : integer;
     function getProcentoPredchozichPlatebNaStejnyVS() : single;
     function getPocetPredchozichPlatebZeStejnehoUctu() : integer;
@@ -145,8 +145,15 @@ end;
 
 
 procedure TPlatbaZVypisu.init(pocetPredchozichPlateb : integer);
+var
+  pouzivanyVSvMinulosti : string;
 begin
   self.loadPredchoziPlatby(pocetPredchozichPlateb);
+  pouzivanyVSvMinulosti := getVSzMinulostiByBankAccount();
+  if pouzivanyVSvMinulosti <> '' then begin
+    self.VS := pouzivanyVSvMinulosti;
+    self.loadPredchoziPlatby(pocetPredchozichPlateb);
+  end;
   self.loadDokladyPodleVS(true);
 end;
 
@@ -288,17 +295,23 @@ begin
 end;
 
 
-// nepouziva se, bylo pro test
-function TPlatbaZVypisu.getVSbyBankAccount() : string;
+function TPlatbaZVypisu.getVSzMinulostiByBankAccount() : string;
 begin
+  Result := '';
   with qrAbra do begin
-    SQL.Text := 'SELECT FIRST 3 VarSymbol, Firm_ID FROM BankStatements2 '
-              + 'WHERE BankAccount like ''' + self.cisloUctu  + ''' '
-              + 'ORDER BY DocDate$Date DESC';
+    SQL.Text := 'SELECT varsymbol, count(*) as pocet FROM'
+              + ' (SELECT FIRST 7 VarSymbol, Firm_ID FROM BankStatements2'
+              + ' WHERE BankAccount like ''' + self.cisloUctu  + ''''
+              + ' AND BankStatementRow_ID is null'
+              + ' ORDER BY DocDate$Date DESC)'
+
+              + ' GROUP BY VARSYMBOL'
+              + ' order by pocet desc';
+
     Open;
     if not Eof then begin
-      Result := FieldByName('VarSymbol').AsString + ' a firmID: ' + FieldByName('Firm_ID').AsString;
-      Next;
+      if StrToInt(FieldByName('Pocet').AsString) > 4 then
+          Result := FieldByName('Varsymbol').AsString;
     end;
     Close;
   end;

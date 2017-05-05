@@ -58,20 +58,20 @@ implementation
   end;
     }
 
-procedure TfmPrirazeniPnp.asgPNPButtonClick(Sender: TObject; ACol,
-  ARow: Integer);
+procedure TfmPrirazeniPnp.asgPNPButtonClick(Sender: TObject; ACol, ARow: Integer);
 begin
   with asgPNP do begin
-    if ACol = 8 then
+    if ACol = 13 then
     try
-      opravRadekVypisuPomociPDocument_ID(AbraOLE, Cells[4, ARow], Cells[6, ARow], Cells[7, ARow]);
-      MessageDlg('Oprava pøiøazením èísla dokladu hotová', mtInformation, [mbOk], 0);
+      opravRadekVypisuPomociPDocument_ID(AbraOLE, Cells[4, ARow], Cells[7, ARow], '03'); //DocumentType je vždy 03 pro faktury
+      RemoveButton(13, ARow);
+      Cells[13, ARow] := 'pøiøaz. ok';
+      //MessageDlg('Oprava pøiøazením èísla dokladu hotová', mtInformation, [mbOk], 0);
     except
-      on E: Exception do
-        MessageDlg('Oprava pøiøazením èísla dokladu SELHALA', mtInformation, [mbOk], 0);
-    end else begin
-      opravRadekVypisuPomociVS(AbraOLE, Cells[4, ARow], Cells[9, ARow]);
-      MessageDlg('Oprava pøiøazením VS hotová', mtInformation, [mbOk], 0);
+      on E: Exception do begin
+        RemoveButton(13, ARow);
+        Application.MessageBox(PChar('Oprava pøiøazením èísla dokladu SELHALA.' + ^M + E.Message), 'Oprava selhala', MB_ICONERROR + MB_OK);
+      end;
     end;
   end;
 end;
@@ -190,6 +190,7 @@ begin
         Cells[10, radek] := format('%m', [FieldByName('LocalAmount').AsCurrency]);
         Cells[11, radek] := format('%m', [FieldByName('Zaplaceno').AsCurrency]);
         Cells[12, radek] := format('%m', [FieldByName('Dluh').AsCurrency]);
+        AddButton(13,radek,55,16,'pøiøaï',haCenter,vaCenter);
 
         for sloupec := 7 to 12 do asgPNP.Colors[sloupec, radek] := clCream;
 
@@ -214,7 +215,8 @@ begin
     for radek := 1 to RowCount - 1 do
     if Cells[6, radek] <> '' then begin
       try
-        opravRadekVypisuPomociPDocument_ID(AbraOLE, Cells[4, radek], Cells[7, radek], '03'); //DocumentTypr je vždy 03 pro faktury
+        opravRadekVypisuPomociPDocument_ID(AbraOLE, Cells[4, radek], Cells[7, radek], '03'); //DocumentType je vždy 03 pro faktury
+        RemoveButton(13, radek);
         Cells[13, radek] := 'opr. ok';
       except
         on E: Exception do

@@ -1,7 +1,7 @@
 object fmPrirazeniPnp: TfmPrirazeniPnp
   Left = 348
   Top = 81
-  Width = 1422
+  Width = 1427
   Height = 731
   Caption = 'P'#345'i'#345'azen'#237' PNP'
   Color = clBtnFace
@@ -13,7 +13,7 @@ object fmPrirazeniPnp: TfmPrirazeniPnp
   OldCreateOrder = False
   OnShow = FormShow
   DesignSize = (
-    1406
+    1411
     693)
   PixelsPerInch = 96
   TextHeight = 13
@@ -34,7 +34,7 @@ object fmPrirazeniPnp: TfmPrirazeniPnp
   object asgPNP: TAdvStringGrid
     Left = -3
     Top = 50
-    Width = 1292
+    Width = 1300
     Height = 639
     Cursor = crDefault
     Anchors = [akLeft, akTop, akBottom]
@@ -78,7 +78,7 @@ object fmPrirazeniPnp: TfmPrirazeniPnp
       'P'#345'edpis'
       'Zaplaceno'
       'Nezaplac.'
-      'vysledek'
+      'akce'
       'zaplaceno'
       'nezaplac.')
     ColumnSize.StretchColumn = 0
@@ -243,7 +243,7 @@ object fmPrirazeniPnp: TfmPrirazeniPnp
     OnClick = btnZmenRadekVypisuClick
   end
   object MemoPNP: TMemo
-    Left = 1297
+    Left = 1302
     Top = 48
     Width = 103
     Height = 329

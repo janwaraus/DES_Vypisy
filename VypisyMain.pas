@@ -70,6 +70,7 @@ type
     procedure asgMainGetCellColor(Sender: TObject; ARow, ACol: Integer;
       AState: TGridDrawState; ABrush: TBrush; AFont: TFont);
     procedure btnShowPrirazeniPnpFormClick(Sender: TObject);
+    procedure asgMainButtonClick(Sender: TObject; ACol, ARow: Integer);
 
   public
     procedure vyplnPrichoziPlatby;
@@ -275,6 +276,8 @@ begin
     begin
       iPlatbaZVypisu := TPlatbaZVypisu(Vypis.Platby[i]);
       //AddCheckBox(0, i+1, True, True);
+      if iPlatbaZVypisu.VS <> iPlatbaZVypisu.VS_orig then
+        AddButton(0, i+1, 76, 16, iPlatbaZVypisu.VS_orig, haCenter, vaCenter);
       if (iPlatbaZVypisu.kredit) then
         Cells[1, i+1] := format('%m', [iPlatbaZVypisu.castka])
       else
@@ -516,14 +519,19 @@ end;
 
 procedure TfmMain.provedAkcePoZmeneVS;
 begin
-    currPlatbaZVypisu.loadPredchoziPlatby(StrToInt(editPocetPredchPlateb.text));
-    vyplnPredchoziPlatby;
-    vyplnDoklady;
-    sparujVsechnyPrichoziPlatby;
-    //sparujPrichoziPlatbu(asgMain.row - 1);
+  asgMain.Cells[2, asgMain.row] := currPlatbaZVypisu.VS;
+  asgMain.RemoveButton(0, asgMain.row);
 
-    Memo2.Clear;
-    Memo2.Lines.Add(Parovatko.getPDParyPlatbyAsText(currPlatbaZVypisu));
+  if currPlatbaZVypisu.VS <> currPlatbaZVypisu.VS_orig then
+    asgMain.AddButton(0, asgMain.row, 76, 16, currPlatbaZVypisu.VS_orig, haCenter, vaCenter);
+
+  currPlatbaZVypisu.loadPredchoziPlatby(StrToInt(editPocetPredchPlateb.text));
+  vyplnPredchoziPlatby;
+  vyplnDoklady;
+  sparujVsechnyPrichoziPlatby;
+  //sparujPrichoziPlatbu(asgMain.row - 1);
+  Memo2.Clear;
+  Memo2.Lines.Add(Parovatko.getPDParyPlatbyAsText(currPlatbaZVypisu));
 end;
 
 
@@ -548,7 +556,6 @@ begin
      //asgMain.Colors[asgMain.col, asgMain.row] := clMoneyGreen;
      currPlatbaZVypisu.VS := asgMain.Cells[2, asgMain.row]; //do pøíslušného objektu platby zapíšu zmìnìný VS
      provedAkcePoZmeneVS;
-
   end;
   if asgMain.col = 5 then //zmìna textu (názvu klienta)
   begin
@@ -562,7 +569,6 @@ procedure TfmMain.asgPredchoziPlatbyButtonClick(Sender: TObject; ACol,
 begin
   urciCurrPlatbaZVypisu();
   currPlatbaZVypisu.VS := TPredchoziPlatba(currPlatbaZVypisu.PredchoziPlatbyList[ARow - 1]).VS;
-  asgMain.Cells[2, asgMain.row] := currPlatbaZVypisu.VS;
   provedAkcePoZmeneVS;
 end;
 
@@ -573,7 +579,6 @@ begin
   if Key = 27 then
   begin
     currPlatbaZVypisu.VS := currPlatbaZVypisu.VS_orig;
-    asgMain.Cells[2, asgMain.row]  := currPlatbaZVypisu.VS;
     provedAkcePoZmeneVS;
   end;
 end;
@@ -672,7 +677,7 @@ procedure TfmMain.asgMainCanEditCell(Sender: TObject; ARow, ACol: Integer;
   var CanEdit: Boolean);
 begin
   case ACol of
-    1: CanEdit := false;
+    0..1: CanEdit := false;
   end;
 end;
 
@@ -710,6 +715,15 @@ fmPrirazeniPnp.Show;
     Free;
   end;
         }
+end;
+
+procedure TfmMain.asgMainButtonClick(Sender: TObject; ACol, ARow: Integer);
+begin
+  asgMain.row := ARow;
+  urciCurrPlatbaZVypisu();
+  currPlatbaZVypisu.VS := currPlatbaZVypisu.VS_orig;
+  provedAkcePoZmeneVS;
+
 end;
 
 end.

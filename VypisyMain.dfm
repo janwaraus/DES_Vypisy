@@ -1,7 +1,7 @@
 object fmMain: TfmMain
   Left = 394
   Top = 126
-  Width = 1326
+  Width = 1344
   Height = 839
   Caption = 'Na'#269'ten'#237', oprava a ulo'#382'en'#237' bankovn'#237'ho v'#253'pisu'
   Color = clBtnFace
@@ -16,7 +16,7 @@ object fmMain: TfmMain
   OnClose = FormClose
   OnShow = FormShow
   DesignSize = (
-    1310
+    1328
     801)
   PixelsPerInch = 96
   TextHeight = 13
@@ -64,6 +64,7 @@ object fmMain: TfmMain
     OnGetAlignment = asgMainGetAlignment
     OnCanEditCell = asgMainCanEditCell
     OnCellsChanged = asgMainCellsChanged
+    OnButtonClick = asgMainButtonClick
     ActiveCellFont.Charset = DEFAULT_CHARSET
     ActiveCellFont.Color = clWindowText
     ActiveCellFont.Height = -11
@@ -114,7 +115,7 @@ object fmMain: TfmMain
       'Equal'
       'Not equal'
       'Clear')
-    FixedColWidth = 67
+    FixedColWidth = 80
     FixedRowHeight = 20
     FixedFont.Charset = DEFAULT_CHARSET
     FixedFont.Color = clWindowText
@@ -163,7 +164,7 @@ object fmMain: TfmMain
     SortSettings.DefaultFormat = ssAutomatic
     Version = '7.4.2.0'
     ColWidths = (
-      67
+      80
       82
       78
       22
@@ -175,7 +176,7 @@ object fmMain: TfmMain
   object pnBottom: TPanel
     Left = 0
     Top = 655
-    Width = 1310
+    Width = 1328
     Height = 146
     Align = alBottom
     TabOrder = 1
@@ -333,7 +334,7 @@ object fmMain: TfmMain
     end
   end
   object pnRight: TPanel
-    Left = 863
+    Left = 881
     Top = 0
     Width = 447
     Height = 655
