@@ -148,12 +148,13 @@ procedure TPlatbaZVypisu.init(pocetPredchozichPlateb : integer);
 var
   pouzivanyVSvMinulosti : string;
 begin
-  self.loadPredchoziPlatby(pocetPredchozichPlateb);
+  pouzivanyVSvMinulosti := '';
   pouzivanyVSvMinulosti := getVSzMinulostiByBankAccount();
   if pouzivanyVSvMinulosti <> '' then begin
     self.VS := pouzivanyVSvMinulosti;
-    self.loadPredchoziPlatby(pocetPredchozichPlateb);
+
   end;
+  self.loadPredchoziPlatby(pocetPredchozichPlateb);
   self.loadDokladyPodleVS(true);
 end;
 
@@ -301,7 +302,7 @@ begin
   with qrAbra do begin
     SQL.Text := 'SELECT varsymbol, count(*) as pocet FROM'
               + ' (SELECT FIRST 7 VarSymbol, Firm_ID FROM BankStatements2'
-              + ' WHERE BankAccount like ''' + self.cisloUctu  + ''''
+              + ' WHERE BankAccount = ''' + self.cisloUctu  + ''''
               + ' AND BankStatementRow_ID is null'
               + ' ORDER BY DocDate$Date DESC)'
 

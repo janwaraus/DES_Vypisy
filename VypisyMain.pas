@@ -179,7 +179,7 @@ begin
 	if NactiGpcDialog.Execute then
   try
     Screen.Cursor := crHourGlass;
-    asgMain.ClearNormalCells;   //clear ostatnich todo
+    asgMain.ClearNormalCells;
     asgPredchoziPlatby.ClearNormalCells;
     asgPredchoziPlatbyVs.ClearNormalCells;
     asgNalezeneDoklady.ClearNormalCells;
@@ -268,6 +268,7 @@ begin
   with asgMain do
   begin
     Enabled := true;
+    ControlLook.NoDisabledButtonLook := true;
     ClearNormalCells;
     RowCount := Vypis.Platby.Count + 1;
     Row := 1;
@@ -384,11 +385,10 @@ begin
   with asgPredchoziPlatby do begin
     Enabled := true;
     ClearNormalCells;
+    lblPrechoziPlatbyZUctu.Caption := 'Pøedchozí platby z úètu '
+        + currPlatbaZVypisu.cisloUctuKZobrazeni;
     if currPlatbaZVypisu.PredchoziPlatbyList.Count > 0 then
     begin
-      lblPrechoziPlatbyZUctu.Caption := 'Pøechozí platby z úètu '
-        + currPlatbaZVypisu.cisloUctuKZobrazeni;
-
       RowCount := currPlatbaZVypisu.PredchoziPlatbyList.Count + 1;
       for i := 0 to RowCount - 2 do begin
         iPredchoziPlatba := TPredchoziPlatba(currPlatbaZVypisu.PredchoziPlatbyList[i]);
@@ -407,10 +407,9 @@ begin
   with asgPredchoziPlatbyVs do begin
     Enabled := true;
     ClearNormalCells;
+    lblPrechoziPlatbySVs.Caption := 'Pøedchozí platby s VS ' + currPlatbaZVypisu.VS;
     if currPlatbaZVypisu.PredchoziPlatbyVsList.Count > 0 then
     begin
-      lblPrechoziPlatbySVs.Caption := 'Pøechozí platby s VS ' + currPlatbaZVypisu.VS;
-
       RowCount := currPlatbaZVypisu.PredchoziPlatbyVsList.Count + 1;
       for i := 0 to RowCount - 2 do begin
         iPredchoziPlatba := TPredchoziPlatba(currPlatbaZVypisu.PredchoziPlatbyVsList[i]);

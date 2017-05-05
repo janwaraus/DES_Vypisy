@@ -128,7 +128,7 @@ begin
   for i := self.Platby.Count - 1 downto 0 do
   begin
     iPlatba := TPlatbaZVypisu(self.Platby[i]);
-    if iPlatba.problemLevel = 1 then begin
+    if (iPlatba.problemLevel = 1) AND (iPlatba.VS = iPlatba.VS_orig) then begin
       self.Platby.Delete(i);
       self.Platby.Add(iPlatba);
     end;
@@ -137,7 +137,7 @@ begin
   for i := self.Platby.Count - 1 downto 0 do
   begin
     iPlatba := TPlatbaZVypisu(self.Platby[i]);
-    if iPlatba.problemLevel = 0 then begin
+    if (iPlatba.problemLevel = 0) AND (iPlatba.VS = iPlatba.VS_orig) then begin
       self.Platby.Delete(i);
       self.Platby.Add(iPlatba);
     end;

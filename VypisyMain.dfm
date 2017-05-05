@@ -1,6 +1,6 @@
 object fmMain: TfmMain
-  Left = 394
-  Top = 126
+  Left = 273
+  Top = 3
   Width = 1344
   Height = 839
   Caption = 'Na'#269'ten'#237', oprava a ulo'#382'en'#237' bankovn'#237'ho v'#253'pisu'
@@ -17,7 +17,7 @@ object fmMain: TfmMain
   OnShow = FormShow
   DesignSize = (
     1328
-    801)
+    800)
   PixelsPerInch = 96
   TextHeight = 13
   object lblHlavicka: TLabel
@@ -175,7 +175,7 @@ object fmMain: TfmMain
   end
   object pnBottom: TPanel
     Left = 0
-    Top = 655
+    Top = 654
     Width = 1328
     Height = 146
     Align = alBottom
@@ -337,7 +337,7 @@ object fmMain: TfmMain
     Left = 881
     Top = 0
     Width = 447
-    Height = 655
+    Height = 654
     Align = alRight
     TabOrder = 2
     object lblPrechoziPlatbyZUctu: TLabel
@@ -646,7 +646,7 @@ object fmMain: TfmMain
     Left = 0
     Top = 0
     Width = 109
-    Height = 655
+    Height = 654
     Align = alLeft
     TabOrder = 3
     object lbZobrazit: TLabel
