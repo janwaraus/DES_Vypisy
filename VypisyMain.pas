@@ -276,6 +276,7 @@ begin
 
     for i := 0 to Vypis.Platby.Count - 1 do
     begin
+      RemoveButton(0, i+1);
       iPlatbaZVypisu := TPlatbaZVypisu(Vypis.Platby[i]);
       //AddCheckBox(0, i+1, True, True);
       if iPlatbaZVypisu.VS <> iPlatbaZVypisu.VS_orig then
