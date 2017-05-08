@@ -5,7 +5,7 @@ interface
 uses
   SysUtils, Variants, Classes, Controls, StrUtils,
   Windows, Messages, Dialogs, Forms,
-  uTVypis, uTPlatbaZVypisu, AbraEntities, DesUtils;
+  uTVypis, AbraEntities, DesUtils;
 
 
 type
@@ -44,6 +44,7 @@ type
 
 
 implementation
+
 
 
 constructor TParovatko.create(AbraOLE: variant; Vypis: TVypis);

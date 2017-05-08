@@ -213,10 +213,10 @@ begin
       Inc(i);
       if i = 1 then //první øádek musí být hlavièka výpisu
       begin
-        if copy(GpcFileLine, 1, 3) = '074' then
-          Vypis := TVypis.Create(GpcFileLine, qrAbra)
-        else
-        begin
+        if copy(GpcFileLine, 1, 3) = '074' then begin
+          Vypis := TVypis.Create(GpcFileLine, qrAbra);
+          Parovatko := TParovatko.create(AbraOLE, Vypis);
+        end else begin
           MessageDlg('Neplatný GPC soubor, 1. øádek není hlavièka', mtInformation, [mbOk], 0);
           Break;
         end;
@@ -226,6 +226,8 @@ begin
       begin
         iPlatbaZVypisu := TPlatbaZVypisu.Create(GpcFileLine, qrAbra);
         iPlatbaZVypisu.init(StrToInt(editPocetPredchPlateb.text));
+        Parovatko.sparujPlatbu(iPlatbaZVypisu);
+        iPlatbaZVypisu.automatickyOpravVS();
         Vypis.Platby.Add(iPlatbaZVypisu);
       end;
 
@@ -235,17 +237,16 @@ begin
       if (Vypis.Platby.Count > 0) then
       begin
         Vypis.init();
-        currPlatbaZVypisu := TPlatbaZVypisu(Vypis.Platby[0]);
-        sparujVsechnyPrichoziPlatby;
         Vypis.setridit();
+        sparujVsechnyPrichoziPlatby;
         vyplnPrichoziPlatby;
         filtrujZobrazeniPlateb;
         lblHlavicka.Caption := Vypis.abraBankaccount.name + ', ' + Vypis.abraBankaccount.number + ', è.'
                         + IntToStr(Vypis.poradoveCislo) + ' (max è. je ' + IntToStr(Vypis.maxExistujiciPoradoveCislo) + '). Plateb: '
                         + IntToStr(Vypis.Platby.Count);
-        if not Vypis.isNavazujeNaRadu() then
+        //if not Vypis.isNavazujeNaRadu() then
          //todo Dialogs.MessageDlg('Doklad è. '+ IntToStr(Vypis.poradoveCislo) + ' nenavazuje na øadu!',mtInformation, [mbOK], 0);
-
+        //currPlatbaZVypisu := TPlatbaZVypisu(Vypis.Platby[0]); //mùže být ale nemìlo by být potøeba
         asgMainClick(nil);
       end;
   finally
@@ -340,29 +341,8 @@ begin
     else
       asgMain.RowHeights[i+1] := 0;
   end;
-
 end;
 
-procedure TfmMain.sparujPrichoziPlatbu(i : integer);
-var
-  iPlatbaZVypisu : TPlatbaZVypisu;
-begin
-  iPlatbaZVypisu := TPlatbaZVypisu(Vypis.Platby[i]);
-
-  Parovatko.sparujPlatbu(iPlatbaZVypisu);
-
-  case iPlatbaZVypisu.problemLevel of
-    0: asgMain.Colors[2, i+1] := $AAFFAA;
-    1: asgMain.Colors[2, i+1] := $cdfaff;
-    2: asgMain.Colors[2, i+1] := $bbbbff;
-  end;
-
-  if iPlatbaZVypisu.rozdeleniPlatby > 0 then
-    asgMain.Cells[7, i+1] := IntToStr (iPlatbaZVypisu.rozdeleniPlatby) + ' dìlení, ' + iPlatbaZVypisu.zprava
-  else
-    asgMain.Cells[7, i+1] := iPlatbaZVypisu.zprava;
-  
-end;
 
 procedure TfmMain.sparujVsechnyPrichoziPlatby;
 var
@@ -374,13 +354,34 @@ begin
 end;
 
 
+procedure TfmMain.sparujPrichoziPlatbu(i : integer);
+var
+  iPlatbaZVypisu : TPlatbaZVypisu;
+begin
+  iPlatbaZVypisu := TPlatbaZVypisu(Vypis.Platby[i]);
+
+  Parovatko.sparujPlatbu(iPlatbaZVypisu);
+  //iPlatbaZVypisu.sparujSe(Parovatko);  // mohlo by takhle být možná pro lepší architekturu
+
+  case iPlatbaZVypisu.problemLevel of
+    0: asgMain.Colors[2, i+1] := $AAFFAA;
+    1: asgMain.Colors[2, i+1] := $CDFAFF;
+    2: asgMain.Colors[2, i+1] := $BBBBFF;
+  end;
+
+  if iPlatbaZVypisu.rozdeleniPlatby > 0 then
+    asgMain.Cells[7, i+1] := IntToStr (iPlatbaZVypisu.rozdeleniPlatby) + ' dìlení, ' + iPlatbaZVypisu.zprava
+  else
+    asgMain.Cells[7, i+1] := iPlatbaZVypisu.zprava;
+
+end;
+
 
 procedure TfmMain.vyplnPredchoziPlatby;
 var
   i : integer;
   iPredchoziPlatba : TPredchoziPlatba;
 begin
-  //lblPrechoziPlatbySVs.Font.Style := [fsBold];
 
   with asgPredchoziPlatby do begin
     Enabled := true;
@@ -392,8 +393,8 @@ begin
       RowCount := currPlatbaZVypisu.PredchoziPlatbyList.Count + 1;
       for i := 0 to RowCount - 2 do begin
         iPredchoziPlatba := TPredchoziPlatba(currPlatbaZVypisu.PredchoziPlatbyList[i]);
-
-        AddButton(0,i+1,25,18,'<--',haCenter,vaCenter);
+        if iPredchoziPlatba.VS <> currPlatbaZVypisu.VS then
+          AddButton(0,i+1,25,18,'<--',haCenter,vaCenter);
         Cells[1, i+1] := iPredchoziPlatba.VS;
         Cells[2, i+1] := format('%m', [iPredchoziPlatba.Castka]);
         if iPredchoziPlatba.Castka < 0 then asgPredchoziPlatby.FontColors[2, i+1] := clRed;
@@ -428,28 +429,21 @@ end;
 
 procedure TfmMain.vyplnDoklady;
 var
-  tempList : TList;
   iDoklad : TDoklad;
   iPDPar : TPlatbaDokladPar;
   i : integer;
 begin
 
-  currPlatbaZVypisu.loadDokladyPodleVS(not chbVsechnyDoklady.Checked);
-  tempList := currPlatbaZVypisu.DokladyList;
-
-  if chbVsechnyDoklady.Checked then
-    lblNalezeneDoklady.Caption := 'Všechny doklady podle VS ' +  currPlatbaZVypisu.VS
-  else
-    lblNalezeneDoklady.Caption := 'Nezaplacené doklady podle VS ' +  currPlatbaZVypisu.VS;
+  //currPlatbaZVypisu.loadDokladyPodleVS(); //bylo v minulosti
 
   with asgNalezeneDoklady do begin
     Enabled := true;
     ClearNormalCells;
-    if tempList.Count > 0 then
+    if currPlatbaZVypisu.DokladyList.Count > 0 then
     begin
-      RowCount := tempList.Count + 1;
+      RowCount := currPlatbaZVypisu.DokladyList.Count + 1;
       for i := 0 to RowCount - 2 do begin
-        iDoklad := TDoklad(tempList[i]);
+        iDoklad := TDoklad(currPlatbaZVypisu.DokladyList[i]);
         Cells[0, i+1] := iDoklad.CisloDokladu;
         Cells[1, i+1] := DateToStr(iDoklad.DatumDokladu);
         Cells[2, i+1] := iDoklad.FirmName;
@@ -460,11 +454,27 @@ begin
         Cells[7, i+1] := iDoklad.ID;
 
         iPDPar := Parovatko.getPDPar(currPlatbaZVypisu, iDoklad.ID);
-        if Assigned(iPDPar) then
-          Cells[8, i+1] := iPDPar.Popis; // + floattostr(iPDPar.CastkaPouzita) ;
-    end;
-    end else
+        if Assigned(iPDPar) then begin
+          Cells[8, i+1] := iPDPar.Popis; // + floattostr(iPDPar.CastkaPouzita);
+          if iPDPar.CastkaPouzita = iDoklad.CastkaNezaplaceno then
+            Colors[6, i+1] := $AAFFAA
+          else
+            Colors[6, i+1] := $CDFAFF;
+        end;
+
+        if iDoklad.CastkaNezaplaceno = 0 then Colors[6, i+1] := $BBBBFF;
+      end;
+
+      chbVsechnyDoklady.Checked := currPlatbaZVypisu.vsechnyDoklady;
+      if chbVsechnyDoklady.Checked then
+        lblNalezeneDoklady.Caption := 'Doklady s VS ' +  currPlatbaZVypisu.VS
+      else
+        lblNalezeneDoklady.Caption := 'Doklady s VS ' +  currPlatbaZVypisu.VS;
+
+    end else begin
       RowCount := 2;
+      lblNalezeneDoklady.Caption := 'Žádné vystavené doklady s VS ' +  currPlatbaZVypisu.VS;
+    end;
   end;
 end;
 
@@ -524,8 +534,9 @@ begin
   if currPlatbaZVypisu.VS <> currPlatbaZVypisu.VS_orig then
     asgMain.AddButton(0, asgMain.row, 76, 16, currPlatbaZVypisu.VS_orig, haCenter, vaCenter);
 
-  currPlatbaZVypisu.loadPredchoziPlatby(StrToInt(editPocetPredchPlateb.text));
+  currPlatbaZVypisu.loadPredchoziPlatbyPodleVS(StrToInt(editPocetPredchPlateb.text));
   vyplnPredchoziPlatby;
+  currPlatbaZVypisu.loadDokladyPodleVS();
   vyplnDoklady;
   sparujVsechnyPrichoziPlatby;
   //sparujPrichoziPlatbu(asgMain.row - 1);
@@ -585,6 +596,8 @@ end;
 
 procedure TfmMain.chbVsechnyDokladyClick(Sender: TObject);
 begin
+  currPlatbaZVypisu.vsechnyDoklady := chbVsechnyDoklady.Checked;
+  currPlatbaZVypisu.loadDokladyPodleVS();
   vyplnDoklady;
 end;
 
@@ -724,5 +737,6 @@ begin
   provedAkcePoZmeneVS;
 
 end;
+
 
 end.

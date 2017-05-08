@@ -40,6 +40,8 @@ type
     kredit, debet: boolean;
     znamyPripad: boolean;
     zprava : string;
+    vsechnyDoklady: boolean;
+    pocetNacitanychPP: integer;
 
     problemLevel: integer;
     rozdeleniPlatby: integer;
@@ -52,10 +54,16 @@ type
     constructor create(castka : currency; qrAbra : TZQuery); overload;
     constructor create(gpcLine : string; qrAbra : TZQuery); overload;
 
+    procedure loadPredchoziPlatbyPodleVS(); overload;
+    procedure loadPredchoziPlatbyPodleUctu(); overload;
+
   published
     procedure init(pocetPredchozichPlateb : integer);
     procedure loadPredchoziPlatby(pocetPlateb : integer);
-    procedure loadDokladyPodleVS(jenNezaplacene : boolean);
+    procedure loadPredchoziPlatbyPodleUctu(pocetPlateb : integer); overload;
+    procedure loadPredchoziPlatbyPodleVS(pocetPlateb : integer); overload;
+    procedure loadDokladyPodleVS();
+    function automatickyOpravVS() : string;
     function getVSzMinulostiByBankAccount() : string;
     function getPocetPredchozichPlatebNaStejnyVS() : integer;
     function getProcentoPredchozichPlatebNaStejnyVS() : single;
@@ -104,7 +112,7 @@ begin
   self.cisloDokladu := copy(gpcLine, 36, 13);
   self.castka := StrToInt(removeLeadingZeros(copy(gpcLine, 49, 12))) / 100;
   self.kodUctovani := copy(gpcLine, 61, 1);
-  self.VS := removeLeadingZeros(copy(gpcLine, 62, 10));
+  self.VS := RemoveSpaces(removeLeadingZeros(copy(gpcLine, 62, 10)));
   //self.KSplnyPodleGpc := copy(gpcLine, 72, 10);
   self.KS := copy(gpcLine, 78, 4);
   self.SS := removeLeadingZeros(copy(gpcLine, 82, 10));
@@ -115,6 +123,8 @@ begin
   self.Datum := Str6digitsToDate(copy(gpcLine, 123, 6));
 
   self.znamyPripad := false;
+  self.pocetNacitanychPP := 5;
+  self.vsechnyDoklady := false;
   self.VS_orig := self.VS;
 
   if (self.kodUctovani = '1') OR (self.kodUctovani = '5') then self.kredit := false; //1 je debet, 5 je storno kreditu
@@ -122,20 +132,16 @@ begin
   self.debet := not self.kredit;
 
   self.cisloUctuKZobrazeni := removeLeadingZeros(self.cisloUctu);
-
   if kredit AND (cisloUctuKZobrazeni = '2100098382/2010') then setZnamyPripad('z BÚ');
   if kredit AND (cisloUctuKZobrazeni = '2800098383/2010') then setZnamyPripad('z SÚ');
   if kredit AND (cisloUctuKZobrazeni = '171336270/0300') then setZnamyPripad('z ÈSOB');
   if kredit AND (cisloUctuKZobrazeni = '2107333410/2700') then setZnamyPripad('z PayU');
-
   if debet AND (cisloUctuKZobrazeni = '2100098382/2010') then setZnamyPripad('na BÚ');
   if debet AND (cisloUctuKZobrazeni = '2800098383/2010') then setZnamyPripad('na SÚ');
   if debet AND (cisloUctuKZobrazeni = '171336270/0300') then setZnamyPripad('na ÈSOB');
   if debet AND (cisloUctuVlastni = '2389210008000000') AND (AnsiContainsStr(nazevKlienta, 'illing')) then setZnamyPripad('z PayU na BÚ');
 
-
   cisloUctuKZobrazeni := prevedCisloUctuNaText(cisloUctuKZobrazeni);
-
 
   self.PredchoziPlatbyList := TList.Create;
   self.PredchoziPlatbyVsList := TList.Create;
@@ -145,29 +151,26 @@ end;
 
 
 procedure TPlatbaZVypisu.init(pocetPredchozichPlateb : integer);
-var
-  pouzivanyVSvMinulosti : string;
 begin
-  pouzivanyVSvMinulosti := '';
-  pouzivanyVSvMinulosti := getVSzMinulostiByBankAccount();
-  if pouzivanyVSvMinulosti <> '' then begin
-    self.VS := pouzivanyVSvMinulosti;
-
-  end;
-  self.loadPredchoziPlatby(pocetPredchozichPlateb);
-  self.loadDokladyPodleVS(true);
+  loadPredchoziPlatby(pocetPredchozichPlateb);
+  loadDokladyPodleVS();
 end;
 
-procedure TPlatbaZVypisu.loadPredchoziPlatby(pocetPlateb : integer);
-//var
-  //SQLStr : AnsiString;
-begin
-  self.PredchoziPlatbyList := TList.Create;
-  self.PredchoziPlatbyVsList := TList.Create;
 
-  with qrAbra do begin //todo se pro cislo uctu Ceske Posty nic nevratilo
+procedure TPlatbaZVypisu.loadPredchoziPlatby(pocetPlateb : integer);
+begin
+  loadPredchoziPlatbyPodleUctu(pocetPlateb);
+  loadPredchoziPlatbyPodleVS(pocetPlateb);
+end;
+
+procedure TPlatbaZVypisu.loadPredchoziPlatbyPodleUctu(pocetPlateb : integer);
+begin
+  self.pocetNacitanychPP := pocetPlateb;
+  self.PredchoziPlatbyList := TList.Create;
+
   // posledních N plateb ze stejného èísla úètu
-    SQL.Text := 'SELECT FIRST ' + IntToStr(pocetPlateb) + ' bs.VarSymbol, bs.Firm_ID, bs.Amount, '
+  with qrAbra do begin //todo aby se pro cislo uctu Ceske Posty nic nevratilo
+    SQL.Text := 'SELECT FIRST ' + IntToStr(self.pocetNacitanychPP) + ' bs.VarSymbol, bs.Firm_ID, bs.Amount, '
               + 'bs.Credit, bs.BankAccount, bs.DocDate$Date, firms.Name as FirmName '
               + 'FROM BankStatements2 bs '
               + 'JOIN Firms ON bs.Firm_ID = Firms.Id '
@@ -180,10 +183,23 @@ begin
       Next;
     end;
     Close;
+  end;
+end;
+
+procedure TPlatbaZVypisu.loadPredchoziPlatbyPodleUctu();
+begin
+  loadPredchoziPlatbyPodleUctu(self.pocetNacitanychPP);
+end;
+
+procedure TPlatbaZVypisu.loadPredchoziPlatbyPodleVS(pocetPlateb : integer);
+begin
+  self.pocetNacitanychPP := pocetPlateb;
+  self.PredchoziPlatbyVsList := TList.Create;
 
   // posledních N plateb na stejný VS
-
-    SQL.Text := 'SELECT FIRST ' + IntToStr(pocetPlateb) + ' bs.VarSymbol, bs.Firm_ID, bs.Amount, '
+  if StrToIntDef(self.VS, 0) > 0 then
+  with qrAbra do begin
+    SQL.Text := 'SELECT FIRST ' + IntToStr(self.pocetNacitanychPP) + ' bs.VarSymbol, bs.Firm_ID, bs.Amount, '
               + 'bs.Credit, bs.BankAccount, bs.DocDate$Date, firms.Name as FirmName '
               + 'FROM BankStatements2 bs '
               + 'JOIN Firms ON bs.Firm_ID = Firms.Id '
@@ -199,18 +215,22 @@ begin
   end;
 end;
 
+procedure TPlatbaZVypisu.loadPredchoziPlatbyPodleVS();
+begin
+  loadPredchoziPlatbyPodleVS(self.pocetNacitanychPP);
+end;
 
-procedure TPlatbaZVypisu.loadDokladyPodleVS(jenNezaplacene : boolean);
+
+procedure TPlatbaZVypisu.loadDokladyPodleVS();
 var
   SQLiiSelect, SQLiiJoin, SQLiiJenNezaplacene, SQLiiWhere, SQLiiOrder,
-  //SQLidiSelect, SQLidiJoin, SQLidiJenNezaplacene, SQLidiWhere, SQLidiOrder,
   SQLStr : AnsiString;
 begin
   self.DokladyList := TList.Create;
 
   with qrAbra do begin
 
-    // cteni s IssuedInvoices
+    // cteni z IssuedInvoices
     SQLiiSelect :=
               'SELECT ii.ID, ii.DOCQUEUE_ID, ii.DOCDATE$DATE, ii.FIRM_ID, ii.DESCRIPTION, D.DOCUMENTTYPE, '
             + 'D.Code || ''-'' || II.OrdNumber || ''/'' || substring(P.Code from 3 for 2) as CisloDokladu, '
@@ -226,10 +246,10 @@ begin
     SQLiiJenNezaplacene :=  'AND (ii.LOCALAMOUNT - ii.LOCALPAIDAMOUNT - ii.LOCALCREDITAMOUNT + ii.LOCALPAIDCREDITAMOUNT) <> 0 ';
     SQLiiOrder := 'order by ii.DocDate$Date DESC';
 
-    if jenNezaplacene then
-      SQL.Text := SQLiiSelect + SQLiiJoin + SQLiiJenNezaplacene + SQLiiWhere + SQLiiOrder
+    if self.vsechnyDoklady then
+      SQL.Text := SQLiiSelect + SQLiiJoin + SQLiiWhere + SQLiiOrder
     else
-      SQL.Text := SQLiiSelect + SQLiiJoin + SQLiiWhere + SQLiiOrder;
+      SQL.Text := SQLiiSelect + SQLiiJoin + SQLiiJenNezaplacene + SQLiiWhere + SQLiiOrder;
     Open;
     while not Eof do begin
       self.DokladyList.Add(TDoklad.Create(qrAbra));
@@ -237,7 +257,7 @@ begin
     end;
     Close;
 
-    // cteni s IssuedDInvoices - zalohove listy
+    // cteni z IssuedDInvoices - zalohove listy
     SQLiiSelect :=                                                       // ZL je D.DOCUMENTTYPE 10, Faktura je D.DOCUMENTTYPE 03
               'SELECT ii.ID, ii.DOCQUEUE_ID, ii.DOCDATE$DATE, ii.FIRM_ID, ii.DESCRIPTION, D.DOCUMENTTYPE, '
             + 'D.Code || ''-'' || II.OrdNumber || ''/'' || substring(P.Code from 3 for 2) as CisloDokladu, '
@@ -253,10 +273,10 @@ begin
     SQLiiJenNezaplacene :=  'AND (ii.LOCALAMOUNT - ii.LOCALPAIDAMOUNT) <> 0 ';
     SQLiiOrder := 'order by ii.DocDate$Date DESC';
 
-    if jenNezaplacene then
-      SQL.Text := SQLiiSelect + SQLiiJoin + SQLiiJenNezaplacene + SQLiiWhere + SQLiiOrder
+    if self.vsechnyDoklady then
+      SQL.Text := SQLiiSelect + SQLiiJoin + SQLiiWhere + SQLiiOrder
     else
-      SQL.Text := SQLiiSelect + SQLiiJoin + SQLiiWhere + SQLiiOrder;
+      SQL.Text := SQLiiSelect + SQLiiJoin + SQLiiJenNezaplacene + SQLiiWhere + SQLiiOrder;
     Open;
     while not Eof do begin
       self.DokladyList.Add(TDoklad.Create(qrAbra));
@@ -267,38 +287,54 @@ begin
 
     // v RecievedInvoices bych musel hledat vydane faktury
 
-  // když se nenajde nezaplacená faktura ani zálohový list, natáhnu 2 zaplacené abych mohl pøiøadit firmu
-  if DokladyList.Count = 0 then begin
+    // když se nenajde nezaplacená faktura ani zálohový list, natáhnu 1 zaplacený abych mohl pøiøadit firmu
+    if DokladyList.Count = 0 then begin
 
-    SQLStr := 'SELECT FIRST 2 ii.ID, ii.DOCQUEUE_ID, ii.DOCDATE$DATE, ii.FIRM_ID, ii.DESCRIPTION, D.DOCUMENTTYPE, '
-            + 'D.Code || ''-'' || II.OrdNumber || ''/'' || substring(P.Code from 3 for 2) as CisloDokladu, '
-            + 'ii.LOCALAMOUNT, ii.LOCALPAIDAMOUNT, ii.LOCALCREDITAMOUNT, ii.LOCALPAIDCREDITAMOUNT, '
-            + 'ii.DUEDATE$DATE, ii.ACCDOCQUEUE_ID, ii.FIRMOFFICE_ID, ii.DOCUUID, firms.Name as FirmName '
-            + 'FROM ISSUEDINVOICES ii ';
-    SQLStr := SQLStr
-            + 'JOIN Firms ON ii.Firm_ID = Firms.ID '
-            + 'JOIN DocQueues D ON ii.DocQueue_ID = D.ID '
-            + 'JOIN Periods P ON ii.Period_ID = P.ID '
-            + 'WHERE ii.VarSymbol = ''' + self.VS  + ''' ';
-    SQLStr := SQLStr + 'order by ii.DocDate$Date DESC';
-    SQL.Text := SQLStr;
-    Open;
-    while not Eof do begin
-      self.DokladyList.Add(TDoklad.Create(qrAbra));
-      Next;
+      SQLStr := 'SELECT FIRST 1 ii.ID, ii.DOCQUEUE_ID, ii.DOCDATE$DATE, ii.FIRM_ID, ii.DESCRIPTION, D.DOCUMENTTYPE, '
+              + 'D.Code || ''-'' || II.OrdNumber || ''/'' || substring(P.Code from 3 for 2) as CisloDokladu, '
+              + 'ii.LOCALAMOUNT, ii.LOCALPAIDAMOUNT, ii.LOCALCREDITAMOUNT, ii.LOCALPAIDCREDITAMOUNT, '
+              + 'ii.DUEDATE$DATE, ii.ACCDOCQUEUE_ID, ii.FIRMOFFICE_ID, ii.DOCUUID, firms.Name as FirmName '
+              + 'FROM ISSUEDINVOICES ii ';
+      SQLStr := SQLStr
+              + 'JOIN Firms ON ii.Firm_ID = Firms.ID '
+              + 'JOIN DocQueues D ON ii.DocQueue_ID = D.ID '
+              + 'JOIN Periods P ON ii.Period_ID = P.ID '
+              + 'WHERE ii.VarSymbol = ''' + self.VS  + ''' ';
+      SQLStr := SQLStr + 'order by ii.DocDate$Date DESC';
+      SQL.Text := SQLStr;
+      Open;
+      while not Eof do begin
+        self.DokladyList.Add(TDoklad.Create(qrAbra));
+        Next;
+      end;
+      Close;
     end;
-    Close;
+  end;
+end;
 
+function TPlatbaZVypisu.automatickyOpravVS() : string;
+var
+  pouzivanyVSvMinulosti : string;
+begin
+  Result := '';
+  if self.cisloUctuKZobrazeni = '/0000' then Exit;
+  if self.problemLevel = 0 then Exit;
+
+  pouzivanyVSvMinulosti := getVSzMinulostiByBankAccount();
+  if pouzivanyVSvMinulosti <> '' then begin
+    self.VS := pouzivanyVSvMinulosti;
+    loadPredchoziPlatbyPodleVS();
+    loadDokladyPodleVS;
   end;
 
-
-  end;
 end;
 
 
 function TPlatbaZVypisu.getVSzMinulostiByBankAccount() : string;
 begin
   Result := '';
+  if self.cisloUctuKZobrazeni = '/0000' then Exit;
+
   with qrAbra do begin
     SQL.Text := 'SELECT varsymbol, count(*) as pocet FROM'
               + ' (SELECT FIRST 7 VarSymbol, Firm_ID FROM BankStatements2'
@@ -382,7 +418,7 @@ end;
 constructor TPredchoziPlatba.create(qrAbra : TZQuery);
 begin
  with qrAbra do begin
-  self.VS := FieldByName('VarSymbol').AsString;
+  self.VS := RemoveSpaces(FieldByName('VarSymbol').AsString);
   self.Firm_ID := FieldByName('Firm_ID').AsString;
   self.castka := FieldByName('Amount').AsCurrency;
   self.cisloUctu := FieldByName('BankAccount').AsString;

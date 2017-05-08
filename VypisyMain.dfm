@@ -1,8 +1,8 @@
 object fmMain: TfmMain
-  Left = 273
-  Top = 3
-  Width = 1344
-  Height = 839
+  Left = 356
+  Top = 179
+  Width = 1362
+  Height = 955
   Caption = 'Na'#269'ten'#237', oprava a ulo'#382'en'#237' bankovn'#237'ho v'#253'pisu'
   Color = clBtnFace
   Constraints.MinHeight = 721
@@ -16,8 +16,8 @@ object fmMain: TfmMain
   OnClose = FormClose
   OnShow = FormShow
   DesignSize = (
-    1328
-    800)
+    1346
+    917)
   PixelsPerInch = 96
   TextHeight = 13
   object lblHlavicka: TLabel
@@ -39,8 +39,8 @@ object fmMain: TfmMain
   object asgMain: TAdvStringGrid
     Left = 110
     Top = 26
-    Width = 753
-    Height = 628
+    Width = 787
+    Height = 744
     Cursor = crDefault
     Anchors = [akLeft, akTop, akBottom]
     ColCount = 8
@@ -171,12 +171,12 @@ object fmMain: TfmMain
       132
       135
       64
-      167)
+      172)
   end
   object pnBottom: TPanel
     Left = 0
-    Top = 654
-    Width = 1328
+    Top = 771
+    Width = 1346
     Height = 146
     Align = alBottom
     TabOrder = 1
@@ -324,7 +324,7 @@ object fmMain: TfmMain
         110)
     end
     object chbVsechnyDoklady: TCheckBox
-      Left = 278
+      Left = 270
       Top = 4
       Width = 103
       Height = 17
@@ -334,10 +334,10 @@ object fmMain: TfmMain
     end
   end
   object pnRight: TPanel
-    Left = 881
+    Left = 899
     Top = 0
     Width = 447
-    Height = 654
+    Height = 771
     Align = alRight
     TabOrder = 2
     object lblPrechoziPlatbyZUctu: TLabel
@@ -646,7 +646,7 @@ object fmMain: TfmMain
     Left = 0
     Top = 0
     Width = 109
-    Height = 654
+    Height = 771
     Align = alLeft
     TabOrder = 3
     object lbZobrazit: TLabel

@@ -17,6 +17,7 @@ function LeftPad(value: string; length:integer=8; pad:char='0'): string; overloa
 function Str6digitsToDate(datum : string) : double;
 function IndexByName(DataObject: variant; Name: ShortString): integer;
 function pocetRadkuTxtSouboru(SName: string): integer;
+function RemoveSpaces(const s: string): string;
 //function DumpObject( YourObjectInstance : tObject ) : ansistring;
 
 
@@ -162,5 +163,33 @@ begin
   Result := oSL.Count;
   oSL.Free;
 end;
+
+function RemoveSpaces(const s: string): string;
+var
+  len, p: integer;
+  pc: PChar;
+const
+  WhiteSpace = [#0, #9, #10, #13, #32];
+
+begin
+  len := Length(s);
+  SetLength(Result, len);
+
+  pc := @s[1];
+  p := 0;
+  while len > 0 do
+  begin
+  if not (pc^ in WhiteSpace) then
+  begin
+  inc(p);
+  Result[p] := pc^;
+  end;
+
+  inc(pc);
+  dec(len);
+  end;
+
+  SetLength(Result, p);
+  end;
 
 end.
