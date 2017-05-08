@@ -5,7 +5,7 @@ interface
 uses
   SysUtils, Variants, Classes, Controls, StrUtils,
   Windows, Messages, Dialogs, Forms,
-  uTVypis, AbraEntities, DesUtils;
+  uTVypis, uTPlatbaZVypisu, AbraEntities, DesUtils;
 
 
 type
@@ -37,14 +37,12 @@ type
     function getPDParyAsText() : AnsiString;
     function getPDParyPlatbyAsText(currPlatba : TPlatbaZVypisu) : AnsiString;
     function getPDPar(currPlatba : TPlatbaZVypisu; currDoklad_ID: string) : TPlatbaDokladPar;
-
   end;
 
 
 
 
 implementation
-
 
 
 constructor TParovatko.create(AbraOLE: variant; Vypis: TVypis);
