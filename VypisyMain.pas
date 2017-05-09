@@ -76,6 +76,7 @@ type
     procedure vyplnPrichoziPlatby;
     procedure vyplnPredchoziPlatby;
     procedure vyplnDoklady;
+    procedure vyplnVysledekParovaniPP(i : integer);
     procedure sparujPrichoziPlatbu(i : integer);
     procedure sparujVsechnyPrichoziPlatby;
     procedure urciCurrPlatbaZVypisu;
@@ -293,21 +294,30 @@ begin
       Cells[5, i+1] := iPlatbaZVypisu.nazevKlienta;
       Cells[6, i+1] := DateToStr(iPlatbaZVypisu.Datum);
 
-      if iPlatbaZVypisu.rozdeleniPlatby > 0 then
-        asgMain.Cells[7, i+1] := IntToStr (iPlatbaZVypisu.rozdeleniPlatby) + ' dìlení, ' + iPlatbaZVypisu.zprava
-      else
-        asgMain.Cells[7, i+1] := iPlatbaZVypisu.zprava;
-
-      case iPlatbaZVypisu.problemLevel of
-        0: asgMain.Colors[2, i+1] := $AAFFAA;
-        1: asgMain.Colors[2, i+1] := $cdfaff;
-        2: asgMain.Colors[2, i+1] := $bbbbff;
-      end;
-      
+      vyplnVysledekParovaniPP(i);
 
     end;
   end;
 
+end;
+
+procedure TfmMain.vyplnVysledekParovaniPP(i : integer);
+var
+  iPlatbaZVypisu : TPlatbaZVypisu;
+begin
+  iPlatbaZVypisu := TPlatbaZVypisu(Vypis.Platby[i]);
+
+  case iPlatbaZVypisu.problemLevel of
+    0: asgMain.Colors[2, i+1] := $AAFFAA;
+    1: asgMain.Colors[2, i+1] := $CDFAFF;
+    2: asgMain.Colors[2, i+1] := $60A4F4;
+    5: asgMain.Colors[2, i+1] := $BBBBFF;
+  end;
+
+  if iPlatbaZVypisu.rozdeleniPlatby > 0 then
+    asgMain.Cells[7, i+1] := IntToStr (iPlatbaZVypisu.rozdeleniPlatby) + ' dìlení, ' + iPlatbaZVypisu.zprava
+  else
+    asgMain.Cells[7, i+1] := iPlatbaZVypisu.zprava;
 end;
 
 procedure TfmMain.filtrujZobrazeniPlateb;
@@ -360,21 +370,8 @@ var
   iPlatbaZVypisu : TPlatbaZVypisu;
 begin
   iPlatbaZVypisu := TPlatbaZVypisu(Vypis.Platby[i]);
-
   Parovatko.sparujPlatbu(iPlatbaZVypisu);
-  //iPlatbaZVypisu.sparujSe(Parovatko);  // mohlo by takhle být možná pro lepší architekturu
-
-  case iPlatbaZVypisu.problemLevel of
-    0: asgMain.Colors[2, i+1] := $AAFFAA;
-    1: asgMain.Colors[2, i+1] := $CDFAFF;
-    2: asgMain.Colors[2, i+1] := $BBBBFF;
-  end;
-
-  if iPlatbaZVypisu.rozdeleniPlatby > 0 then
-    asgMain.Cells[7, i+1] := IntToStr (iPlatbaZVypisu.rozdeleniPlatby) + ' dìlení, ' + iPlatbaZVypisu.zprava
-  else
-    asgMain.Cells[7, i+1] := iPlatbaZVypisu.zprava;
-
+  vyplnVysledekParovaniPP(i);
 end;
 
 

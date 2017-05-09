@@ -318,13 +318,15 @@ var
 begin
   Result := '';
   if self.cisloUctuKZobrazeni = '/0000' then Exit;
-  if self.problemLevel = 0 then Exit;
 
-  pouzivanyVSvMinulosti := getVSzMinulostiByBankAccount();
-  if pouzivanyVSvMinulosti <> '' then begin
-    self.VS := pouzivanyVSvMinulosti;
-    loadPredchoziPlatbyPodleVS();
-    loadDokladyPodleVS;
+  if self.problemLevel = 5 then
+  begin
+    pouzivanyVSvMinulosti := getVSzMinulostiByBankAccount();
+    if pouzivanyVSvMinulosti <> '' then begin
+      self.VS := pouzivanyVSvMinulosti;
+      loadPredchoziPlatbyPodleVS();
+      loadDokladyPodleVS;
+    end;
   end;
 
 end;

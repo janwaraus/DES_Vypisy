@@ -101,7 +101,7 @@ begin
         end else begin
           vytvorPDPar(Platba, iDoklad, zbyvaCastka, 'pøepl. | ' + Platba.VS + ' |', false);
           Platba.zprava := 'neznámý pøep. ' + FloatToStr(zbyvaCastka) + ' Kè';
-          Platba.problemLevel := 2;
+          Platba.problemLevel := 5;
         end;
       end;
       Exit;
