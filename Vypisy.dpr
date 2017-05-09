@@ -8,7 +8,8 @@ uses
   uTPlatbaZVypisu in 'uTPlatbaZVypisu.pas',
   uTParovatko in 'uTParovatko.pas',
   AbraEntities in 'AbraEntities.pas',
-  PrirazeniPNP in 'PrirazeniPNP.pas' {fmPrirazeniPnp};
+  PrirazeniPNP in 'PrirazeniPNP.pas' {fmPrirazeniPnp},
+  Customers in 'Customers.pas' {fmCustomers};
 
 {$R *.res}
 
@@ -17,5 +18,6 @@ begin
   Application.Title := 'Vypisy';
   Application.CreateForm(TfmMain, fmMain);
   Application.CreateForm(TfmPrirazeniPnp, fmPrirazeniPnp);
+  Application.CreateForm(TfmCustomers, fmCustomers);
   Application.Run;
 end.

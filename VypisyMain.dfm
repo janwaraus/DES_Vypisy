@@ -1,7 +1,7 @@
 object fmMain: TfmMain
-  Left = 63
-  Top = 5
-  Width = 1362
+  Left = 142
+  Top = 182
+  Width = 1365
   Height = 817
   Caption = 'Na'#269'ten'#237', oprava a ulo'#382'en'#237' bankovn'#237'ho v'#253'pisu'
   Color = clBtnFace
@@ -16,8 +16,8 @@ object fmMain: TfmMain
   OnClose = FormClose
   OnShow = FormShow
   DesignSize = (
-    1346
-    778)
+    1357
+    790)
   PixelsPerInch = 96
   TextHeight = 13
   object lblHlavicka: TLabel
@@ -38,9 +38,9 @@ object fmMain: TfmMain
   end
   object asgMain: TAdvStringGrid
     Left = 110
-    Top = 26
-    Width = 787
-    Height = 685
+    Top = 24
+    Width = 788
+    Height = 618
     Cursor = crDefault
     Anchors = [akLeft, akTop, akBottom]
     ColCount = 8
@@ -175,8 +175,8 @@ object fmMain: TfmMain
   end
   object pnBottom: TPanel
     Left = 0
-    Top = 632
-    Width = 1346
+    Top = 644
+    Width = 1357
     Height = 146
     Align = alBottom
     TabOrder = 1
@@ -334,10 +334,10 @@ object fmMain: TfmMain
     end
   end
   object pnRight: TPanel
-    Left = 899
+    Left = 910
     Top = 0
     Width = 447
-    Height = 632
+    Height = 644
     Align = alRight
     TabOrder = 2
     object lblPrechoziPlatbyZUctu: TLabel
@@ -646,7 +646,7 @@ object fmMain: TfmMain
     Left = 0
     Top = 0
     Width = 109
-    Height = 632
+    Height = 644
     Align = alLeft
     TabOrder = 3
     object lbZobrazit: TLabel
@@ -673,7 +673,7 @@ object fmMain: TfmMain
     end
     object btnZapisDoAbry: TButton
       Left = 22
-      Top = 164
+      Top = 206
       Width = 65
       Height = 21
       Caption = '&Do Abry'
@@ -769,6 +769,21 @@ object fmMain: TfmMain
       ParentFont = False
       TabOrder = 9
       OnClick = btnShowPrirazeniPnpFormClick
+    end
+    object btCustomes: TButton
+      Left = 22
+      Top = 170
+      Width = 65
+      Height = 21
+      Caption = '&Z'#225'kazn'#237'ci'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = []
+      ParentFont = False
+      TabOrder = 10
+      OnClick = btCustomesClick
     end
   end
   object dbAbra: TZConnection

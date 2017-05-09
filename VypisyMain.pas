@@ -37,6 +37,7 @@ type
     lblPrechoziPlatbyZUctu: TLabel;
     Memo2: TMemo;
     btnShowPrirazeniPnpForm: TButton;
+    btCustomes: TButton;
 
     procedure btnNactiClick(Sender: TObject);
     procedure btnZapisDoAbryClick(Sender: TObject);
@@ -71,6 +72,7 @@ type
       AState: TGridDrawState; ABrush: TBrush; AFont: TFont);
     procedure btnShowPrirazeniPnpFormClick(Sender: TObject);
     procedure asgMainButtonClick(Sender: TObject; ACol, ARow: Integer);
+    procedure btCustomesClick(Sender: TObject);
 
   public
     procedure vyplnPrichoziPlatby;
@@ -96,7 +98,7 @@ var
 
 implementation
 
-uses AbraEntities, DesUtils, PrirazeniPNP;
+uses AbraEntities, DesUtils, PrirazeniPNP, Customers;
 
 {$R *.dfm}
 
@@ -736,5 +738,10 @@ begin
 
 end;
 
+
+procedure TfmMain.btCustomesClick(Sender: TObject);
+begin
+  fmCustomers.Show;
+end;
 
 end.
