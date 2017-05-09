@@ -310,7 +310,7 @@ begin
   case iPlatbaZVypisu.problemLevel of
     0: asgMain.Colors[2, i+1] := $AAFFAA;
     1: asgMain.Colors[2, i+1] := $CDFAFF;
-    2: asgMain.Colors[2, i+1] := $60A4F4;
+    2: asgMain.Colors[2, i+1] := $40D0A0; // oranzova je $35C9FF
     5: asgMain.Colors[2, i+1] := $BBBBFF;
   end;
 

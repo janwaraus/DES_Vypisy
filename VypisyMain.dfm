@@ -1,8 +1,8 @@
 object fmMain: TfmMain
-  Left = 356
-  Top = 179
+  Left = 63
+  Top = 5
   Width = 1362
-  Height = 955
+  Height = 817
   Caption = 'Na'#269'ten'#237', oprava a ulo'#382'en'#237' bankovn'#237'ho v'#253'pisu'
   Color = clBtnFace
   Constraints.MinHeight = 721
@@ -17,7 +17,7 @@ object fmMain: TfmMain
   OnShow = FormShow
   DesignSize = (
     1346
-    917)
+    778)
   PixelsPerInch = 96
   TextHeight = 13
   object lblHlavicka: TLabel
@@ -40,7 +40,7 @@ object fmMain: TfmMain
     Left = 110
     Top = 26
     Width = 787
-    Height = 744
+    Height = 685
     Cursor = crDefault
     Anchors = [akLeft, akTop, akBottom]
     ColCount = 8
@@ -175,7 +175,7 @@ object fmMain: TfmMain
   end
   object pnBottom: TPanel
     Left = 0
-    Top = 771
+    Top = 632
     Width = 1346
     Height = 146
     Align = alBottom
@@ -337,7 +337,7 @@ object fmMain: TfmMain
     Left = 899
     Top = 0
     Width = 447
-    Height = 771
+    Height = 632
     Align = alRight
     TabOrder = 2
     object lblPrechoziPlatbyZUctu: TLabel
@@ -377,7 +377,7 @@ object fmMain: TfmMain
       Left = 3
       Top = 406
       Width = 435
-      Height = 131
+      Height = 99
       TabOrder = 0
     end
     object asgPredchoziPlatby: TAdvStringGrid
@@ -634,9 +634,9 @@ object fmMain: TfmMain
     end
     object Memo2: TMemo
       Left = 2
-      Top = 552
+      Top = 512
       Width = 436
-      Height = 129
+      Height = 113
       Lines.Strings = (
         'Memo2')
       TabOrder = 4
@@ -646,7 +646,7 @@ object fmMain: TfmMain
     Left = 0
     Top = 0
     Width = 109
-    Height = 771
+    Height = 632
     Align = alLeft
     TabOrder = 3
     object lbZobrazit: TLabel

@@ -65,6 +65,7 @@ begin
   iDoklad := nil;
   Platba.rozdeleniPlatby := 0;
   Platba.castecnaUhrada := 0;
+  Platba.problemLevel := 2; //default oranžová
 
   self.odparujPlatbu(Platba); //není vlastnì už potøeba, protože vždy párujeme nanovo všechny Platby od zaèátku do konce
 
@@ -119,10 +120,17 @@ begin
         begin
           vytvorPDPar(Platba, iDoklad, zbyvaCastka, '', true); //pøesnì |
           Platba.zprava := 'pøesnì';
+
+          if Platba.getProcentoPredchozichPlatebZeStejnehoUctu() > 0.5 then
+            Platba.problemLevel := 0
+          else
+            Platba.problemLevel := 2;
+          {
           if Platba.rozdeleniPlatby > 0 then
             Platba.problemLevel := 0 //bylo 1
           else
             Platba.problemLevel := 0;
+          }
           Exit;
         end;
 
@@ -131,7 +139,12 @@ begin
           vytvorPDPar(Platba, iDoklad, zbyvaCastka, 'èást. ' + floattostr(zbyvaCastka) + ' z ' + floattostr(kNaparovani) + ' Kè |', true);
           Platba.zprava := 'èásteèná úhrada';
           Platba.castecnaUhrada := 1;
-          Platba.problemLevel := 1;
+
+          if Platba.getProcentoPredchozichPlatebZeStejnehoUctu() > 0.5 then
+            Platba.problemLevel := 1
+          else
+            Platba.problemLevel := 2;
+
           Exit;
         end;
 
@@ -145,7 +158,10 @@ begin
     end;
     vytvorPDPar(Platba, iDoklad, zbyvaCastka, 'pøepl. | ' + Platba.VS + ' |' , false);
     Platba.zprava := 'pøepl. ' + FloatToStr(zbyvaCastka) + ' Kè';
-    Platba.problemLevel := 1;
+    if Platba.getProcentoPredchozichPlatebZeStejnehoUctu() > 0.5 then
+      Platba.problemLevel := 1
+    else
+      Platba.problemLevel := 2;
   end;
 
 end;
