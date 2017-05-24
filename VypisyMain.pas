@@ -1,3 +1,6 @@
+// do FI.ini pøidat øádek 
+// GpcPath = J:\Eurosignal\HB\
+
 unit VypisyMain;
 
 interface
@@ -37,7 +40,16 @@ type
     lblPrechoziPlatbyZUctu: TLabel;
     Memo2: TMemo;
     btnShowPrirazeniPnpForm: TButton;
-    btnFaZeZl: TButton;
+    btnVypisFio: TButton;
+    lblVypisFioGpc: TLabel;
+    lblVypisFioInfo: TLabel;
+    btnVypisFioSporici: TButton;
+    btnVypisCsob: TButton;
+    btnVypisPayU: TButton;
+    lblVypisFioSporiciGpc: TLabel;
+    lblVypisFioSporiciInfo: TLabel;
+    lblVypisCsobInfo: TLabel;
+    lblVypisCsobGpc: TLabel;
     Button1: TButton;
 
     procedure btnNactiClick(Sender: TObject);
@@ -73,10 +85,14 @@ type
       AState: TGridDrawState; ABrush: TBrush; AFont: TFont);
     procedure btnShowPrirazeniPnpFormClick(Sender: TObject);
     procedure asgMainButtonClick(Sender: TObject; ACol, ARow: Integer);
-    procedure btnFaZeZlClick(Sender: TObject);
+    procedure btnVypisFioClick(Sender: TObject);
+    procedure btnVypisFioSporiciClick(Sender: TObject);
+    procedure btnVypisCsobClick(Sender: TObject);
     procedure Button1Click(Sender: TObject);
 
   public
+    procedure nactiGpc(GpcFilename : string);
+    procedure vyplnNacitaciButtony;
     procedure vyplnPrichoziPlatby;
     procedure vyplnPredchoziPlatby;
     procedure vyplnDoklady;
@@ -95,6 +111,7 @@ var
   Vypis : TVypis;
   currPlatbaZVypisu : TPlatbaZVypisu;
   PROGRAM_PATH: string;
+  GPC_PATH: string;
   AbraOLE: variant;
   Parovatko : TParovatko;
 
@@ -116,8 +133,8 @@ begin
       dbAbra.HostName := ReadString('Preferences', 'AbraHN', '');
       dbAbra.Database := ReadString('Preferences', 'AbraDB', '');
       dbAbra.User := ReadString('Preferences', 'AbraUN', '');
-
       dbAbra.Password := ReadString('Preferences', 'AbraPW', '');
+      GPC_PATH := ReadString('Preferences', 'GpcPath', '');
     finally
       FIIni.Free;
     end;
@@ -161,6 +178,9 @@ begin
       Exit;
     end;
   end;
+
+  vyplnNacitaciButtony;
+
 end;
 
 procedure TfmMain.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -170,19 +190,85 @@ begin
       Vypis.Platby.Free;
 end;
 
+procedure TfmMain.vyplnNacitaciButtony;
+var
+  maxCisloVypisu : integer;
+  fRok, nalezenyGpcSoubor, hledanyGpcSoubor : string;
+  abraBankaccount : TAbraBankaccount;
+begin
+  fRok := IntToStr(SysUtils.CurrentYear);
+  abraBankAccount := TAbraBankaccount.create(qrAbra);
 
-procedure TfmMain.btnNactiClick(Sender: TObject);
+  //Fio
+  abraBankaccount.loadByNumber('2100098382/2010');
+  maxCisloVypisu := abraBankaccount.getMaxPoradoveCisloVypisu(fRok);
+  hledanyGpcSoubor := 'Vypis_z_uctu-2100098382_' + fRok + '*-' + IntToStr(maxCisloVypisu + 1) + '.gpc';
+  nalezenyGpcSoubor := FindInFolder(GPC_PATH, hledanyGpcSoubor, true);
+
+  Memo2.Lines.Add('Hledám soubor ' + hledanyGpcSoubor);
+  Memo2.Lines.Add('Našel jsem ' + nalezenyGpcSoubor);
+
+  if nalezenyGpcSoubor = '' then begin //nenašel se
+    lblVypisFioGpc.caption := hledanyGpcSoubor + ' nenalezen';
+    btnVypisFio.Enabled := false;
+  end else begin
+    lblVypisFioGpc.caption := nalezenyGpcSoubor;
+  end;
+
+  lblVypisFioInfo.Caption := format('Poèet výpisù: %d, max. èíslo výpisu: %d', [abraBankaccount.getPocetVypisu(fRok), abraBankaccount.getMaxPoradoveCisloVypisu(fRok)]);
+
+
+  /// Fio Spoøicí
+  abraBankaccount.loadByNumber('2800098383/2010');
+  maxCisloVypisu := abraBankaccount.getMaxPoradoveCisloVypisu(fRok);
+  hledanyGpcSoubor := 'Vypis_z_uctu-2800098383_' + fRok + '*-' + IntToStr(maxCisloVypisu + 1) + '.gpc';
+  nalezenyGpcSoubor := FindInFolder(GPC_PATH, hledanyGpcSoubor, true);
+
+  Memo2.Lines.Add('Hledám soubor ' + hledanyGpcSoubor);
+  Memo2.Lines.Add('Našel jsem ' + nalezenyGpcSoubor);
+
+  if nalezenyGpcSoubor = '' then begin //nenašel se
+    lblVypisFioSporiciGpc.caption := hledanyGpcSoubor + ' nenalezen';
+    btnVypisFioSporici.Enabled := false;
+  end else begin
+    lblVypisFioSporiciGpc.caption := nalezenyGpcSoubor;
+  end;
+
+  lblVypisFioSporiciInfo.Caption := format('Poèet výpisù: %d, max. èíslo výpisu: %d', [abraBankaccount.getPocetVypisu(fRok), abraBankaccount.getMaxPoradoveCisloVypisu(fRok)]);
+
+
+  /// ÈSOB Spoøicí
+  abraBankaccount.loadByNumber('171336270/0300');
+  maxCisloVypisu := abraBankaccount.getMaxPoradoveCisloVypisu(fRok);
+  hledanyGpcSoubor := 'BB117641_171336270_' + fRok + '*_' + IntToStr(maxCisloVypisu + 1) + '.gpc';
+  nalezenyGpcSoubor := FindInFolder(GPC_PATH, hledanyGpcSoubor, true);
+
+  Memo2.Lines.Add('Hledám soubor ' + hledanyGpcSoubor);
+  Memo2.Lines.Add('Našel jsem ' + nalezenyGpcSoubor);
+
+  if nalezenyGpcSoubor = '' then begin //nenašel se
+    lblVypisCsobGpc.caption := hledanyGpcSoubor + ' nenalezen';
+    btnVypisCsob.Enabled := false;
+  end else begin
+    lblVypisCsobGpc.caption := nalezenyGpcSoubor;
+  end;
+
+  lblVypisCsobInfo.Caption := format('Poèet výpisù: %d, max. èíslo výpisu: %d', [abraBankaccount.getPocetVypisu(fRok), abraBankaccount.getMaxPoradoveCisloVypisu(fRok)]);
+
+  //Pay U   2389210008000000/0300
+end;
+
+procedure TfmMain.nactiGpc(GpcFilename : string);
 var
   GpcInputFile : TextFile;
   GpcFileLine : string;
   iPlatbaZVypisu : TPlatbaZVypisu;
   i, pocetPlatebGpc: integer;
 begin
-// *** naètení GPC na základì dialogu
-  //NactiGpcDialog.InitialDir := 'J:\Eurosignal\HB\';
-  NactiGpcDialog.Filter := 'Bankovní výpisy (*.gpc)|*.gpc';
-	if NactiGpcDialog.Execute then
   try
+    AssignFile(GpcInputFile, GpcFilename);
+    Reset(GpcInputFile);
+
     Screen.Cursor := crHourGlass;
     asgMain.Visible := true;
     asgMain.ClearNormalCells;
@@ -191,10 +277,7 @@ begin
     asgNalezeneDoklady.ClearNormalCells;
     btnNacti.Enabled := false;
     Application.ProcessMessages;
-    AssignFile(GpcInputFile, NactiGpcDialog.Filename);
 
-
-    Reset(GpcInputFile);
     pocetPlatebGpc := 0;
     while not Eof(GpcInputFile) do
     begin
@@ -221,7 +304,7 @@ begin
         Inc(i);
         if copy(GpcFileLine, 1, 3) = '074' then begin
           Vypis := TVypis.Create(GpcFileLine, qrAbra);
-          Parovatko := TParovatko.create(AbraOLE, Vypis);
+          Parovatko := TParovatko.create(Vypis, AbraOLE, qrAbra);
         end else begin
           MessageDlg('Neplatný GPC soubor, 1. øádek není hlavièka', mtInformation, [mbOk], 0);
           Break;
@@ -251,8 +334,8 @@ begin
         lblHlavicka.Caption := Vypis.abraBankaccount.name + ', ' + Vypis.abraBankaccount.number + ', è.'
                         + IntToStr(Vypis.poradoveCislo) + ' (max è. je ' + IntToStr(Vypis.maxExistujiciPoradoveCislo) + '). Plateb: '
                         + IntToStr(Vypis.Platby.Count);
-        //if not Vypis.isNavazujeNaRadu() then
-         //todo Dialogs.MessageDlg('Doklad è. '+ IntToStr(Vypis.poradoveCislo) + ' nenavazuje na øadu!',mtInformation, [mbOK], 0);
+        if not Vypis.isNavazujeNaRadu() then
+          Dialogs.MessageDlg('Doklad è. '+ IntToStr(Vypis.poradoveCislo) + ' nenavazuje na øadu!', mtInformation, [mbOK], 0);
         //currPlatbaZVypisu := TPlatbaZVypisu(Vypis.Platby[0]); //mùže být ale nemìlo by být potøeba
         asgMainClick(nil);
       end;
@@ -365,7 +448,7 @@ procedure TfmMain.sparujVsechnyPrichoziPlatby;
 var
   i : integer;
 begin
-  Parovatko := TParovatko.create(AbraOLE, Vypis);
+  Parovatko := TParovatko.create(Vypis, AbraOLE, qrAbra);
   for i := 0 to Vypis.Platby.Count - 1 do
     sparujPrichoziPlatbu(i);
 end;
@@ -722,15 +805,15 @@ end;
 
 procedure TfmMain.btnShowPrirazeniPnpFormClick(Sender: TObject);
 begin
-fmPrirazeniPnp.Show;
-{
+  fmPrirazeniPnp.Show;
+  {
   with fmPrirazeniPnp.Create(self) do
   try
     ShowModal;
   finally
     Free;
   end;
-        }
+  }
 end;
 
 procedure TfmMain.asgMainButtonClick(Sender: TObject; ACol, ARow: Integer);
@@ -739,181 +822,40 @@ begin
   urciCurrPlatbaZVypisu();
   currPlatbaZVypisu.VS := currPlatbaZVypisu.VS_orig;
   provedAkcePoZmeneVS;
-
 end;
 
-
-procedure TfmMain.btnFaZeZlClick(Sender: TObject);
-var
-  i, j : integer;
-  iPDPar : TPlatbaDokladPar;
-  mApplication,
-  mManager,
-  BStatementRow_Object,
-  BStatementRow_Data,
-  BStatement_Data_Coll,
-  NewID : variant;
-  mmm : ansistring;
+procedure TfmMain.btnNactiClick(Sender: TObject);
 begin
+  // *** naètení GPC na základì dialogu
+  NactiGpcDialog.InitialDir := 'J:\Eurosignal\HB\';
+  NactiGpcDialog.Filter := 'Bankovní výpisy (*.gpc)|*.gpc';
+	if NactiGpcDialog.Execute then
+    nactiGpc(NactiGpcDialog.Filename);
+end;
 
-{
-  mManager := AbraOLE.CreateDocumentImportManager('@IssuedDepositInvoice', '@IssuedInvoice');
-// predani vstupnich dokladu
-  mManager.AddInputDocument('22Z1000101');
+procedure TfmMain.btnVypisFioClick(Sender: TObject);
+begin
+  nactiGpc(lblVypisFioGpc.caption);
+end;
 
-  // nastaveni parametru pro tvorbu dokladu
-  mManager.SetParam('DocQueue_ID', '1D10000101'); //FO3 zuctovani ZL
-  mManager.SetParam('Amount', '218');
-  //vytvoreni vystupniho dokladu
-  mManager.Execute;
+procedure TfmMain.btnVypisFioSporiciClick(Sender: TObject);
+begin
+  nactiGpc(lblVypisFioSporiciGpc.caption);
+end;
 
-//upravy nove vytvoreneho dokladu
-
-  mManager.OutputDocument.ValueByName('NewRelatedType') := 1;
-  mManager.OutputDocument.ValueByName('NewRelatedDocument_ID') := '2ZZ1000101';
-
-  mManager.OutputDocument.ValueByName('DocQueue_ID') := '1D10000101';
-  //mManager.OutputDocument.ValueByName('Amount') := '219';
-//ulozeni vystupniho dokladu
-  NewID := mManager.SaveOutputDocument;
-
-}
-  mManager := AbraOLE.CreateDocumentImportManager('@IssuedDepositInvoice', '@BillOfDelivery');
-
-// predani vstupnich dokladu
-  mManager.AddInputDocument('22Z1000101');
-
-  // nastaveni parametru pro tvorbu dokladu
-  mManager.OutputDocument.ValueByName('NewRelatedType') := 1616;
-  mManager.OutputDocument.ValueByName('NewRelatedDocument_ID') := '2ZZ1000101';
-  mManager.SetParam('DocQueue_ID', '4A00000101');
-  //mManager.SetParam('Amount', '218');
-  //vytvoreni vystupniho dokladu
-  mManager.Execute;
-
-//upravy nove vytvoreneho dokladu
-
-  //mManager.OutputDocument.ValueByName('Amount') := '219';
-//ulozeni vystupniho dokladu
-  NewID := mManager.SaveOutputDocument;
-
-
-    mmm := '';
-    for j := 0 to mManager.OutputDocument.Count - 1 do try
-      if mManager.OutputDocument.Names[j] <> 'Rows' then
-        mmm := mmm + inttostr(j) + 'r ' + mManager.OutputDocument.Names[j] + ': ' + vartostr( mManager.OutputDocument.Value[j]) + sLineBreak;
-    except
-      on E: Exception do begin
-        Application.MessageBox(PChar('errr'  + ^M + E.Message), 'Oprava selhala', MB_ICONERROR + MB_OK);
-        mmm := mmm + 'EEEERRR ' + mManager.OutputDocument.Names[j] + sLineBreak;
-      end;
-      //mmm := mmm + inttostr(j) + 'r ' + mManager.OutputDocument.Names[j];
-    end;
-        Memo2.Clear;
-    Memo2.Lines.Add(mmm);
-
-    //MessageDlg(mmm, mtInformation, [mbOk], 0);
-
-
-
+procedure TfmMain.btnVypisCsobClick(Sender: TObject);
+begin
+  nactiGpc(lblVypisCsobGpc.caption);
 end;
 
 procedure TfmMain.Button1Click(Sender: TObject);
-var
-  i, j : integer;
-  issuedDepUsage_Object,
-  issuedDepUsage_Data,
-  NewID, NewSGI_ID : variant;
-  mmm : ansistring;
 begin
-  {
-  issuedDepUsage_Object := AbraOLE.CreateObject('@SourceGroupIdentical');
-  issuedDepUsage_Data := AbraOLE.CreateValues('@SourceGroupIdentical');
-  issuedDepUsage_Object.PrefillValues(issuedDepUsage_Data);
-
-  issuedDepUsage_Data.ValueByName('Source_ID') := 'E0ZN000101';
-  issuedDepUsage_Data.ValueByName('Target_ID') := '18RN000101';
-  issuedDepUsage_Data.ValueByName('IsUser') := false;
-
-  Memo2.Clear;
-  mmm := '';
-  for j := 0 to issuedDepUsage_Data.Count - 1 do try
-    if issuedDepUsage_Data.Names[j] <> 'Rows' then
-      mmm := mmm + inttostr(j) + 'r ' +issuedDepUsage_Data.Names[j] + ': ' + vartostr( issuedDepUsage_Data.Value[j]) + sLineBreak;
-  except
-    on E: Exception do begin
-      Application.MessageBox(PChar('errr'  + ^M + E.Message), 'Oprava selhala', MB_ICONERROR + MB_OK);
-    end;
-  end;
-
-  Memo2.Lines.Add(mmm);
-
-  try begin
-    NewSGI_ID := issuedDepUsage_Object.CreateNewFromValues(issuedDepUsage_Data); //NewID je ID Abry
-    Memo2.Lines.Add('Nové SourceGroupIdentical ID je ' + NewSGI_ID);
-  end;
-  except on E: exception do
-    begin
-      Application.MessageBox(PChar('Problemm ' + ^M + E.Message), 'AbraOLE');
-      Memo2.Lines.Add('Chyba pøi zakládání SourceGroupIdentical');
-    end;
-  end;
-
-
-  //exit;
-  }
-
-  issuedDepUsage_Object := AbraOLE.CreateObject('@IssuedDepositUsage');
-  issuedDepUsage_Data := AbraOLE.CreateValues('@IssuedDepositUsage');
-  issuedDepUsage_Object.PrefillValues(issuedDepUsage_Data);
-
-
-  issuedDepUsage_Data.ValueByName('DepositDocument_ID') := '2QZ1000101';
-  issuedDepUsage_Data.ValueByName('Amount') := 1426;
-
-  issuedDepUsage_Data.ValueByName('PDocumentType') := '03';
-  issuedDepUsage_Data.ValueByName('PDocument_ID') := '0M6U000101';
-
-
-  issuedDepUsage_Data.ValueByName('PaymentDate$DATE') := 42870; //je to AccDate$DATE PDocumentu, tedy faktury (0M6U000101)
-  issuedDepUsage_Data.ValueByName('AccDate$DATE') := 42870;
-
-
-
-
-  mmm := '';
-  for j := 0 to issuedDepUsage_Data.Count - 1 do try
-    if issuedDepUsage_Data.Names[j] <> 'Rows' then
-      mmm := mmm + inttostr(j) + 'r ' +issuedDepUsage_Data.Names[j] + ': ' + vartostr( issuedDepUsage_Data.Value[j]) + sLineBreak;
-  except
-    on E: Exception do begin
-      Application.MessageBox(PChar('errr'  + ^M + E.Message), 'Oprava selhala', MB_ICONERROR + MB_OK);
-    end;
-  end;
-
-  Memo2.Lines.Add(mmm);
-
-
-  try begin
-    NewID := issuedDepUsage_Object.CreateNewFromValues(issuedDepUsage_Data); //NewID je ID Abry v BANKSTATEMENTS
-    Memo2.Lines.Add('Èíslo prirazeni je ' + NewID);
-  end;
-  except on E: exception do
-    begin
-      Application.MessageBox(PChar('Problemm ' + ^M + E.Message), 'AbraOLE');
-      Memo2.Lines.Add('Chyba pøi zakládání prirazeni');
-    end;
-  end;
-
-
-
-
-
-    //MessageDlg(mmm, mtInformation, [mbOk], 0);
-
-
-
-
+  asgMain.Visible := false;
+  asgMain.ClearNormalCells;
+  asgPredchoziPlatby.ClearNormalCells;
+  asgPredchoziPlatbyVs.ClearNormalCells;
+  asgNalezeneDoklady.ClearNormalCells;
+  lblHlavicka.Caption := '';
 end;
 
 end.

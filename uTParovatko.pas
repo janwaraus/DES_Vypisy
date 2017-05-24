@@ -5,6 +5,7 @@ interface
 uses
   SysUtils, Variants, Classes, Controls, StrUtils,
   Windows, Messages, Dialogs, Forms,
+  ZAbstractRODataset, ZAbstractDataset, ZDataset, ZAbstractConnection, ZConnection,  
   uTVypis, uTPlatbaZVypisu, AbraEntities, DesUtils;
 
 
@@ -22,17 +23,17 @@ type
 
   TParovatko = class
   public
-    AbraOLE: variant;
     Vypis: TVypis;
+    qrAbra: TZQuery;
+    AbraOLE: variant;
     listPlatbaDokladPar : TList;//<TPlatbaDokladPar>;
-    constructor create(AbraOLE: variant; Vypis: TVypis);
+    constructor create(Vypis: TVypis; AbraOLE: variant; qrAbra : TZQuery);
   published
     procedure sparujPlatbu(Platba : TPlatbaZVypisu);
     procedure odparujPlatbu(currPlatba : TPlatbaZVypisu);
     procedure vytvorPDPar(Platba : TPlatbaZVypisu; Doklad : TDoklad;
                 Castka: currency; popis : string; vazbaNaDoklad : boolean);
     function zapisDoAbry() : string;
-    function zapisDoAbryNadvakrat() : string;    
     function getUzSparovano(Doklad_ID : string) : currency;
     function getPDParyAsText() : AnsiString;
     function getPDParyPlatbyAsText(currPlatba : TPlatbaZVypisu) : AnsiString;
@@ -45,8 +46,9 @@ type
 implementation
 
 
-constructor TParovatko.create(AbraOLE: variant; Vypis: TVypis);
+constructor TParovatko.create(Vypis: TVypis; AbraOLE: variant; qrAbra : TZQuery);
 begin
+  self.qrAbra := qrAbra;
   self.AbraOLE := AbraOLE;
   self.Vypis := Vypis;
   self.listPlatbaDokladPar := TList.Create();
@@ -185,125 +187,6 @@ begin
 end;
 
 
-function TParovatko.zapisDoAbryNadvakrat() : string;
-var
-  i, j : integer;
-  iPDPar : TPlatbaDokladPar;
-  BStatement_Object,
-  BStatement_Data,
-  BStatementRow_Object,
-  BStatementRow_Data,
-  BStatement_Data_Coll,
-  newID, newRadekID  : variant;
-  mmm : ansistring;
-begin
-
-  if (listPlatbaDokladPar.Count = 0) then Exit;
-
-  Result := 'Zápis do ABRY výpisu pro úèet ' + removeLeadingZeros(self.Vypis.abraBankaccount.name);
-
-  BStatement_Object:= AbraOLE.CreateObject('@BankStatement');
-  BStatement_Data:= AbraOLE.CreateValues('@BankStatement');
-  BStatement_Object.PrefillValues(BStatement_Data);
-  BStatement_Data.ValueByName('DocQueue_ID') := self.Vypis.abraBankaccount.bankStatementDocqueueId;
-  BStatement_Data.ValueByName('Period_ID') := '1L20000101'; //rok 2017, TODO automatika
-  BStatement_Data.ValueByName('BankAccount_ID') := self.Vypis.abraBankaccount.id;
-  BStatement_Data.ValueByName('ExternalNumber') := self.Vypis.PoradoveCislo;
-  BStatement_Data.ValueByName('DocDate$DATE') := self.Vypis.Datum;
-  BStatement_Data.ValueByName('CreatedAt$DATE') := IntToStr(Trunc(Date));
-  try begin
-      newID := BStatement_Object.CreateNewFromValues(BStatement_Data); //NewID je ID Abry v BANKSTATEMENTS
-      Result := Result + ' Èíslo výpisu je ' + NewID;
-    end;
-  except on E: exception do
-    begin
-      Application.MessageBox(PChar('Problemmm ' + ^M + E.Message), 'AbraOLE');
-    end;
-  end;
-
-  BStatement_Object:= AbraOLE.CreateObject('@BankStatement'); //mozna nemusi byt uz mame
-  BStatement_Data:= AbraOLE.CreateValues('@BankStatement');
-  BStatement_Data := BStatement_Object.GetValues(newID);
-
-  BStatementRow_Object := AbraOLE.CreateObject('@BankStatementRow');
-  BStatement_Data_Coll := BStatement_Data.Value[IndexByName(BStatement_Data, 'Rows')];
-
-
-
-
-  for i := 0 to listPlatbaDokladPar.Count - 1 do
-  begin
-    iPDPar := TPlatbaDokladPar(listPlatbaDokladPar[i]);
-
-    BStatementRow_Data := AbraOLE.CreateValues('@BankStatementRow');
-    BStatementRow_Object.PrefillValues(BStatementRow_Data);
-    BStatementRow_Data.ValueByName('Amount') := iPDPar.CastkaPouzita;
-    BStatementRow_Data.ValueByName('Credit') := IfThen(iPDPar.Platba.Kredit,'1','0');
-    BStatementRow_Data.ValueByName('BankAccount') := iPDPar.Platba.cisloUctu;
-    BStatementRow_Data.ValueByName('SpecSymbol') := iPDPar.Platba.SS;
-    BStatementRow_Data.ValueByName('DocDate$DATE') := iPDPar.Platba.Datum;
-    BStatementRow_Data.ValueByName('AccDate$DATE') := iPDPar.Platba.Datum;
-
-    if iPDPar.popis = '' then
-      BStatementRow_Data.ValueByName('Text') := iPDPar.Platba.nazevKlienta
-    else
-      BStatementRow_Data.ValueByName('Text') := iPDPar.popis + ' ' + iPDPar.Platba.nazevKlienta;
-
-    if Assigned(iPDPar.Doklad) then
-      BStatementRow_Data.ValueByName('Firm_ID') := iPDPar.Doklad.Firm_ID
-    else // if iPDPar.Platba.Debet then
-      BStatementRow_Data.ValueByName('Firm_ID') := '3Y90000101';  // DES
-
-    if iPDPar.vazbaNaDoklad AND Assigned(iPDPar.Doklad) then //Doklad vyplnime jen jestli chceme vazbu. Doklad máme i když vazbu nechceme - kvùli Firm_ID
-    begin
-      //BStatementRow_Data.ValueByName('VarSymbol') := iPDPar.Platba.VS;
-      //BStatementRow_Data.ValueByName('PAmount') := iPDPar.CastkaPouzita;
-      BStatementRow_Data.ValueByName('PDocumentType') := iPDPar.Doklad.DocumentType;
-      BStatementRow_Data.ValueByName('PDocument_ID') := iPDPar.Doklad.ID;
-    end;
-
-
-    for j := 0 to BStatementRow_Data.Count - 1 do begin
-      mmm := mmm + inttostr(j) + 'r ' + BStatementRow_Data.Names[j] + ': ' + vartostr( BStatementRow_Data.Value[j]) + sLineBreak;
-    end;
-    //MessageDlg(mmm, mtInformation, [mbOk], 0);
-
-    if iPDPar.Platba.Debet then
-    begin
-      BStatementRow_Data.ValueByName('VarSymbol') := iPDPar.Platba.VS; //pro debety aby vždy zùstal VS
-    end;
-
-    BStatement_Data_Coll.Add(BStatementRow_Data);
-  end;
-
-  try begin
-      BStatement_Object.UpdateValues(newID, BStatement_Data);
-      //MessageDlg('Updatnul jsem', mtInformation, [mbOk], 0);
-    end;
-  except on E: exception do
-    begin
-      MessageDlg('Problem - neupdatnul jsem', mtInformation, [mbOk], 0);
-    end;
-  end;
-
-  {
-  //opravit øádky v Abøe kde se nespárovalo
-  for i := 0 to listPlatbaDokladPar.Count - 1 do
-  try
-    iPDPar := TPlatbaDokladPar(listPlatbaDokladPar[i]);
-    if iPDPar.vazbaNaDoklad AND Assigned(iPDPar.Doklad) then
-    begin
-      opravRadekVypisuPomociPDocument_ID(AbraOLE, iPDPar.AbraBS2_ID, iPDPar.Doklad.ID, iPDPar.Doklad.ID);
-      MessageDlg('Øádek ' + iPDPar.AbraBS2_ID + ' byl opraven', mtInformation, [mbOk], 0);
-    end;
-  except
-    on E: Exception do
-    MessageDlg('Oprava øádku ' + iPDPar.AbraBS2_ID + ' se nepovedla!', mtInformation, [mbOk], 0);
-  end;
-  }
-
-end;
-
 function TParovatko.zapisDoAbry() : string;
 var
   i, j : integer;
@@ -315,17 +198,21 @@ var
   BStatement_Data_Coll,
   NewID : variant;
   mmm : ansistring;
+  abraPeriod : TAbraPeriod;
 begin
 
   if (listPlatbaDokladPar.Count = 0) then Exit;
 
   Result := 'Zápis do ABRY výpisu pro úèet ' + self.Vypis.abraBankaccount.name + '.';
 
+  abraPeriod := TAbraPeriod.create(self.Vypis.Datum, qrAbra);
+
   BStatement_Object:= AbraOLE.CreateObject('@BankStatement');
   BStatement_Data:= AbraOLE.CreateValues('@BankStatement');
   BStatement_Object.PrefillValues(BStatement_Data);
   BStatement_Data.ValueByName('DocQueue_ID') := self.Vypis.abraBankaccount.bankStatementDocqueueId;
-  BStatement_Data.ValueByName('Period_ID') := '1L20000101'; //rok 2017, TODO automatika
+  BStatement_Data.ValueByName('Period_ID') := abraPeriod.id;
+  //BStatement_Data.ValueByName('Period_ID') := '1L20000101'; //rok 2017, TODO automatika
   BStatement_Data.ValueByName('BankAccount_ID') := self.Vypis.abraBankaccount.id;
   BStatement_Data.ValueByName('ExternalNumber') := self.Vypis.PoradoveCislo;
   BStatement_Data.ValueByName('DocDate$DATE') := self.Vypis.Datum;
