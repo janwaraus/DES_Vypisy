@@ -1,6 +1,6 @@
 object fmMain: TfmMain
-  Left = 356
-  Top = 179
+  Left = 390
+  Top = 87
   Width = 1362
   Height = 955
   Caption = 'Na'#269'ten'#237', oprava a ulo'#382'en'#237' bankovn'#237'ho v'#253'pisu'
@@ -57,6 +57,7 @@ object fmMain: TfmMain
     ParentFont = False
     ScrollBars = ssBoth
     TabOrder = 0
+    Visible = False
     OnClick = asgMainClick
     OnKeyUp = asgMainKeyUp
     HoverRowCells = [hcNormal, hcSelected]
@@ -634,9 +635,9 @@ object fmMain: TfmMain
     end
     object Memo2: TMemo
       Left = 2
-      Top = 552
+      Top = 32
       Width = 436
-      Height = 129
+      Height = 729
       Lines.Strings = (
         'Memo2')
       TabOrder = 4
@@ -769,6 +770,24 @@ object fmMain: TfmMain
       ParentFont = False
       TabOrder = 9
       OnClick = btnShowPrirazeniPnpFormClick
+    end
+    object btnFaZeZl: TButton
+      Left = 16
+      Top = 544
+      Width = 75
+      Height = 25
+      Caption = 'FA ze ZL'
+      TabOrder = 10
+      OnClick = btnFaZeZlClick
+    end
+    object Button1: TButton
+      Left = 8
+      Top = 584
+      Width = 97
+      Height = 25
+      Caption = 'zaplat FA zal.listem'
+      TabOrder = 11
+      OnClick = Button1Click
     end
   end
   object dbAbra: TZConnection

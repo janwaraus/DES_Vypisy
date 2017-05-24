@@ -37,6 +37,8 @@ type
     lblPrechoziPlatbyZUctu: TLabel;
     Memo2: TMemo;
     btnShowPrirazeniPnpForm: TButton;
+    btnFaZeZl: TButton;
+    Button1: TButton;
 
     procedure btnNactiClick(Sender: TObject);
     procedure btnZapisDoAbryClick(Sender: TObject);
@@ -71,6 +73,8 @@ type
       AState: TGridDrawState; ABrush: TBrush; AFont: TFont);
     procedure btnShowPrirazeniPnpFormClick(Sender: TObject);
     procedure asgMainButtonClick(Sender: TObject; ACol, ARow: Integer);
+    procedure btnFaZeZlClick(Sender: TObject);
+    procedure Button1Click(Sender: TObject);
 
   public
     procedure vyplnPrichoziPlatby;
@@ -106,8 +110,8 @@ var
 begin
   PROGRAM_PATH := ExtractFilePath(ParamStr(0));
 
-  if FileExists(ExtractFilePath(ParamStr(0)) + 'FI.ini') then begin         // existuje FI.ini ?
-    FIIni := TIniFile.Create(ExtractFilePath(ParamStr(0)) + 'FI.ini');
+  if FileExists(PROGRAM_PATH + 'FI.ini') then begin         // existuje FI.ini ?
+    FIIni := TIniFile.Create(PROGRAM_PATH + 'FI.ini');
     with FIIni do try
       dbAbra.HostName := ReadString('Preferences', 'AbraHN', '');
       dbAbra.Database := ReadString('Preferences', 'AbraDB', '');
@@ -180,6 +184,7 @@ begin
 	if NactiGpcDialog.Execute then
   try
     Screen.Cursor := crHourGlass;
+    asgMain.Visible := true;
     asgMain.ClearNormalCells;
     asgPredchoziPlatby.ClearNormalCells;
     asgPredchoziPlatbyVs.ClearNormalCells;
@@ -188,21 +193,21 @@ begin
     Application.ProcessMessages;
     AssignFile(GpcInputFile, NactiGpcDialog.Filename);
 
-  { // naètení GPC na základì dialogu
-  NactiGpcDialog.InitialDir := ExtractFilePath(ParamStr(0));
-  if NactiGpcDialog.Execute then
-  begin
-    AssignFile(GpcInputFile, NactiGpcDialog.Filename);
-{
-  // naètení GPC na základì vstupního pole
-  if FileExists(PROGRAM_PATH  + 'HB\' +  EditVstupniSoubor.Text) then
-  begin
-    AssignFile(GpcInputFile, PROGRAM_PATH + 'HB\' + EditVstupniSoubor.Text);
-}
 
     Reset(GpcInputFile);
-    pocetPlatebGpc := pocetRadkuTxtSouboru(NactiGpcDialog.Filename) - 1;
+    pocetPlatebGpc := 0;
+    while not Eof(GpcInputFile) do
+    begin
+      ReadLn(GpcInputFile, GpcFileLine);
+      if copy(GpcFileLine, 1, 3) = '075' then
+        Inc(pocetPlatebGpc);
+    end;
+    CloseFile(GpcInputFile);
 
+
+    //pocetPlatebGpc := pocetRadkuTxtSouboru(NactiGpcDialog.Filename) - 1;
+
+    Reset(GpcInputFile);
     Vypis := nil;
     i := 0;
     while not Eof(GpcInputFile) do
@@ -210,10 +215,10 @@ begin
       lblHlavicka.Caption := '... naèítání ' + IntToStr(i) + '. z ' + IntToStr(pocetPlatebGpc);
       Application.ProcessMessages;
       ReadLn(GpcInputFile, GpcFileLine);
-      
-      Inc(i);
-      if i = 1 then //první øádek musí být hlavièka výpisu
+
+      if i = 0 then //první øádek musí být hlavièka výpisu
       begin
+        Inc(i);
         if copy(GpcFileLine, 1, 3) = '074' then begin
           Vypis := TVypis.Create(GpcFileLine, qrAbra);
           Parovatko := TParovatko.create(AbraOLE, Vypis);
@@ -225,6 +230,7 @@ begin
 
       if copy(GpcFileLine, 1, 3) = '075' then //radek vypisu zacina 075
       begin
+        Inc(i);
         iPlatbaZVypisu := TPlatbaZVypisu.Create(GpcFileLine, qrAbra);
         iPlatbaZVypisu.init(StrToInt(editPocetPredchPlateb.text));
         Parovatko.sparujPlatbu(iPlatbaZVypisu);
@@ -736,5 +742,178 @@ begin
 
 end;
 
+
+procedure TfmMain.btnFaZeZlClick(Sender: TObject);
+var
+  i, j : integer;
+  iPDPar : TPlatbaDokladPar;
+  mApplication,
+  mManager,
+  BStatementRow_Object,
+  BStatementRow_Data,
+  BStatement_Data_Coll,
+  NewID : variant;
+  mmm : ansistring;
+begin
+
+{
+  mManager := AbraOLE.CreateDocumentImportManager('@IssuedDepositInvoice', '@IssuedInvoice');
+// predani vstupnich dokladu
+  mManager.AddInputDocument('22Z1000101');
+
+  // nastaveni parametru pro tvorbu dokladu
+  mManager.SetParam('DocQueue_ID', '1D10000101'); //FO3 zuctovani ZL
+  mManager.SetParam('Amount', '218');
+  //vytvoreni vystupniho dokladu
+  mManager.Execute;
+
+//upravy nove vytvoreneho dokladu
+
+  mManager.OutputDocument.ValueByName('NewRelatedType') := 1;
+  mManager.OutputDocument.ValueByName('NewRelatedDocument_ID') := '2ZZ1000101';
+
+  mManager.OutputDocument.ValueByName('DocQueue_ID') := '1D10000101';
+  //mManager.OutputDocument.ValueByName('Amount') := '219';
+//ulozeni vystupniho dokladu
+  NewID := mManager.SaveOutputDocument;
+
+}
+  mManager := AbraOLE.CreateDocumentImportManager('@IssuedDepositInvoice', '@BillOfDelivery');
+
+// predani vstupnich dokladu
+  mManager.AddInputDocument('22Z1000101');
+
+  // nastaveni parametru pro tvorbu dokladu
+  mManager.OutputDocument.ValueByName('NewRelatedType') := 1616;
+  mManager.OutputDocument.ValueByName('NewRelatedDocument_ID') := '2ZZ1000101';
+  mManager.SetParam('DocQueue_ID', '4A00000101');
+  //mManager.SetParam('Amount', '218');
+  //vytvoreni vystupniho dokladu
+  mManager.Execute;
+
+//upravy nove vytvoreneho dokladu
+
+  //mManager.OutputDocument.ValueByName('Amount') := '219';
+//ulozeni vystupniho dokladu
+  NewID := mManager.SaveOutputDocument;
+
+
+    mmm := '';
+    for j := 0 to mManager.OutputDocument.Count - 1 do try
+      if mManager.OutputDocument.Names[j] <> 'Rows' then
+        mmm := mmm + inttostr(j) + 'r ' + mManager.OutputDocument.Names[j] + ': ' + vartostr( mManager.OutputDocument.Value[j]) + sLineBreak;
+    except
+      on E: Exception do begin
+        Application.MessageBox(PChar('errr'  + ^M + E.Message), 'Oprava selhala', MB_ICONERROR + MB_OK);
+        mmm := mmm + 'EEEERRR ' + mManager.OutputDocument.Names[j] + sLineBreak;
+      end;
+      //mmm := mmm + inttostr(j) + 'r ' + mManager.OutputDocument.Names[j];
+    end;
+        Memo2.Clear;
+    Memo2.Lines.Add(mmm);
+
+    //MessageDlg(mmm, mtInformation, [mbOk], 0);
+
+
+
+end;
+
+procedure TfmMain.Button1Click(Sender: TObject);
+var
+  i, j : integer;
+  issuedDepUsage_Object,
+  issuedDepUsage_Data,
+  NewID, NewSGI_ID : variant;
+  mmm : ansistring;
+begin
+  {
+  issuedDepUsage_Object := AbraOLE.CreateObject('@SourceGroupIdentical');
+  issuedDepUsage_Data := AbraOLE.CreateValues('@SourceGroupIdentical');
+  issuedDepUsage_Object.PrefillValues(issuedDepUsage_Data);
+
+  issuedDepUsage_Data.ValueByName('Source_ID') := 'E0ZN000101';
+  issuedDepUsage_Data.ValueByName('Target_ID') := '18RN000101';
+  issuedDepUsage_Data.ValueByName('IsUser') := false;
+
+  Memo2.Clear;
+  mmm := '';
+  for j := 0 to issuedDepUsage_Data.Count - 1 do try
+    if issuedDepUsage_Data.Names[j] <> 'Rows' then
+      mmm := mmm + inttostr(j) + 'r ' +issuedDepUsage_Data.Names[j] + ': ' + vartostr( issuedDepUsage_Data.Value[j]) + sLineBreak;
+  except
+    on E: Exception do begin
+      Application.MessageBox(PChar('errr'  + ^M + E.Message), 'Oprava selhala', MB_ICONERROR + MB_OK);
+    end;
+  end;
+
+  Memo2.Lines.Add(mmm);
+
+  try begin
+    NewSGI_ID := issuedDepUsage_Object.CreateNewFromValues(issuedDepUsage_Data); //NewID je ID Abry
+    Memo2.Lines.Add('Nové SourceGroupIdentical ID je ' + NewSGI_ID);
+  end;
+  except on E: exception do
+    begin
+      Application.MessageBox(PChar('Problemm ' + ^M + E.Message), 'AbraOLE');
+      Memo2.Lines.Add('Chyba pøi zakládání SourceGroupIdentical');
+    end;
+  end;
+
+
+  //exit;
+  }
+
+  issuedDepUsage_Object := AbraOLE.CreateObject('@IssuedDepositUsage');
+  issuedDepUsage_Data := AbraOLE.CreateValues('@IssuedDepositUsage');
+  issuedDepUsage_Object.PrefillValues(issuedDepUsage_Data);
+
+
+  issuedDepUsage_Data.ValueByName('DepositDocument_ID') := '2QZ1000101';
+  issuedDepUsage_Data.ValueByName('Amount') := 1426;
+
+  issuedDepUsage_Data.ValueByName('PDocumentType') := '03';
+  issuedDepUsage_Data.ValueByName('PDocument_ID') := '0M6U000101';
+
+
+  issuedDepUsage_Data.ValueByName('PaymentDate$DATE') := 42870; //je to AccDate$DATE PDocumentu, tedy faktury (0M6U000101)
+  issuedDepUsage_Data.ValueByName('AccDate$DATE') := 42870;
+
+
+
+
+  mmm := '';
+  for j := 0 to issuedDepUsage_Data.Count - 1 do try
+    if issuedDepUsage_Data.Names[j] <> 'Rows' then
+      mmm := mmm + inttostr(j) + 'r ' +issuedDepUsage_Data.Names[j] + ': ' + vartostr( issuedDepUsage_Data.Value[j]) + sLineBreak;
+  except
+    on E: Exception do begin
+      Application.MessageBox(PChar('errr'  + ^M + E.Message), 'Oprava selhala', MB_ICONERROR + MB_OK);
+    end;
+  end;
+
+  Memo2.Lines.Add(mmm);
+
+
+  try begin
+    NewID := issuedDepUsage_Object.CreateNewFromValues(issuedDepUsage_Data); //NewID je ID Abry v BANKSTATEMENTS
+    Memo2.Lines.Add('Èíslo prirazeni je ' + NewID);
+  end;
+  except on E: exception do
+    begin
+      Application.MessageBox(PChar('Problemm ' + ^M + E.Message), 'AbraOLE');
+      Memo2.Lines.Add('Chyba pøi zakládání prirazeni');
+    end;
+  end;
+
+
+
+
+
+    //MessageDlg(mmm, mtInformation, [mbOk], 0);
+
+
+
+
+end;
 
 end.
