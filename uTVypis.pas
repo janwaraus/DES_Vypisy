@@ -24,6 +24,7 @@ type
     obratDebet  : currency;
     obratKredit  : currency;
     maxExistujiciPoradoveCislo : integer;
+    maxExistujiciExtPoradoveCislo : integer;
 
     constructor create(gpcLine : string; qrAbra : TZQuery);
   published
@@ -61,16 +62,21 @@ end;
 procedure TVypis.nactiMaxExistujiciPoradoveCislo();
 begin
   with qrAbra do begin
-    SQL.Text := 'SELECT MAX(bs.OrdNumber) as MaxPoradoveCislo '
-              + ' FROM BANKSTATEMENTS bs, PERIODS p '
-              + 'WHERE bs.DOCQUEUE_ID = ''' + self.AbraBankAccount.bankStatementDocqueueId  + ''''
-              + ' AND bs.PERIOD_ID = p.ID AND p.DATEFROM$DATE <= ' + FloatToStr(self.datum)
-              + ' AND p.DATETO$DATE > ' + FloatToStr(self.datum);
+    SQL.Text := 'SELECT bs1.OrdNumber as MaxOrdNumber, bs1.EXTERNALNUMBER as MaxExtOrdNumber'
+              + ' FROM BANKSTATEMENTS bs1'
+              + ' WHERE bs1.DOCQUEUE_ID = ''' + self.AbraBankAccount.bankStatementDocqueueId  + ''''
+              + ' AND bs1.PERIOD_ID = (SELECT ID FROM PERIODS p WHERE p.DATEFROM$DATE <= ' + FloatToStr(self.datum)
+              + ' AND p.DATETO$DATE > ' + FloatToStr(self.datum) + ')'
+              + ' AND bs1.OrdNumber = (SELECT max(bs2.ORDNUMBER) FROM BANKSTATEMENTS bs2 WHERE bs1.DOCQUEUE_ID = bs2.DOCQUEUE_ID and bs1.PERIOD_ID = bs2.PERIOD_ID)';
     Open;
-    if not Eof then
-      self.maxExistujiciPoradoveCislo := FieldByName('MaxPoradoveCislo').AsInteger
-    else
+    if not Eof then begin
+      self.maxExistujiciPoradoveCislo := FieldByName('MaxOrdNumber').AsInteger;
+      self.maxExistujiciExtPoradoveCislo := FieldByName('MaxExtOrdNumber').AsInteger;
+    end
+    else begin
       self.maxExistujiciPoradoveCislo := 0;
+      self.maxExistujiciExtPoradoveCislo := 0;
+    end;
     Close;
   end;
 end;
@@ -99,12 +105,15 @@ begin
       //payuProvizePP := iPlatba;
       payuProvize := payuProvize + iPlatba.castka;
       self.Platby.Delete(i);
+
+    { nemelo by byt potreba, duplicita
     end
     // debety dozadu
     else if iPlatba.debet then
     begin
       self.Platby.Delete(i);
       self.Platby.Add(iPlatba);
+      }
     end;
   end;
 

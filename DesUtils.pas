@@ -19,6 +19,7 @@ function IndexByName(DataObject: variant; Name: ShortString): integer;
 function pocetRadkuTxtSouboru(SName: string): integer;
 function RemoveSpaces(const s: string): string;
 //function DumpObject( YourObjectInstance : tObject ) : ansistring;
+function FindInFolder(sFolder, sFile: string; bUseSubfolders: Boolean): string;
 
 
 const
@@ -190,6 +191,46 @@ begin
   end;
 
   SetLength(Result, p);
+end;
+
+
+function FindInFolder(sFolder, sFile: string; bUseSubfolders: Boolean): string;
+var
+  sr: TSearchRec;
+  i: Integer;
+  sDatFile: String;
+begin
+  Result := '';
+  sFolder := IncludeTrailingPathDelimiter(sFolder);
+  if SysUtils.FindFirst(sFolder + sFile, faAnyFile - faDirectory, sr) = 0 then
+  begin
+    Result := sFolder + sr.Name;
+    SysUtils.FindClose(sr);
+    Exit;
   end;
+
+  //not found .... search in subfolders
+  if bUseSubfolders then
+  begin
+    //find first subfolder
+    if SysUtils.FindFirst(sFolder + '*.*', faDirectory, sr) = 0 then
+    begin
+      try
+        repeat
+          if ((sr.Attr and faDirectory) <> 0) and (sr.Name <> '.') and (sr.Name <> '..') then //is real folder?
+          begin
+            //recursive call!
+            //Result := FindInFolder(sFolder + sr.Name, sFile, bUseSubfolders); // plná rekurze
+            Result := FindInFolder(sFolder + sr.Name, sFile, false); // rekurze jen do 1. úrovnì
+
+            if Length(Result) > 0 then Break; //found it ... escape
+          end;
+        until SysUtils.FindNext(sr) <> 0;  //...next subfolder
+      finally
+        SysUtils.FindClose(sr);
+      end;
+    end;
+  end;
+end;
 
 end.

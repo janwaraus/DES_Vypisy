@@ -1,3 +1,6 @@
+// do FI.ini pøidat øádek
+// GpcPath = J:\Eurosignal\HB\
+
 unit VypisyMain;
 
 interface
@@ -37,6 +40,18 @@ type
     lblPrechoziPlatbyZUctu: TLabel;
     Memo2: TMemo;
     btnShowPrirazeniPnpForm: TButton;
+    btnVypisFio: TButton;
+    lblVypisFioGpc: TLabel;
+    lblVypisFioInfo: TLabel;
+    btnVypisFioSporici: TButton;
+    btnVypisCsob: TButton;
+    btnVypisPayU: TButton;
+    lblVypisFioSporiciGpc: TLabel;
+    lblVypisFioSporiciInfo: TLabel;
+    lblVypisCsobInfo: TLabel;
+    lblVypisCsobGpc: TLabel;
+    Button1: TButton;
+    btnCustomers: TButton;
 
     procedure btnNactiClick(Sender: TObject);
     procedure btnZapisDoAbryClick(Sender: TObject);
@@ -71,8 +86,15 @@ type
       AState: TGridDrawState; ABrush: TBrush; AFont: TFont);
     procedure btnShowPrirazeniPnpFormClick(Sender: TObject);
     procedure asgMainButtonClick(Sender: TObject; ACol, ARow: Integer);
+    procedure btnVypisFioClick(Sender: TObject);
+    procedure btnVypisFioSporiciClick(Sender: TObject);
+    procedure btnVypisCsobClick(Sender: TObject);
+    procedure Button1Click(Sender: TObject);
+    procedure btnCustomersClick(Sender: TObject);
 
   public
+    procedure nactiGpc(GpcFilename : string);
+    procedure vyplnNacitaciButtony;
     procedure vyplnPrichoziPlatby;
     procedure vyplnPredchoziPlatby;
     procedure vyplnDoklady;
@@ -91,12 +113,13 @@ var
   Vypis : TVypis;
   currPlatbaZVypisu : TPlatbaZVypisu;
   PROGRAM_PATH: string;
+  GPC_PATH: string;
   AbraOLE: variant;
   Parovatko : TParovatko;
 
 implementation
 
-uses AbraEntities, DesUtils, PrirazeniPNP;
+uses AbraEntities, DesUtils, PrirazeniPNP, Customers;
 
 {$R *.dfm}
 
@@ -106,14 +129,14 @@ var
 begin
   PROGRAM_PATH := ExtractFilePath(ParamStr(0));
 
-  if FileExists(ExtractFilePath(ParamStr(0)) + 'FI.ini') then begin         // existuje FI.ini ?
-    FIIni := TIniFile.Create(ExtractFilePath(ParamStr(0)) + 'FI.ini');
+  if FileExists(PROGRAM_PATH + 'FI.ini') then begin         // existuje FI.ini ?
+    FIIni := TIniFile.Create(PROGRAM_PATH + 'FI.ini');
     with FIIni do try
       dbAbra.HostName := ReadString('Preferences', 'AbraHN', '');
       dbAbra.Database := ReadString('Preferences', 'AbraDB', '');
       dbAbra.User := ReadString('Preferences', 'AbraUN', '');
-
       dbAbra.Password := ReadString('Preferences', 'AbraPW', '');
+      GPC_PATH := ReadString('Preferences', 'GpcPath', '');
     finally
       FIIni.Free;
     end;
@@ -157,6 +180,9 @@ begin
       Exit;
     end;
   end;
+
+  vyplnNacitaciButtony;
+
 end;
 
 procedure TfmMain.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -166,43 +192,125 @@ begin
       Vypis.Platby.Free;
 end;
 
+procedure TfmMain.vyplnNacitaciButtony;
+var
+  maxCisloVypisu : integer;
+  fRok, nalezenyGpcSoubor, hledanyGpcSoubor : string;
+  abraBankaccount : TAbraBankaccount;
+begin
+  fRok := IntToStr(SysUtils.CurrentYear);
+  abraBankAccount := TAbraBankaccount.create(qrAbra);
 
-procedure TfmMain.btnNactiClick(Sender: TObject);
+  //Fio
+  abraBankaccount.loadByNumber('2100098382/2010');
+  maxCisloVypisu := abraBankaccount.getMaxPoradoveCisloVypisu(fRok);
+  hledanyGpcSoubor := 'Vypis_z_uctu-2100098382_' + fRok + '*-' + IntToStr(maxCisloVypisu + 1) + '.gpc';
+  nalezenyGpcSoubor := FindInFolder(GPC_PATH, hledanyGpcSoubor, true);
+
+  Memo2.Lines.Add('Hledám soubor ' + hledanyGpcSoubor);
+  Memo2.Lines.Add('Našel jsem ' + nalezenyGpcSoubor);
+
+  if nalezenyGpcSoubor = '' then begin //nenašel se
+    lblVypisFioGpc.caption := hledanyGpcSoubor + ' nenalezen';
+    btnVypisFio.Enabled := false;
+  end else begin
+    lblVypisFioGpc.caption := nalezenyGpcSoubor;
+    btnVypisFio.Enabled := true;
+  end;
+
+  lblVypisFioInfo.Caption := format('Poèet výpisù: %d, max. èíslo výpisu: %d, externí èíslo: %d, datum %s', [
+    abraBankaccount.getPocetVypisu(fRok),
+    abraBankaccount.getMaxPoradoveCisloVypisu(fRok),
+    abraBankaccount.getMaxExtPoradoveCisloVypisu(fRok),
+    DateToStr(abraBankaccount.getMaxDatumVypisu(fRok))
+    ]);
+
+
+  /// Fio Spoøicí
+  abraBankaccount.loadByNumber('2800098383/2010');
+  maxCisloVypisu := abraBankaccount.getMaxPoradoveCisloVypisu(fRok);
+  hledanyGpcSoubor := 'Vypis_z_uctu-2800098383_' + fRok + '*-' + IntToStr(maxCisloVypisu + 1) + '.gpc';
+  nalezenyGpcSoubor := FindInFolder(GPC_PATH, hledanyGpcSoubor, true);
+
+  Memo2.Lines.Add('Hledám soubor ' + hledanyGpcSoubor);
+  Memo2.Lines.Add('Našel jsem ' + nalezenyGpcSoubor);
+
+  if nalezenyGpcSoubor = '' then begin //nenašel se
+    lblVypisFioSporiciGpc.caption := hledanyGpcSoubor + ' nenalezen';
+    btnVypisFioSporici.Enabled := false;
+  end else begin
+    lblVypisFioSporiciGpc.caption := nalezenyGpcSoubor;
+    btnVypisFioSporici.Enabled := true;
+  end;
+
+  lblVypisFioSporiciInfo.Caption := format('Poèet výpisù: %d, max. èíslo výpisu: %d, externí èíslo: %d, datum %s', [
+    abraBankaccount.getPocetVypisu(fRok),
+    abraBankaccount.getMaxPoradoveCisloVypisu(fRok),
+    abraBankaccount.getMaxExtPoradoveCisloVypisu(fRok),
+    DateToStr(abraBankaccount.getMaxDatumVypisu(fRok))
+    ]);
+
+
+  /// ÈSOB Spoøicí
+  abraBankaccount.loadByNumber('171336270/0300');
+  maxCisloVypisu := abraBankaccount.getMaxPoradoveCisloVypisu(fRok);
+  hledanyGpcSoubor := 'BB117641_171336270_' + fRok + '*_' + IntToStr(maxCisloVypisu + 1) + '.gpc';
+  nalezenyGpcSoubor := FindInFolder(GPC_PATH, hledanyGpcSoubor, true);
+
+  Memo2.Lines.Add('Hledám soubor ' + hledanyGpcSoubor);
+  Memo2.Lines.Add('Našel jsem ' + nalezenyGpcSoubor);
+
+  if nalezenyGpcSoubor = '' then begin //nenašel se
+    lblVypisCsobGpc.caption := hledanyGpcSoubor + ' nenalezen';
+    btnVypisCsob.Enabled := false;
+  end else begin
+    lblVypisCsobGpc.caption := nalezenyGpcSoubor;
+    btnVypisCsob.Enabled := true;
+  end;
+
+  lblVypisCsobInfo.Caption := format('Poèet výpisù: %d, max. èíslo výpisu: %d, externí èíslo: %d, datum %s', [
+    abraBankaccount.getPocetVypisu(fRok),
+    abraBankaccount.getMaxPoradoveCisloVypisu(fRok),
+    abraBankaccount.getMaxExtPoradoveCisloVypisu(fRok),
+    DateToStr(abraBankaccount.getMaxDatumVypisu(fRok))
+    ]);
+
+  //Pay U   2389210008000000/0300
+end;
+
+procedure TfmMain.nactiGpc(GpcFilename : string);
 var
   GpcInputFile : TextFile;
   GpcFileLine : string;
   iPlatbaZVypisu : TPlatbaZVypisu;
   i, pocetPlatebGpc: integer;
 begin
-// *** naètení GPC na základì dialogu
-  //NactiGpcDialog.InitialDir := 'J:\Eurosignal\HB\';
-  NactiGpcDialog.Filter := 'Bankovní výpisy (*.gpc)|*.gpc';
-	if NactiGpcDialog.Execute then
   try
+    AssignFile(GpcInputFile, GpcFilename);
+    Reset(GpcInputFile);
+
     Screen.Cursor := crHourGlass;
+    asgMain.Visible := true;
     asgMain.ClearNormalCells;
     asgPredchoziPlatby.ClearNormalCells;
     asgPredchoziPlatbyVs.ClearNormalCells;
     asgNalezeneDoklady.ClearNormalCells;
     btnNacti.Enabled := false;
     Application.ProcessMessages;
-    AssignFile(GpcInputFile, NactiGpcDialog.Filename);
 
-  { // naètení GPC na základì dialogu
-  NactiGpcDialog.InitialDir := ExtractFilePath(ParamStr(0));
-  if NactiGpcDialog.Execute then
-  begin
-    AssignFile(GpcInputFile, NactiGpcDialog.Filename);
-{
-  // naètení GPC na základì vstupního pole
-  if FileExists(PROGRAM_PATH  + 'HB\' +  EditVstupniSoubor.Text) then
-  begin
-    AssignFile(GpcInputFile, PROGRAM_PATH + 'HB\' + EditVstupniSoubor.Text);
-}
+    pocetPlatebGpc := 0;
+    while not Eof(GpcInputFile) do
+    begin
+      ReadLn(GpcInputFile, GpcFileLine);
+      if copy(GpcFileLine, 1, 3) = '075' then
+        Inc(pocetPlatebGpc);
+    end;
+    CloseFile(GpcInputFile);
+
+
+    //pocetPlatebGpc := pocetRadkuTxtSouboru(NactiGpcDialog.Filename) - 1;
 
     Reset(GpcInputFile);
-    pocetPlatebGpc := pocetRadkuTxtSouboru(NactiGpcDialog.Filename) - 1;
-
     Vypis := nil;
     i := 0;
     while not Eof(GpcInputFile) do
@@ -210,13 +318,13 @@ begin
       lblHlavicka.Caption := '... naèítání ' + IntToStr(i) + '. z ' + IntToStr(pocetPlatebGpc);
       Application.ProcessMessages;
       ReadLn(GpcInputFile, GpcFileLine);
-      
-      Inc(i);
-      if i = 1 then //první øádek musí být hlavièka výpisu
+
+      if i = 0 then //první øádek musí být hlavièka výpisu
       begin
+        Inc(i);
         if copy(GpcFileLine, 1, 3) = '074' then begin
           Vypis := TVypis.Create(GpcFileLine, qrAbra);
-          Parovatko := TParovatko.create(AbraOLE, Vypis);
+          Parovatko := TParovatko.create(Vypis, AbraOLE, qrAbra);
         end else begin
           MessageDlg('Neplatný GPC soubor, 1. øádek není hlavièka', mtInformation, [mbOk], 0);
           Break;
@@ -225,6 +333,7 @@ begin
 
       if copy(GpcFileLine, 1, 3) = '075' then //radek vypisu zacina 075
       begin
+        Inc(i);
         iPlatbaZVypisu := TPlatbaZVypisu.Create(GpcFileLine, qrAbra);
         iPlatbaZVypisu.init(StrToInt(editPocetPredchPlateb.text));
         Parovatko.sparujPlatbu(iPlatbaZVypisu);
@@ -245,8 +354,8 @@ begin
         lblHlavicka.Caption := Vypis.abraBankaccount.name + ', ' + Vypis.abraBankaccount.number + ', è.'
                         + IntToStr(Vypis.poradoveCislo) + ' (max è. je ' + IntToStr(Vypis.maxExistujiciPoradoveCislo) + '). Plateb: '
                         + IntToStr(Vypis.Platby.Count);
-        //if not Vypis.isNavazujeNaRadu() then
-         //todo Dialogs.MessageDlg('Doklad è. '+ IntToStr(Vypis.poradoveCislo) + ' nenavazuje na øadu!',mtInformation, [mbOK], 0);
+        if not Vypis.isNavazujeNaRadu() then
+          Dialogs.MessageDlg('Doklad è. '+ IntToStr(Vypis.poradoveCislo) + ' nenavazuje na øadu!', mtInformation, [mbOK], 0);
         //currPlatbaZVypisu := TPlatbaZVypisu(Vypis.Platby[0]); //mùže být ale nemìlo by být potøeba
         asgMainClick(nil);
       end;
@@ -310,7 +419,7 @@ begin
   case iPlatbaZVypisu.problemLevel of
     0: asgMain.Colors[2, i+1] := $AAFFAA;
     1: asgMain.Colors[2, i+1] := $CDFAFF;
-    2: asgMain.Colors[2, i+1] := $40D0A0; // oranzova je $35C9FF
+    2: asgMain.Colors[2, i+1] := $60A4F4;
     5: asgMain.Colors[2, i+1] := $BBBBFF;
   end;
 
@@ -359,7 +468,7 @@ procedure TfmMain.sparujVsechnyPrichoziPlatby;
 var
   i : integer;
 begin
-  Parovatko := TParovatko.create(AbraOLE, Vypis);
+  Parovatko := TParovatko.create(Vypis, AbraOLE, qrAbra);
   for i := 0 to Vypis.Platby.Count - 1 do
     sparujPrichoziPlatbu(i);
 end;
@@ -520,6 +629,7 @@ begin
   }
   dbAbra.Reconnect;
   MessageDlg('Zápis do Abry dokonèen', mtInformation, [mbOk], 0);
+  vyplnNacitaciButtony;
 
 end;
 
@@ -716,15 +826,15 @@ end;
 
 procedure TfmMain.btnShowPrirazeniPnpFormClick(Sender: TObject);
 begin
-fmPrirazeniPnp.Show;
-{
+  fmPrirazeniPnp.Show;
+  {
   with fmPrirazeniPnp.Create(self) do
   try
     ShowModal;
   finally
     Free;
   end;
-        }
+  }
 end;
 
 procedure TfmMain.asgMainButtonClick(Sender: TObject; ACol, ARow: Integer);
@@ -733,8 +843,45 @@ begin
   urciCurrPlatbaZVypisu();
   currPlatbaZVypisu.VS := currPlatbaZVypisu.VS_orig;
   provedAkcePoZmeneVS;
-
 end;
 
+procedure TfmMain.btnNactiClick(Sender: TObject);
+begin
+  // *** naètení GPC na základì dialogu
+  NactiGpcDialog.InitialDir := 'J:\Eurosignal\HB\';
+  NactiGpcDialog.Filter := 'Bankovní výpisy (*.gpc)|*.gpc';
+	if NactiGpcDialog.Execute then
+    nactiGpc(NactiGpcDialog.Filename);
+end;
+
+procedure TfmMain.btnVypisFioClick(Sender: TObject);
+begin
+  nactiGpc(lblVypisFioGpc.caption);
+end;
+
+procedure TfmMain.btnVypisFioSporiciClick(Sender: TObject);
+begin
+  nactiGpc(lblVypisFioSporiciGpc.caption);
+end;
+
+procedure TfmMain.btnVypisCsobClick(Sender: TObject);
+begin
+  nactiGpc(lblVypisCsobGpc.caption);
+end;
+
+procedure TfmMain.Button1Click(Sender: TObject);
+begin
+  asgMain.Visible := false;
+  asgMain.ClearNormalCells;
+  asgPredchoziPlatby.ClearNormalCells;
+  asgPredchoziPlatbyVs.ClearNormalCells;
+  asgNalezeneDoklady.ClearNormalCells;
+  lblHlavicka.Caption := '';
+end;
+
+procedure TfmMain.btnCustomersClick(Sender: TObject);
+begin
+  fmCustomers.Show;
+end;
 
 end.
