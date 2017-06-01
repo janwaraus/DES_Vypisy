@@ -1,40 +1,31 @@
 unit Customers;
+// 12.5.2017 zobrazí nìkteré údaje z tabulek "customers" a "contracts" podle zadaných kritérií
 
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Math, IniFiles,
-  Dialogs, Grids, AdvObj, BaseGrid, AdvGrid, StdCtrls, DB,
-  ZAbstractRODataset, ZAbstractDataset, ZDataset, ZAbstractConnection,
-  ZConnection;
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, StdCtrls, Forms, Math, IniFiles, Dialogs, Grids, BaseGrid, AdvGrid, AdvObj,
+  DB, ZAbstractRODataset, ZAbstractDataset, ZDataset, ZAbstractConnection, ZConnection, VypisyMain;
 
 type
   TfmCustomers = class(TForm)
-    edJmeno: TEdit;
-    edPrijmeni: TEdit;
-    btNajdi: TButton;
-    lbJmeno: TLabel;
-    lbPrijmeni: TLabel;
-    asgCustomers: TAdvStringGrid;
-    lbVS: TLabel;
-    edVS: TEdit;
     dbMain: TZConnection;
     qrMain: TZQuery;
+    lbJmeno: TLabel;
+    edJmeno: TEdit;
+    lbPrijmeni: TLabel;
+    edPrijmeni: TEdit;
+    lbVS: TLabel;
+    edVS: TEdit;
+    btNajdi: TButton;
+    asgCustomers: TAdvStringGrid;
     procedure FormShow(Sender: TObject);
     procedure dbMainAfterConnect(Sender: TObject);
     procedure btNajdiClick(Sender: TObject);
-    procedure asgCustomersGetAlignment(Sender: TObject; ARow,
-      ACol: Integer; var HAlign: TAlignment; var VAlign: TVAlignment);
-    procedure edJmenoKeyUp(Sender: TObject; var Key: Word;
-      Shift: TShiftState);
-    procedure edPrijmeniKeyUp(Sender: TObject; var Key: Word;
-      Shift: TShiftState);
-    procedure edVSKeyUp(Sender: TObject; var Key: Word;
-      Shift: TShiftState);
-  private
-    { Private declarations }
-  public
-    { Public declarations }
+    procedure asgCustomersGetAlignment(Sender: TObject; ARow, ACol: Integer; var HAlign: TAlignment; var VAlign: TVAlignment);
+    procedure edJmenoKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure edPrijmeniKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure edVSKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
   end;
 
 var
@@ -72,7 +63,9 @@ begin
       Application.Terminate;
     end;
   end;
-  edPrijmeni.SetFocus;
+  with fmMain.asgMain do
+    if (Cells[2, Row] <> '') then edVS.Text := Cells[2, Row];
+  edVS.SetFocus;
 end;
 
 procedure TfmCustomers.dbMainAfterConnect(Sender: TObject);
