@@ -40,6 +40,8 @@ type
   published
     procedure loadByNumber(baNumber : string);
     function getMaxPoradoveCisloVypisu(pYear : string) : integer;
+    function getMaxExtPoradoveCisloVypisu(pYear : string) : integer;
+    function getMaxDatumVypisu(pYear : string) : double;    
     function getPocetVypisu(pYear : string) : integer;
   end;
 
@@ -107,14 +109,50 @@ end;
 function TAbraBankAccount.getMaxPoradoveCisloVypisu(pYear : string) : integer;
 begin
   with qrAbra do begin
-    SQL.Text := 'SELECT MAX(bs.OrdNumber) as MaxPoradoveCislo '  //nemìlo by být max externalnumber?
+    SQL.Text := 'SELECT MAX(bs.OrdNumber) as MaxOrdNumber '  //nemìlo by být max externalnumber?
               + ' FROM BANKSTATEMENTS bs, PERIODS p '
               + 'WHERE bs.DOCQUEUE_ID = ''' + self.bankStatementDocqueueId  + ''''
               + ' AND bs.PERIOD_ID = p.ID'
               + ' AND p.CODE = ''' + pYear  + '''';
     Open;
     if not Eof then
-      Result := FieldByName('MaxPoradoveCislo').AsInteger
+      Result := FieldByName('MaxOrdNumber').AsInteger
+    else
+      Result := 0;
+    Close;
+  end;
+end;
+
+function TAbraBankAccount.getMaxExtPoradoveCisloVypisu(pYear : string) : integer;
+begin
+  with qrAbra do begin
+    SQL.Text := 'SELECT bs1.OrdNumber as MaxOrdNumber, bs1.EXTERNALNUMBER as MaxExtOrdNumber'
+              + ' FROM BANKSTATEMENTS bs1'
+              + ' WHERE bs1.DOCQUEUE_ID = ''' + self.bankStatementDocqueueId  + ''''
+              + ' AND bs1.PERIOD_ID = (SELECT ID FROM PERIODS p WHERE p.CODE = ''' + pYear  + ''')'
+              + ' AND bs1.OrdNumber = (SELECT max(bs2.ORDNUMBER) FROM BANKSTATEMENTS bs2 WHERE bs1.DOCQUEUE_ID = bs2.DOCQUEUE_ID and bs1.PERIOD_ID = bs2.PERIOD_ID)';
+
+    Open;
+    if not Eof then
+      Result := FieldByName('MaxExtOrdNumber').AsInteger
+    else
+      Result := 0;
+    Close;
+  end;
+end;
+
+function TAbraBankAccount.getMaxDatumVypisu(pYear : string) : double;
+begin
+  with qrAbra do begin
+    SQL.Text := 'SELECT bs1.DOCDATE$DATE'
+              + ' FROM BANKSTATEMENTS bs1'
+              + ' WHERE bs1.DOCQUEUE_ID = ''' + self.bankStatementDocqueueId  + ''''
+              + ' AND bs1.PERIOD_ID = (SELECT ID FROM PERIODS p WHERE p.CODE = ''' + pYear  + ''')'
+              + ' AND bs1.OrdNumber = (SELECT max(bs2.ORDNUMBER) FROM BANKSTATEMENTS bs2 WHERE bs1.DOCQUEUE_ID = bs2.DOCQUEUE_ID and bs1.PERIOD_ID = bs2.PERIOD_ID)';
+
+    Open;
+    if not Eof then
+      Result := FieldByName('DOCDATE$DATE').AsFloat
     else
       Result := 0;
     Close;

@@ -1,4 +1,4 @@
-// do FI.ini pøidat øádek 
+// do FI.ini pøidat øádek
 // GpcPath = J:\Eurosignal\HB\
 
 unit VypisyMain;
@@ -7,7 +7,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, IniFiles, Forms,
-  Dialogs, StdCtrls, Grids, AdvObj, BaseGrid, AdvGrid, StrUtils, //DEShelpers
+  Dialogs, StdCtrls, Grids, AdvObj, BaseGrid, AdvGrid, StrUtils,
   DB, ComObj, AdvEdit, DateUtils, Math, ExtCtrls,
   ZAbstractRODataset, ZAbstractDataset, ZDataset, ZAbstractConnection, ZConnection,
   uTVypis, uTPlatbaZVypisu, uTParovatko;
@@ -51,6 +51,7 @@ type
     lblVypisCsobInfo: TLabel;
     lblVypisCsobGpc: TLabel;
     Button1: TButton;
+    btnCustomers: TButton;
 
     procedure btnNactiClick(Sender: TObject);
     procedure btnZapisDoAbryClick(Sender: TObject);
@@ -89,6 +90,7 @@ type
     procedure btnVypisFioSporiciClick(Sender: TObject);
     procedure btnVypisCsobClick(Sender: TObject);
     procedure Button1Click(Sender: TObject);
+    procedure btnCustomersClick(Sender: TObject);
 
   public
     procedure nactiGpc(GpcFilename : string);
@@ -117,7 +119,8 @@ var
 
 implementation
 
-uses AbraEntities, DesUtils, PrirazeniPNP;
+uses
+  AbraEntities, DesUtils, PrirazeniPNP,  Superobject, Customers;
 
 {$R *.dfm}
 
@@ -139,7 +142,7 @@ begin
       FIIni.Free;
     end;
   end else begin
-    Application.MessageBox('Neexistuje soubor FI.ini, program ukonèen', 'FI.ini', MB_OK + MB_ICONERROR);
+    Application.MessageBox('Neeexistuje soubor FI.ini, program ukonèen', 'FI.ini', MB_OK + MB_ICONERROR);
     Application.Terminate;
   end;
   try
@@ -159,13 +162,11 @@ begin
     AbraOLE := CreateOLEObject('AbraOLE.Application');
     if not AbraOLE.Connect('@DES') then begin
       Zprava('Problém s Abrou (connect DES).');
-      //Screen.Cursor := crDefault;
       Exit;
     end;
     Zprava('Pøipojeno k Abøe (connect DES).');
     if not AbraOLE.Login('Supervisor', '') then begin
       Zprava('Problém s Abrou (login Supervisor).');
-      //Screen.Cursor := crDefault;
       Exit;
     end;
     Zprava('Pøihlášeno k Abøe (login Supervisor).');
@@ -173,8 +174,6 @@ begin
     begin
       Application.MessageBox(PChar('Problém s Abrou.' + ^M + E.Message), 'Abra', MB_ICONERROR + MB_OK);
       Zprava('Problém s Abrou - ' + E.Message);
-      //btKonec.Caption := '&Konec';
-      //Screen.Cursor := crDefault;
       Exit;
     end;
   end;
@@ -213,9 +212,15 @@ begin
     btnVypisFio.Enabled := false;
   end else begin
     lblVypisFioGpc.caption := nalezenyGpcSoubor;
+    btnVypisFio.Enabled := true;
   end;
 
-  lblVypisFioInfo.Caption := format('Poèet výpisù: %d, max. èíslo výpisu: %d', [abraBankaccount.getPocetVypisu(fRok), abraBankaccount.getMaxPoradoveCisloVypisu(fRok)]);
+  lblVypisFioInfo.Caption := format('Poèet výpisù: %d, max. èíslo výpisu: %d, externí èíslo: %d, datum %s', [
+    abraBankaccount.getPocetVypisu(fRok),
+    abraBankaccount.getMaxPoradoveCisloVypisu(fRok),
+    abraBankaccount.getMaxExtPoradoveCisloVypisu(fRok),
+    DateToStr(abraBankaccount.getMaxDatumVypisu(fRok))
+    ]);
 
 
   /// Fio Spoøicí
@@ -232,9 +237,15 @@ begin
     btnVypisFioSporici.Enabled := false;
   end else begin
     lblVypisFioSporiciGpc.caption := nalezenyGpcSoubor;
+    btnVypisFioSporici.Enabled := true;
   end;
 
-  lblVypisFioSporiciInfo.Caption := format('Poèet výpisù: %d, max. èíslo výpisu: %d', [abraBankaccount.getPocetVypisu(fRok), abraBankaccount.getMaxPoradoveCisloVypisu(fRok)]);
+  lblVypisFioSporiciInfo.Caption := format('Poèet výpisù: %d, max. èíslo výpisu: %d, externí èíslo: %d, datum %s', [
+    abraBankaccount.getPocetVypisu(fRok),
+    abraBankaccount.getMaxPoradoveCisloVypisu(fRok),
+    abraBankaccount.getMaxExtPoradoveCisloVypisu(fRok),
+    DateToStr(abraBankaccount.getMaxDatumVypisu(fRok))
+    ]);
 
 
   /// ÈSOB Spoøicí
@@ -251,9 +262,15 @@ begin
     btnVypisCsob.Enabled := false;
   end else begin
     lblVypisCsobGpc.caption := nalezenyGpcSoubor;
+    btnVypisCsob.Enabled := true;
   end;
 
-  lblVypisCsobInfo.Caption := format('Poèet výpisù: %d, max. èíslo výpisu: %d', [abraBankaccount.getPocetVypisu(fRok), abraBankaccount.getMaxPoradoveCisloVypisu(fRok)]);
+  lblVypisCsobInfo.Caption := format('Poèet výpisù: %d, max. èíslo výpisu: %d, externí èíslo: %d, datum %s', [
+    abraBankaccount.getPocetVypisu(fRok),
+    abraBankaccount.getMaxPoradoveCisloVypisu(fRok),
+    abraBankaccount.getMaxExtPoradoveCisloVypisu(fRok),
+    DateToStr(abraBankaccount.getMaxDatumVypisu(fRok))
+    ]);
 
   //Pay U   2389210008000000/0300
 end;
@@ -576,7 +593,6 @@ end;
 
 procedure TfmMain.btnZapisDoAbryClick(Sender: TObject);
 var
-  OutputFile : TextFile;
   vysledek  : string;
   casStart, dobaZapisu: double;
 
@@ -601,14 +617,10 @@ begin
   dobaZapisu := (Now - casStart) * 24 * 3600;
   Memo1.Lines.Add('Doba trvání: ' + floattostr(RoundTo(dobaZapisu, -2))
               + ' s (' + floattostr(RoundTo(dobaZapisu / 60, -2)) + ' min)');
-  {
-  AssignFile(OutputFile, PROGRAM_PATH + EditVystupniSoubor.Text);
-  ReWrite(OutputFile);
-  WriteLn(OutputFile, vysledek);
-  CloseFile(OutputFile);
-  }
+
   dbAbra.Reconnect;
   MessageDlg('Zápis do Abry dokonèen', mtInformation, [mbOk], 0);
+  vyplnNacitaciButtony;
 
 end;
 
@@ -856,6 +868,11 @@ begin
   asgPredchoziPlatbyVs.ClearNormalCells;
   asgNalezeneDoklady.ClearNormalCells;
   lblHlavicka.Caption := '';
+end;
+
+procedure TfmMain.btnCustomersClick(Sender: TObject);
+begin
+  fmCustomers.Show;
 end;
 
 end.

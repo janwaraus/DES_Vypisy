@@ -1,9 +1,9 @@
 object fmMain: TfmMain
-  Left = 364
-  Top = 165
-  Width = 1362
-  Height = 962
+  Left = 141
+  Top = 0
   Caption = 'Na'#269'ten'#237', oprava a ulo'#382'en'#237' bankovn'#237'ho v'#253'pisu'
+  ClientHeight = 801
+  ClientWidth = 1346
   Color = clBtnFace
   Constraints.MinHeight = 721
   Constraints.MinWidth = 1312
@@ -17,7 +17,7 @@ object fmMain: TfmMain
   OnShow = FormShow
   DesignSize = (
     1346
-    924)
+    801)
   PixelsPerInch = 96
   TextHeight = 13
   object lblHlavicka: TLabel
@@ -80,7 +80,7 @@ object fmMain: TfmMain
   end
   object pnBottom: TPanel
     Left = 0
-    Top = 778
+    Top = 655
     Width = 1346
     Height = 146
     Align = alBottom
@@ -106,6 +106,7 @@ object fmMain: TfmMain
       Cursor = crDefault
       ColCount = 9
       DefaultRowHeight = 20
+      DrawingStyle = gdsClassic
       Enabled = False
       FixedCols = 0
       RowCount = 7
@@ -242,7 +243,7 @@ object fmMain: TfmMain
     Left = 899
     Top = 0
     Width = 447
-    Height = 778
+    Height = 655
     Align = alRight
     TabOrder = 2
     object lblPrechoziPlatbyZUctu: TLabel
@@ -292,6 +293,7 @@ object fmMain: TfmMain
       Height = 183
       Cursor = crDefault
       DefaultRowHeight = 20
+      DrawingStyle = gdsClassic
       Enabled = False
       FixedCols = 0
       RowCount = 8
@@ -416,6 +418,7 @@ object fmMain: TfmMain
       Cursor = crDefault
       ColCount = 4
       DefaultRowHeight = 20
+      DrawingStyle = gdsClassic
       Enabled = False
       FixedCols = 0
       RowCount = 8
@@ -551,7 +554,7 @@ object fmMain: TfmMain
     Left = 0
     Top = 0
     Width = 109
-    Height = 778
+    Height = 655
     Align = alLeft
     TabOrder = 3
     object lbZobrazit: TLabel
@@ -690,6 +693,15 @@ object fmMain: TfmMain
       TabOrder = 10
       OnClick = Button1Click
     end
+    object btnCustomers: TButton
+      Left = 16
+      Top = 448
+      Width = 75
+      Height = 25
+      Caption = 'Z'#225'kazn'#237'ci'
+      TabOrder = 11
+      OnClick = btnCustomersClick
+    end
   end
   object btnVypisFio: TButton
     Left = 128
@@ -731,11 +743,12 @@ object fmMain: TfmMain
     Left = 110
     Top = 26
     Width = 787
-    Height = 751
+    Height = 626
     Cursor = crDefault
     Anchors = [akLeft, akTop, akBottom]
     ColCount = 8
     DefaultRowHeight = 20
+    DrawingStyle = gdsClassic
     Enabled = False
     FixedCols = 0
     RowCount = 5
@@ -867,8 +880,14 @@ object fmMain: TfmMain
   end
   object dbAbra: TZConnection
     ControlsCodePage = cGET_ACP
-    AutoEncodeStrings = False
+    Catalog = ''
+    Properties.Strings = (
+      'controls_cp=GET_ACP')
+    HostName = ''
     Port = 0
+    Database = ''
+    User = ''
+    Password = ''
     Protocol = 'firebirdd-2.1'
     Left = 158
     Top = 142
