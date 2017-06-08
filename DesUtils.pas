@@ -3,15 +3,18 @@ unit DesUtils;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, StrUtils,Dialogs, StdCtrls; //, Grids, AdvObj;
+  Windows, Messages, SysUtils, Variants, Classes, StrUtils, Dialogs, Forms, IniFiles; //, Grids, AdvObj, StdCtrls,;
+
 
 procedure nactiIni();
 function abraBoGet(abraBo : string) : string;
+//function abraBoGetByRowId(abraBo, rowId : string) : string;
+function abraBoGetById(abraBo, sId : string) : string;
 function abraBoCreate(abraBo, sJson : string) : string;
 function abraBoUpdate(abraBo, sJson : string) : string;
 function prevedCisloUctuNaText(cisloU : string) : string;
-procedure opravRadekVypisuPomociPDocument_ID(AbraOLE : variant; Radek_ID, PDocument_ID, PDocumentType : string);
-procedure opravRadekVypisuPomociVS(AbraOLE : variant; Radek_ID : string; VS : string);
+procedure opravRadekVypisuPomociPDocument_ID(Vypis_ID, RadekVypisu_ID, PDocument_ID, PDocumentType : string);
+procedure opravRadekVypisuPomociVS(Vypis_ID, RadekVypisu_ID, VS : string);
 
 function removeLeadingZeros(const Value: string): string;
 function LeftPad(value:integer; length:integer=8; pad:char='0'): string; overload;
@@ -27,7 +30,7 @@ const
   Ap = chr(39);
   ApC = Ap + ',';
   ApZ = Ap + ')';
-  sLineBreak = {$IFDEF LINUX} AnsiChar(#10) {$ENDIF} 
+  sLineBreak = {$IFDEF LINUX} AnsiChar(#10) {$ENDIF}
                {$IFDEF MSWINDOWS} AnsiString(#13#10) {$ENDIF};
 
 var
@@ -36,7 +39,7 @@ var
 
 implementation
 
-uses IdHTTP;
+uses IdHTTP, Superobject;
 
 {****************************************************************************}
 {**********************     ABRA common functions     ***********************}
@@ -44,39 +47,60 @@ uses IdHTTP;
 
 procedure nactiIni();
 var
+  adpIniFile: TIniFile;
   PROGRAM_PATH: string;
 begin
+  if iniNacteno > 0 then Exit;
+
   PROGRAM_PATH := ExtractFilePath(ParamStr(0)) + '../CommonFiles/';
-  if FileExists(PROGRAM_PATH + 'abraDesProgramy.ini') && (not iniNacteno) then begin
+  if FileExists(PROGRAM_PATH + 'abraDesProgramy.ini') then begin
     iniNacteno := 1;
-    FIIni := TIniFile.Create(PROGRAM_PATH + 'abraDesProgramy.ini');
-    with FIIni do try
+    adpIniFile := TIniFile.Create(PROGRAM_PATH + 'abraDesProgramy.ini');
+    with adpIniFile do try
       abraWebApiUrl := ReadString('Preferences', 'AbraWebApiUrl', '');
     finally
-      FIIni.Free;
+      adpIniFile.Free;
     end;
   end else begin
-    Application.MessageBox('Nenalezen soubor ' + PROGRAM_PATH 
-        + 'abraDesProgramy.ini, program ukonèen', 'abraDesProgramy.ini', MB_OK + MB_ICONERROR);
+    Application.MessageBox(PChar('Nenalezen soubor ' + PROGRAM_PATH + 'abraDesProgramy.ini, program ukonèen'),
+      'abraDesProgramy.ini', MB_OK + MB_ICONERROR);
     Application.Terminate;
   end;
-end;  
+end;
 
 {*** ABRA WebApi IdHTTP functions ***}
 
 function abraBoGet(abraBo : string) : string;
+begin
+  Result := abraBoGetById(abraBo, '');
+end;
+
+{
+function abraBoGetByRowId(abraBo, rowId : string) : string;
+begin
+  Result := abraBoGetById(abraBo, getEnpointPartForRowId(rowId));
+end;
+}
+
+function abraBoGetById(abraBo, sId : string) : string;
 var
   idHTTP: TIdHTTP;
+  endpoint : string;
 begin
-
+  nactiIni();
   idHTTP := TidHTTP.Create;
   idHTTP.Request.BasicAuthentication := True;
   idHTTP.Request.Username := 'Supervisor';
   idHTTP.Request.Password := '';
 
+  endpoint := abraWebApiUrl + abraBo;
+
+  if sId <> '' then
+    endpoint := endpoint + '/' + sId;
+
   try
     try
-      Result := idHTTP.Get(pUrl);
+      Result := idHTTP.Get(endpoint);
     except
       on E: Exception do
         ShowMessage('Error on request: '#13#10 + e.Message);
@@ -90,24 +114,29 @@ function abraBoCreate(abraBo, sJson : string) : string;
 var
   idHTTP: TIdHTTP;
   sstreamJson: TStringStream;
+  endpoint : string;
 begin
-
+  nactiIni();
   //sstreamJson := TStringStream.Create(Utf8Encode(pJson)); // D2007 and earlier only
-  sstreamJson := TStringStream.Create(pJson, TEncoding.UTF8);
+  sstreamJson := TStringStream.Create(sJson, TEncoding.UTF8);
 
   idHTTP := TidHTTP.Create;
   idHTTP.Request.BasicAuthentication := True;
   idHTTP.Request.Username := 'Supervisor';
   idHTTP.Request.Password := '';
 
+  endpoint := abraWebApiUrl + abraBo;
+
   try
     idHTTP.Request.ContentType := 'application/json';
     idHTTP.Request.CharSet := 'utf-8';
     try
-      Result := idHTTP.Post(pUrl, sstreamJson);
+      Result := idHTTP.Post(abraWebApiUrl + abraBo, sstreamJson);
     except
-      on E: Exception do
+      on E: Exception do begin
         ShowMessage('Error on request: '#13#10 + e.Message);
+        ShowMessage(Result);
+      end;
     end;
   finally
     sstreamJson.Free;
@@ -120,9 +149,9 @@ var
   idHTTP: TIdHTTP;
   sstreamJson: TStringStream;
 begin
-
+  nactiIni();
   //sstreamJson := TStringStream.Create(Utf8Encode(pJson)); // D2007 and earlier only
-  sstreamJson := TStringStream.Create(pJson, TEncoding.UTF8);
+  sstreamJson := TStringStream.Create(sJson, TEncoding.UTF8);
 
   idHTTP := TidHTTP.Create;
   idHTTP.Request.BasicAuthentication := True;
@@ -133,7 +162,7 @@ begin
     idHTTP.Request.ContentType := 'application/json';
     idHTTP.Request.CharSet := 'utf-8';
     try
-      Result := idHTTP.Put(pUrl, sstreamJson);
+      Result := idHTTP.Put(abraWebApiUrl + abraBo, sstreamJson);
     except
       on E: Exception do
         ShowMessage('Error on request: '#13#10 + e.Message);
@@ -143,6 +172,10 @@ begin
     idHTTP.Free;
   end;
 end;
+
+
+
+{*** ABRA data manipulating functions ***}
 
 function prevedCisloUctuNaText(cisloU : string) : string;
 begin
@@ -155,33 +188,44 @@ begin
   if cisloU = '160987123/0300' then Result := 'Èeská Pošta';
 end;
 
-procedure opravRadekVypisuPomociPDocument_ID(AbraOLE : variant; Radek_ID, PDocument_ID, PDocumentType : string);
+procedure opravRadekVypisuPomociPDocument_ID(Vypis_ID, RadekVypisu_ID, PDocument_ID, PDocumentType : string);
 var
+  JsonSO: ISuperObject;
+  sResponse: string;
+  {
   BStatement_Object,
   BStatement_Data,
   BStatementRow_Object,
   BStatementRow_Data,
   BStatementRow_Coll : variant;
+  }
+
 begin
+  { takhle to bylo pres OLE
   BStatementRow_Object := AbraOLE.CreateObject('@BankStatementRow');
   BStatementRow_Data := AbraOLE.CreateValues('@BankStatementRow');
-  
+
   BStatementRow_Data := BStatementRow_Object.GetValues(Radek_ID);
   BStatementRow_Data.ValueByName('PDocumentType') := PDocumentType;
   BStatementRow_Data.ValueByName('PDocument_ID') := PDocument_ID;
   BStatementRow_Object.UpdateValues(Radek_ID, BStatementRow_Data);
+  }
+
+  JsonSO := SO;
+  JsonSO.S['PDocumentType'] := PDocumentType;
+  JsonSO.S['PDocument_ID'] := PDocument_ID;
+
+  sResponse := abraBoUpdate('bankstatements/' + Vypis_ID + '/rows/' + RadekVypisu_ID, JsonSO.AsJSon());
 
 end;
 
 
-procedure opravRadekVypisuPomociVS(AbraOLE : variant; Radek_ID : string; VS : string);
+procedure opravRadekVypisuPomociVS(Vypis_ID, RadekVypisu_ID, VS : string);
 var
-  BStatement_Object,
-  BStatement_Data,
-  BStatementRow_Object,
-  BStatementRow_Data,
-  BStatementRow_Coll : variant;
+  JsonSO: ISuperObject;
+  sResponse: string;
 begin
+  { takhle to bylo pres OLE
   BStatementRow_Object := AbraOLE.CreateObject('@BankStatementRow');
   BStatementRow_Data := AbraOLE.CreateValues('@BankStatementRow');
 
@@ -192,7 +236,18 @@ begin
   BStatementRow_Data := BStatementRow_Object.GetValues(Radek_ID);
   BStatementRow_Data.ValueByName('VarSymbol') := VS;
   BStatementRow_Object.UpdateValues(Radek_ID, BStatementRow_Data);
+  }
+
+  JsonSO := SO;
+  JsonSO.S['VarSymbol'] := ''; //odstranit VS aby se Abra chytla pøi pøiøazení
+  sResponse := abraBoUpdate('bankstatements/' + Vypis_ID + '/rows/' + RadekVypisu_ID, JsonSO.AsJSon());
+
+  JsonSO := SO;
+  JsonSO.S['VarSymbol'] := VS;
+  sResponse := abraBoUpdate('bankstatements/' + Vypis_ID + '/rows/' + RadekVypisu_ID, JsonSO.AsJSon());
+
 end;
+
 
 {***************************************************************************}
 {********************     General helper functions     *********************}
@@ -324,3 +379,4 @@ begin
 end;
 
 end.
+

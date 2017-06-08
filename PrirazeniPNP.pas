@@ -14,17 +14,11 @@ type
     asgPNP: TAdvStringGrid;
     btnNactiPnp: TButton;
     btnPriradPnp: TButton;
-    Label1: TLabel;
-    Edit1: TEdit;
-    Label2: TLabel;
-    Edit2: TEdit;
-    btnZmenRadekVypisu: TButton;
     MemoPNP: TMemo;
     btnNactiPnpInfo: TButton;
     chbNacistPnp: TCheckBox;
     procedure btnNactiPnpClick(Sender: TObject);
     procedure btnNactiPnpInfoClick(Sender: TObject);
-    procedure btnZmenRadekVypisuClick(Sender: TObject);
     procedure asgPNPButtonClick(Sender: TObject; ACol, ARow: Integer);
 
     procedure asgPNPGetCellColor(Sender: TObject; ARow, ACol: Integer;
@@ -46,27 +40,18 @@ implementation
 
 {$R *.dfm}
 
+uses
+  Superobject;
 
-
-{
-  try
-    BStatementRow_Object.UpdateValues(Radek_ID, BStatementRow_Data);
-  except
-    on E: Exception do begin
-     MessageDlg('Oprava pøiøazením èísla dokladu se posrala', mtInformation, [mbOk], 0);
-    end;
-  end;
-    }
 
 procedure TfmPrirazeniPnp.asgPNPButtonClick(Sender: TObject; ACol, ARow: Integer);
 begin
   with asgPNP do begin
     if ACol = 13 then
     try
-      opravRadekVypisuPomociPDocument_ID(AbraOLE, Cells[4, ARow], Cells[7, ARow], '03'); //DocumentType je vždy 03 pro faktury
+      opravRadekVypisuPomociPDocument_ID(Cells[16, ARow], Cells[4, ARow], Cells[7, ARow], '03'); //DocumentType je vždy 03 pro faktury
       RemoveButton(13, ARow);
       Cells[13, ARow] := 'pøiøaz. ok';
-      //MessageDlg('Oprava pøiøazením èísla dokladu hotová', mtInformation, [mbOk], 0);
     except
       on E: Exception do begin
         RemoveButton(13, ARow);
@@ -76,30 +61,7 @@ begin
   end;
 end;
 
-procedure TfmPrirazeniPnp.btnZmenRadekVypisuClick(Sender: TObject);
-var
-  i : integer;
-  RadekVypisuID : string;
-  BStatement_Object,
-  BStatement_Data,
-  BStatementRow_Object,
-  BStatementRow_Data,
-  BStatementRow_Coll  : variant;
-begin
 
-  RadekVypisuID := Edit1.Text;
-
-  BStatementRow_Object := AbraOLE.CreateObject('@BankStatementRow');
-  BStatementRow_Data := AbraOLE.CreateValues('@BankStatementRow');
-  BStatementRow_Data := BStatementRow_Object.GetValues(RadekVypisuID);
-  BStatementRow_Data.ValueByName('PDocument_ID') := Edit2.Text;
-
-  for i := 0 to BStatementRow_Data.Count - 1 do
-    MemoPNP.Lines.Add(inttostr(i) + 'r ' + BStatementRow_Data.Names[i] + ': ' + vartostr( BStatementRow_Data.Value[i]));
-
-  BStatementRow_Object.UpdateValues(RadekVypisuID, BStatementRow_Data);
-
-end;
 
 procedure TfmPrirazeniPnp.nactiPNP;
 var
@@ -109,7 +71,7 @@ begin
 // nalezení zákazníkù s pøeplatky na 325 z Abry
 
   SQLStr := 'SELECT ADQ.Code || ''-'' || G1.OrdNumber || ''/'' || P.Code AS DokladVypis, G1.Amount, F.Name, G1.Text,'
-  + ' bs.ID as Vypis_ID, bs2.ID as RadekVypisu_ID,  bs2.FIRM_ID, bs2.varsymbol as RadekVypisu_VS'
+  + ' bs.ID as Vypis_ID, bs2.ID as RadekVypisu_ID, bs2.Parent_ID as Vypis_ID, bs2.Firm_ID, bs2.varsymbol as RadekVypisu_VS'
   + ' FROM GENERALLEDGER G1, BANKSTATEMENTS bs, BANKSTATEMENTS2 bs2,'
   + '   AccDocQueues ADQ, Periods P, Firms F'
   + ' WHERE G1.CreditAccount_ID = ''A300000101'''
@@ -138,20 +100,15 @@ begin
     SQL.Text := SQLStr;
     Open;
     while not EOF do begin
-      //opravRadekVypisuPomociPDocument_ID(AbraOLE, FieldByName('RadekVypisu_ID').AsString, FieldByName('Doklad_ID').AsString);
       Inc(radek);
       RowCount := radek + 1;
       Cells[0, radek] := FieldByName('DokladVypis').AsString; //ucetni doklad
-      //Cells[1, radek] := format('%m', [FieldByName('Amount').AsCurrency]);
-      //Cells[1, radek] := FieldByName('Amount').AsString;
-      Floats[1, radek] := FieldByName('Amount').AsFloat;
+      Floats[1, radek] := FieldByName('Amount').AsFloat; // ne asCurrency, protože potøebuju teèku jako desetinný oddìlovaè
       Cells[2, radek] := FieldByName('Name').AsString;
       Cells[3, radek] := FieldByName('Text').AsString;
-      //Cells[2, radek] := floattostr(Floats[1, radek]);
-      //Cells[3, radek] := Cells[1, radek];
       Cells[4, radek] := FieldByName('RadekVypisu_ID').AsString;
-      Cells[5, radek] := FieldByName('FIRM_ID').AsString;
-
+      Cells[5, radek] := FieldByName('Firm_ID').AsString;
+      Cells[16, radek] := FieldByName('Vypis_ID').AsString;
       Application.ProcessMessages;
       Next;
     end;
@@ -215,7 +172,7 @@ begin
     for radek := 1 to RowCount - 1 do
     if Cells[6, radek] <> '' then begin
       try
-        opravRadekVypisuPomociPDocument_ID(AbraOLE, Cells[4, radek], Cells[7, radek], '03'); //DocumentType je vždy 03 pro faktury
+        opravRadekVypisuPomociPDocument_ID(Cells[16, radek], Cells[4, radek], Cells[7, radek], '03'); //DocumentType je vždy 03 pro faktury
         RemoveButton(13, radek);
         Cells[13, radek] := 'opr. ok';
       except
@@ -250,6 +207,7 @@ begin
   end;
 end;
 
+// alternativní data, vše na 1 SELECT ale neumí øešit pokud existuje více nezaplacených faktur pro zákazníka co má pøeplatek
 procedure TfmPrirazeniPnp.nactiPNPinfo;
 var
   SQLStr: AnsiString;

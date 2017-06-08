@@ -6,7 +6,7 @@ uses
   SysUtils, Variants, Classes, Controls, StrUtils,
   Windows, Messages, Dialogs, Forms,
   ZAbstractRODataset, ZAbstractDataset, ZDataset, ZAbstractConnection, ZConnection,  
-  uTVypis, uTPlatbaZVypisu, AbraEntities, DesUtils;
+  uTVypis, uTPlatbaZVypisu, AbraEntities;
 
 
 type
@@ -44,6 +44,9 @@ type
 
 
 implementation
+
+uses
+  DesUtils, Superobject;
 
 
 constructor TParovatko.create(Vypis: TVypis; AbraOLE: variant; qrAbra : TZQuery);
@@ -191,14 +194,20 @@ function TParovatko.zapisDoAbry() : string;
 var
   i, j : integer;
   iPDPar : TPlatbaDokladPar;
+  {
   BStatement_Object,
   BStatement_Data,
   BStatementRow_Object,
   BStatementRow_Data,
   BStatement_Data_Coll,
   NewID : variant;
-  mmm : ansistring;
+  }
+  newBankstatement : ansistring;
   abraPeriod : TAbraPeriod;
+  jsonBo,
+  jsonBoRow,
+  newJsonBo: ISuperObject;
+  OutputFile : TextFile;
 begin
 
   if (listPlatbaDokladPar.Count = 0) then Exit;
@@ -207,6 +216,7 @@ begin
 
   abraPeriod := TAbraPeriod.create(self.Vypis.Datum, qrAbra);
 
+  {//---------------
   BStatement_Object:= AbraOLE.CreateObject('@BankStatement');
   BStatement_Data:= AbraOLE.CreateValues('@BankStatement');
   BStatement_Object.PrefillValues(BStatement_Data);
@@ -250,45 +260,71 @@ begin
 
     if iPDPar.Platba.Debet then
       BStatementRow_Data.ValueByName('VarSymbol') := iPDPar.Platba.VS; //pro debety aby vûdy z˘stal VS
-
-    {
-    mmm := 'ID novÈho ¯·dku: ' + iPDPar.AbraBS2_ID + sLineBreak;
-    for j := 0 to BStatementRow_Data.Count - 1 do begin
-      mmm := mmm + inttostr(j) + 'r ' + BStatementRow_Data.Names[j] + ': ' + vartostr( BStatementRow_Data.Value[j]) + sLineBreak;
-    end;
-    MessageDlg(mmm, mtInformation, [mbOk], 0);
-    }
-
     BStatement_Data_Coll.Add(BStatementRow_Data);
   end;
+  }
+
+  jsonBo := SO;
+  jsonBo.S['DocQueue_ID'] := self.Vypis.abraBankaccount.bankStatementDocqueueId;
+  jsonBo.S['Period_ID'] := abraPeriod.id;
+  jsonBo.S['BankAccount_ID'] := self.Vypis.abraBankaccount.id;
+  jsonBo.I['ExternalNumber'] := self.Vypis.PoradoveCislo;
+  jsonBo.D['DocDate$DATE'] := self.Vypis.Datum;
+  //jsonBo.D['CreatedAt$DATE'] := Trunc(Date); //nefunkËnÌ, abra tam d· vûdy aktu·lnÌ Ëas
+  jsonBo.O['rows'] := SA([]);
+
+
+
+  for i := 0 to listPlatbaDokladPar.Count - 1 do
+  begin
+    iPDPar := TPlatbaDokladPar(listPlatbaDokladPar[i]);
+
+    jsonBoRow := SO;
+    jsonBoRow.D['Amount'] := iPDPar.CastkaPouzita;
+    jsonBoRow.I['Credit'] := StrToInt(IfThen(iPDPar.Platba.Kredit,'1','0'));
+    jsonBoRow.S['BankAccount'] := iPDPar.Platba.cisloUctu;
+    jsonBoRow.S['Text'] := iPDPar.popis + ' ' + iPDPar.Platba.nazevKlienta;
+    jsonBoRow.S['SpecSymbol'] := iPDPar.Platba.SS;
+    jsonBoRow.D['DocDate$DATE'] := iPDPar.Platba.Datum;
+    jsonBoRow.D['AccDate$DATE'] := iPDPar.Platba.Datum;
+    jsonBoRow.S['Division_id'] := '1000000101';
+    jsonBoRow.S['Currency_id'] := '0000CZK000';
+
+    if Assigned(iPDPar.Doklad) then
+      jsonBoRow.S['Firm_ID'] := iPDPar.Doklad.Firm_ID
+    else
+      jsonBoRow.S['Firm_ID'] := '3Y90000101';  // pokud nenÌ doklad, tak aù je firma DES. jinak se tam d· jako default "drobn˝ n·kup"
+
+    if iPDPar.vazbaNaDoklad AND Assigned(iPDPar.Doklad) then //Doklad vyplnime jen jestli chceme vazbu. Doklad m·me i kdyû vazbu nechceme - kv˘li Firm_ID
+    begin
+      jsonBoRow.S['PDocumentType'] := iPDPar.Doklad.DocumentType;
+      jsonBoRow.S['PDocument_ID'] := iPDPar.Doklad.ID;
+    end;
+
+    if iPDPar.Platba.Debet then
+      jsonBoRow.S['VarSymbol'] := iPDPar.Platba.VS; //pro debety aby vûdy z˘stal VS
+
+    jsonBo.A['rows'].Add(jsonBoRow);
+  end;
+
+  AssignFile(OutputFile, ExtractFilePath(ParamStr(0)) + '!json.txt');
+  ReWrite(OutputFile);
+  WriteLn(OutputFile, jsonBo.AsJSon(true));
+  CloseFile(OutputFile);
+  //Dialogs.MessageDlg(jsonBo.AsJSon(true), mtInformation, [mbOK], 0);
+  //exit;
 
   try begin
-    NewID := BStatement_Object.CreateNewFromValues(BStatement_Data); //NewID je ID Abry v BANKSTATEMENTS
-    Result := Result + ' »Ìslo v˝pisu je ' + NewID;
+    //NewID := BStatement_Object.CreateNewFromValues(BStatement_Data); //NewID je ID Abry v BANKSTATEMENTS
+    newBankstatement := abraBoCreate('bankstatements', jsonBo.AsJSon());
+    Result := Result + ' »Ìslo v˝pisu je ' + SO(newBankstatement).S['id'];
   end;
   except on E: exception do
     begin
-      Application.MessageBox(PChar('Problemmm ' + ^M + E.Message), 'AbraOLE');
+      Application.MessageBox(PChar('Problem ' + ^M + E.Message), 'AbraOLE');
       Result := 'Chyba p¯i zakl·d·nÌ v˝pisu';
     end;
   end;
-
-
-  //opravit ¯·dky v Ab¯e kde se nesp·rovalo
-  {
-  for i := 0 to listPlatbaDokladPar.Count - 1 do
-  try
-    iPDPar := TPlatbaDokladPar(listPlatbaDokladPar[i]);
-    if iPDPar.vazbaNaDoklad AND Assigned(iPDPar.Doklad) then
-    begin
-      opravRadekVypisuPomociPDocument_ID(AbraOLE, iPDPar.AbraBS2_ID, iPDPar.Doklad.ID, iPDPar.Doklad.ID);
-      MessageDlg('ÿ·dek ' + iPDPar.AbraBS2_ID + ' byl opraven', mtInformation, [mbOk], 0);
-    end;
-  except
-    on E: Exception do
-    MessageDlg('Oprava ¯·dku ' + iPDPar.AbraBS2_ID + ' se nepovedla!', mtInformation, [mbOk], 0);
-  end;
-  }
 
 end;
 

@@ -156,7 +156,7 @@ begin
   asgMain.CheckFalse := '0';
   asgMain.CheckTrue := '1';
 
-
+  {
 // pøipojení k Abøe
   if VarIsEmpty(AbraOLE) then try
     AbraOLE := CreateOLEObject('AbraOLE.Application');
@@ -177,6 +177,8 @@ begin
       Exit;
     end;
   end;
+
+  }
 
   vyplnNacitaciButtony;
 
@@ -361,7 +363,6 @@ begin
     btnZapisDoAbry.Enabled := true;
     CloseFile(GpcInputFile);
     Screen.Cursor := crDefault;
-
   end;
 
 end;

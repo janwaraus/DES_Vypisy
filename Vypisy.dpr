@@ -10,10 +10,10 @@ uses
   AbraEntities in 'AbraEntities.pas',
   PrirazeniPNP in 'PrirazeniPNP.pas' {fmPrirazeniPnp},
   Customers in 'Customers.pas' {fmCustomers},
-  superobject in '..\Libs\superobject.pas',
-  supertypes in '..\Libs\supertypes.pas',
-  superdate in '..\Libs\superdate.pas',
-  supertimezone in '..\Libs\supertimezone.pas';
+  superdate in 'superdate.pas',
+  superobject in 'superobject.pas',
+  supertimezone in 'supertimezone.pas',
+  supertypes in 'supertypes.pas';
 
 {$R *.res}
 

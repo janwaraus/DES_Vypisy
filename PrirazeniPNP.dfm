@@ -1,9 +1,9 @@
 object fmPrirazeniPnp: TfmPrirazeniPnp
-  Left = 348
-  Top = 81
-  Width = 1427
-  Height = 731
+  Left = 133
+  Top = 0
   Caption = 'P'#345'i'#345'azen'#237' PNP'
+  ClientHeight = 674
+  ClientWidth = 1428
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -11,37 +11,25 @@ object fmPrirazeniPnp: TfmPrirazeniPnp
   Font.Name = 'MS Sans Serif'
   Font.Style = []
   OldCreateOrder = False
+  Position = poDesigned
   OnShow = FormShow
   DesignSize = (
-    1411
-    693)
+    1428
+    674)
   PixelsPerInch = 96
   TextHeight = 13
-  object Label1: TLabel
-    Left = 864
-    Top = 8
-    Width = 74
-    Height = 13
-    Caption = 'ID radku vypisu'
-  end
-  object Label2: TLabel
-    Left = 976
-    Top = 8
-    Width = 52
-    Height = 13
-    Caption = 'ID dokladu'
-  end
   object asgPNP: TAdvStringGrid
     Left = -3
     Top = 50
     Width = 1300
-    Height = 639
+    Height = 620
     Cursor = crDefault
     Anchors = [akLeft, akTop, akBottom]
     BorderStyle = bsNone
-    ColCount = 16
+    ColCount = 17
     Ctl3D = True
     DefaultRowHeight = 18
+    DrawingStyle = gdsClassic
     FixedCols = 0
     RowCount = 2
     Font.Charset = EASTEUROPE_CHARSET
@@ -70,7 +58,7 @@ object fmPrirazeniPnp: TfmPrirazeniPnp
       'Z'#225'kazn'#237'k'
       'Text'
       #344#225'dek v'#253'pisu ID'
-      'Firma ID'
+      'V'#253'pis ID'
       #268#237'slo dokladu'
       'ID dokladu'
       'VS dokladu'
@@ -197,7 +185,8 @@ object fmPrirazeniPnp: TfmPrirazeniPnp
       72
       64
       72
-      72)
+      72
+      5)
   end
   object btnNactiPnp: TButton
     Left = 8
@@ -217,40 +206,16 @@ object fmPrirazeniPnp: TfmPrirazeniPnp
     TabOrder = 2
     OnClick = btnPriradPnpClick
   end
-  object Edit1: TEdit
-    Left = 864
-    Top = 24
-    Width = 97
-    Height = 21
-    TabOrder = 3
-    Text = 'VJMD000101'
-  end
-  object Edit2: TEdit
-    Left = 976
-    Top = 24
-    Width = 97
-    Height = 21
-    TabOrder = 4
-    Text = '2AIT000101'
-  end
-  object btnZmenRadekVypisu: TButton
-    Left = 1088
-    Top = 16
-    Width = 97
-    Height = 25
-    Caption = 'zm'#283'nRadekVypisu'
-    TabOrder = 5
-    OnClick = btnZmenRadekVypisuClick
-  end
   object MemoPNP: TMemo
-    Left = 1302
+    Left = 1319
     Top = 48
     Width = 103
     Height = 329
     Anchors = [akTop, akRight]
     Lines.Strings = (
       '')
-    TabOrder = 6
+    TabOrder = 3
+    ExplicitLeft = 1302
   end
   object btnNactiPnpInfo: TButton
     Left = 1240
@@ -258,7 +223,7 @@ object fmPrirazeniPnp: TfmPrirazeniPnp
     Width = 89
     Height = 25
     Caption = 'alternativn'#237' data'
-    TabOrder = 7
+    TabOrder = 4
     OnClick = btnNactiPnpInfoClick
   end
   object chbNacistPnp: TCheckBox
@@ -267,6 +232,6 @@ object fmPrirazeniPnp: TfmPrirazeniPnp
     Width = 289
     Height = 17
     Caption = 'vyhledat i doklady s '#269#225'stkou men'#353#237' ne'#382' p'#345'eplatek'
-    TabOrder = 8
+    TabOrder = 5
   end
 end
