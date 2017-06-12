@@ -52,7 +52,7 @@ var
 begin
   if iniNacteno > 0 then Exit;
 
-  PROGRAM_PATH := ExtractFilePath(ParamStr(0)) + '../DE$_Common/';
+  PROGRAM_PATH := ExtractFilePath(ParamStr(0)) + '..\DE$_Common\';
   if FileExists(PROGRAM_PATH + 'abraDesProgramy.ini') then begin
     iniNacteno := 1;
     adpIniFile := TIniFile.Create(PROGRAM_PATH + 'abraDesProgramy.ini');

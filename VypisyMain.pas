@@ -1,6 +1,3 @@
-// do FI.ini pøidat øádek
-// GpcPath = J:\Eurosignal\HB\
-
 unit VypisyMain;
 
 interface
