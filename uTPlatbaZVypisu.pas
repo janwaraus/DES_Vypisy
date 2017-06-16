@@ -141,7 +141,7 @@ begin
   if debet AND (cisloUctuKZobrazeni = '171336270/0300') then setZnamyPripad('na ÈSOB');
   if debet AND (cisloUctuVlastni = '2389210008000000') AND (AnsiContainsStr(nazevKlienta, 'illing')) then setZnamyPripad('z PayU na BÚ');
 
-  cisloUctuKZobrazeni := prevedCisloUctuNaText(cisloUctuKZobrazeni);
+  cisloUctuKZobrazeni := DesU.prevedCisloUctuNaText(cisloUctuKZobrazeni);
 
   self.PredchoziPlatbyList := TList.Create;
   self.PredchoziPlatbyVsList := TList.Create;
@@ -378,6 +378,7 @@ begin
     Result := getPocetPredchozichPlatebNaStejnyVS() / PredchoziPlatbyList.Count;
 end;
 
+
 function TPlatbaZVypisu.getPocetPredchozichPlatebZeStejnehoUctu() : integer;
 var
   i : integer;
@@ -389,7 +390,6 @@ begin
       if TPredchoziPlatba(self.PredchoziPlatbyVsList[i]).cisloUctu = self.cisloUctu then Inc(Result);
   end;
 end;
-
 
 function TPlatbaZVypisu.getProcentoPredchozichPlatebZeStejnehoUctu() : single;
 begin
@@ -427,7 +427,7 @@ begin
   self.Datum := FieldByName('DocDate$Date').asFloat;
   self.FirmName := FieldByName('FirmName').AsString;
 
-  self.cisloUctuKZobrazeni := prevedCisloUctuNaText(removeLeadingZeros(cisloUctu));
+  self.cisloUctuKZobrazeni := DesU.prevedCisloUctuNaText(removeLeadingZeros(cisloUctu));
 
   if (FieldByName('Credit').AsString = 'N') then
     self.Castka := - self.Castka;

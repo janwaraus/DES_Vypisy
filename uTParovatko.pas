@@ -34,6 +34,8 @@ type
     procedure vytvorPDPar(Platba : TPlatbaZVypisu; Doklad : TDoklad;
                 Castka: currency; popis : string; vazbaNaDoklad : boolean);
     function zapisDoAbry() : string;
+    function zapisDoAbryOLE() : string;
+    function zapisDoAbryWebApi() : string;
     function getUzSparovano(Doklad_ID : string) : currency;
     function getPDParyAsText() : AnsiString;
     function getPDParyPlatbyAsText(currPlatba : TPlatbaZVypisu) : AnsiString;
@@ -52,7 +54,8 @@ uses
 constructor TParovatko.create(Vypis: TVypis; AbraOLE: variant; qrAbra : TZQuery);
 begin
   self.qrAbra := qrAbra;
-  self.AbraOLE := AbraOLE;
+  //self.qrAbra := DesU.getQrAbra; todo takhle by mìlo být
+  self.AbraOLE := DesU.getAbraOLE;
   self.Vypis := Vypis;
   self.listPlatbaDokladPar := TList.Create();
 end;
@@ -76,13 +79,14 @@ begin
   if Platba.DokladyList.Count > 0 then
     iDoklad := TDoklad(Platba.DokladyList[0]); //pokud je alespon 1 doklad, priradime si ho pro debety a kredity bez nezaplacenych dokladu
 
-  if Platba.debet then //platba je Debet
-  begin
+  if Platba.debet then
+  begin //platba je debet
       Platba.zprava := 'debet';
       Platba.problemLevel := 0;
       vytvorPDPar(Platba, iDoklad, Platba.Castka, '', false);
-  end else
-  begin //platba je Kredit
+  end   // end platba je debet
+  else
+  begin //platba je kredit
 
     // vyrobím si list jen nezaplacených dokladù
     nezaplaceneDoklady := TList.Create;
@@ -114,6 +118,7 @@ begin
 
 
     for i := nezaplaceneDoklady.Count - 1 downto 0 do
+    // begin existují nezaplacené doklady
     begin
       iDoklad := TDoklad(nezaplaceneDoklady[i]);
       kNaparovani := iDoklad.CastkaNezaplaceno - getUzSparovano(iDoklad.ID);
@@ -128,7 +133,7 @@ begin
             Platba.problemLevel := 0 //bylo 1
           else
             Platba.problemLevel := 0;
-          Exit;
+          Break;
         end;
 
         if (kNaparovani > zbyvaCastka) AND not(iDoklad.DocumentType = '10') then
@@ -137,7 +142,7 @@ begin
           Platba.zprava := 'èásteèná úhrada';
           Platba.castecnaUhrada := 1;
           Platba.problemLevel := 1;
-          Exit;
+          Break;
         end;
 
         if (kNaparovani < zbyvaCastka) then
@@ -148,10 +153,23 @@ begin
         end;
       end;
     end;
-    vytvorPDPar(Platba, iDoklad, zbyvaCastka, 'pøepl. | ' + Platba.VS + ' |' , false);
-    Platba.zprava := 'pøepl. ' + FloatToStr(zbyvaCastka) + ' Kè';
-    Platba.problemLevel := 1;
+    // end existují nezaplacené doklady
+
+    if (zbyvaCastka > 0) then
+    begin
+      vytvorPDPar(Platba, iDoklad, zbyvaCastka, 'pøepl. | ' + Platba.VS + ' |' , false);
+      Platba.zprava := 'pøepl. ' + FloatToStr(zbyvaCastka) + ' Kè';
+      Platba.problemLevel := 1;
+    end;
+
+    if Platba.getPocetPredchozichPlatebZeStejnehoUctu() = 0 then
+    begin
+      Platba.zprava := 'nový/neznámý úèet - ' + Platba.zprava;
+      Platba.problemLevel := 2;
+    end;
+
   end;
+  // end platba je kredit
 
 end;
 
@@ -189,40 +207,35 @@ begin
   self.listPlatbaDokladPar.Add(iPDPar);
 end;
 
-
 function TParovatko.zapisDoAbry() : string;
+begin
+  Result := self.zapisDoAbryOLE();
+  //Result := self.zapisDoAbryWebApi();
+end;
+
+
+function TParovatko.zapisDoAbryOLE() : string;
 var
   i, j : integer;
   iPDPar : TPlatbaDokladPar;
-  {
   BStatement_Object,
   BStatement_Data,
   BStatementRow_Object,
   BStatementRow_Data,
   BStatement_Data_Coll,
   NewID : variant;
-  }
-  newBankstatement : ansistring;
-  abraPeriod : TAbraPeriod;
-  jsonBo,
-  jsonBoRow,
-  newJsonBo: ISuperObject;
-  OutputFile : TextFile;
+  mmm : ansistring;
 begin
 
   if (listPlatbaDokladPar.Count = 0) then Exit;
 
-  Result := 'Zápis do ABRY výpisu pro úèet ' + self.Vypis.abraBankaccount.name + '.';
+  Result := 'Zápis pomocí ABRA OLE výpisu pro úèet ' + self.Vypis.abraBankaccount.name + '.';
 
-  abraPeriod := TAbraPeriod.create(self.Vypis.Datum, qrAbra);
-
-  {//---------------
   BStatement_Object:= AbraOLE.CreateObject('@BankStatement');
   BStatement_Data:= AbraOLE.CreateValues('@BankStatement');
   BStatement_Object.PrefillValues(BStatement_Data);
   BStatement_Data.ValueByName('DocQueue_ID') := self.Vypis.abraBankaccount.bankStatementDocqueueId;
-  BStatement_Data.ValueByName('Period_ID') := abraPeriod.id;
-  //BStatement_Data.ValueByName('Period_ID') := '1L20000101'; //rok 2017, TODO automatika
+  BStatement_Data.ValueByName('Period_ID') := '1L20000101'; //rok 2017, TODO automatika
   BStatement_Data.ValueByName('BankAccount_ID') := self.Vypis.abraBankaccount.id;
   BStatement_Data.ValueByName('ExternalNumber') := self.Vypis.PoradoveCislo;
   BStatement_Data.ValueByName('DocDate$DATE') := self.Vypis.Datum;
@@ -252,17 +265,54 @@ begin
 
     if iPDPar.vazbaNaDoklad AND Assigned(iPDPar.Doklad) then //Doklad vyplnime jen jestli chceme vazbu. Doklad máme i když vazbu nechceme - kvùli Firm_ID
     begin
-      //BStatementRow_Data.ValueByName('VarSymbol') := iPDPar.Platba.VS;
-      //BStatementRow_Data.ValueByName('PAmount') := iPDPar.CastkaPouzita;
       BStatementRow_Data.ValueByName('PDocumentType') := iPDPar.Doklad.DocumentType;
       BStatementRow_Data.ValueByName('PDocument_ID') := iPDPar.Doklad.ID;
     end;
 
     if iPDPar.Platba.Debet then
       BStatementRow_Data.ValueByName('VarSymbol') := iPDPar.Platba.VS; //pro debety aby vždy zùstal VS
+
     BStatement_Data_Coll.Add(BStatementRow_Data);
+
+
+    //MessageDlg(DesU.getOleObjDataDisplay(BStatementRow_Data), mtInformation, [mbOk], 0);
+    //writeToFile(DesU.PROGRAM_PATH + '!OLE'+inttostr(i)+'.txt', DesU.getOleObjDataDisplay(BStatementRow_Data));
   end;
-  }
+
+  try begin
+    NewID := BStatement_Object.CreateNewFromValues(BStatement_Data); //NewID je ID Abry v BANKSTATEMENTS
+    Result := Result + ' Èíslo výpisu je ' + NewID;
+  end;
+  except on E: exception do
+    begin
+      Application.MessageBox(PChar('Problem ' + ^M + E.Message), 'AbraOLE');
+      Result := 'Chyba pøi zakládání výpisu';
+    end;
+  end;
+
+
+end;
+
+
+
+
+function TParovatko.zapisDoAbryWebApi() : string;
+var
+  i, j : integer;
+  iPDPar : TPlatbaDokladPar;
+  newBankstatement : ansistring;
+  abraPeriod : TAbraPeriod;
+  jsonBo,
+  jsonBoRow,
+  newJsonBo: ISuperObject;
+begin
+
+  if (listPlatbaDokladPar.Count = 0) then Exit;
+
+  Result := 'Zápis pomocí ABRA WebApi výpisu pro úèet ' + self.Vypis.abraBankaccount.name + '.';
+
+  abraPeriod := TAbraPeriod.create(self.Vypis.Datum, qrAbra);
+
 
   jsonBo := SO;
   jsonBo.S['DocQueue_ID'] := self.Vypis.abraBankaccount.bankStatementDocqueueId;
@@ -280,6 +330,7 @@ begin
     iPDPar := TPlatbaDokladPar(listPlatbaDokladPar[i]);
 
     jsonBoRow := SO;
+    jsonBoRow.S['AccPresetDef_ID'] := '1201000000';
     jsonBoRow.D['Amount'] := iPDPar.CastkaPouzita;
     jsonBoRow.I['Credit'] := StrToInt(IfThen(iPDPar.Platba.Kredit,'1','0'));
     jsonBoRow.S['BankAccount'] := iPDPar.Platba.cisloUctu;
@@ -307,16 +358,12 @@ begin
     jsonBo.A['rows'].Add(jsonBoRow);
   end;
 
-  AssignFile(OutputFile, ExtractFilePath(ParamStr(0)) + '!json.txt');
-  ReWrite(OutputFile);
-  WriteLn(OutputFile, jsonBo.AsJSon(true));
-  CloseFile(OutputFile);
+  writeToFile(ExtractFilePath(ParamStr(0)) + '!json.txt', jsonBo.AsJSon(true));
   //Dialogs.MessageDlg(jsonBo.AsJSon(true), mtInformation, [mbOK], 0);
   //exit;
 
   try begin
-    //NewID := BStatement_Object.CreateNewFromValues(BStatement_Data); //NewID je ID Abry v BANKSTATEMENTS
-    newBankstatement := abraBoCreate('bankstatements', jsonBo.AsJSon());
+    newBankstatement := DesU.abraBoCreate('bankstatements', jsonBo.AsJSon());
     Result := Result + ' Èíslo výpisu je ' + SO(newBankstatement).S['id'];
   end;
   except on E: exception do

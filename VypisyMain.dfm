@@ -893,13 +893,13 @@ object fmMain: TfmMain
     Top = 142
   end
   object NactiGpcDialog: TOpenDialog
-    Left = 228
+    Left = 276
     Top = 142
   end
   object qrAbra: TZQuery
     Connection = dbAbra
     Params = <>
-    Left = 186
+    Left = 210
     Top = 142
   end
 end

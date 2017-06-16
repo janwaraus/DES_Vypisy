@@ -111,7 +111,7 @@ var
   currPlatbaZVypisu : TPlatbaZVypisu;
   PROGRAM_PATH: string;
   GPC_PATH: string;
-  AbraOLE: variant;
+  //AbraOLE: variant; //presunuto do DesUtils
   Parovatko : TParovatko;
 
 implementation
@@ -125,8 +125,9 @@ procedure TfmMain.FormShow(Sender: TObject);
 var
   FIIni: TIniFile;
 begin
-  PROGRAM_PATH := ExtractFilePath(ParamStr(0));
+  desUtilsInit('');
 
+  PROGRAM_PATH := ExtractFilePath(ParamStr(0));
   if FileExists(PROGRAM_PATH + 'FI.ini') then begin         // existuje FI.ini ?
     FIIni := TIniFile.Create(PROGRAM_PATH + 'FI.ini');
     with FIIni do try
@@ -153,7 +154,7 @@ begin
   asgMain.CheckFalse := '0';
   asgMain.CheckTrue := '1';
 
-  {
+{
 // pøipojení k Abøe
   if VarIsEmpty(AbraOLE) then try
     AbraOLE := CreateOLEObject('AbraOLE.Application');
@@ -174,8 +175,8 @@ begin
       Exit;
     end;
   end;
+}
 
-  }
 
   vyplnNacitaciButtony;
 
@@ -203,9 +204,6 @@ begin
   hledanyGpcSoubor := 'Vypis_z_uctu-2100098382_' + fRok + '*-' + IntToStr(maxCisloVypisu + 1) + '.gpc';
   nalezenyGpcSoubor := FindInFolder(GPC_PATH, hledanyGpcSoubor, true);
 
-  Memo2.Lines.Add('Hledám soubor ' + hledanyGpcSoubor);
-  Memo2.Lines.Add('Našel jsem ' + nalezenyGpcSoubor);
-
   if nalezenyGpcSoubor = '' then begin //nenašel se
     lblVypisFioGpc.caption := hledanyGpcSoubor + ' nenalezen';
     btnVypisFio.Enabled := false;
@@ -228,9 +226,6 @@ begin
   hledanyGpcSoubor := 'Vypis_z_uctu-2800098383_' + fRok + '*-' + IntToStr(maxCisloVypisu + 1) + '.gpc';
   nalezenyGpcSoubor := FindInFolder(GPC_PATH, hledanyGpcSoubor, true);
 
-  Memo2.Lines.Add('Hledám soubor ' + hledanyGpcSoubor);
-  Memo2.Lines.Add('Našel jsem ' + nalezenyGpcSoubor);
-
   if nalezenyGpcSoubor = '' then begin //nenašel se
     lblVypisFioSporiciGpc.caption := hledanyGpcSoubor + ' nenalezen';
     btnVypisFioSporici.Enabled := false;
@@ -252,9 +247,6 @@ begin
   maxCisloVypisu := abraBankaccount.getMaxPoradoveCisloVypisu(fRok);
   hledanyGpcSoubor := 'BB117641_171336270_' + fRok + '*_' + IntToStr(maxCisloVypisu + 1) + '.gpc';
   nalezenyGpcSoubor := FindInFolder(GPC_PATH, hledanyGpcSoubor, true);
-
-  Memo2.Lines.Add('Hledám soubor ' + hledanyGpcSoubor);
-  Memo2.Lines.Add('Našel jsem ' + nalezenyGpcSoubor);
 
   if nalezenyGpcSoubor = '' then begin //nenašel se
     lblVypisCsobGpc.caption := hledanyGpcSoubor + ' nenalezen';
@@ -303,9 +295,6 @@ begin
     end;
     CloseFile(GpcInputFile);
 
-
-    //pocetPlatebGpc := pocetRadkuTxtSouboru(NactiGpcDialog.Filename) - 1;
-
     Reset(GpcInputFile);
     Vypis := nil;
     i := 0;
@@ -320,7 +309,7 @@ begin
         Inc(i);
         if copy(GpcFileLine, 1, 3) = '074' then begin
           Vypis := TVypis.Create(GpcFileLine, qrAbra);
-          Parovatko := TParovatko.create(Vypis, AbraOLE, qrAbra);
+          Parovatko := TParovatko.create(Vypis, DesU.getAbraOLE, qrAbra);
         end else begin
           MessageDlg('Neplatný GPC soubor, 1. øádek není hlavièka', mtInformation, [mbOk], 0);
           Break;
@@ -336,7 +325,6 @@ begin
         iPlatbaZVypisu.automatickyOpravVS();
         Vypis.Platby.Add(iPlatbaZVypisu);
       end;
-
     end;
 
     if assigned(Vypis) then
@@ -463,7 +451,7 @@ procedure TfmMain.sparujVsechnyPrichoziPlatby;
 var
   i : integer;
 begin
-  Parovatko := TParovatko.create(Vypis, AbraOLE, qrAbra);
+  Parovatko := TParovatko.create(Vypis, DesU.getAbraOLE, qrAbra); //todo na Parovatko := TParovatko.create(Vypis);
   for i := 0 to Vypis.Platby.Count - 1 do
     sparujPrichoziPlatbu(i);
 end;
@@ -595,7 +583,6 @@ var
   casStart, dobaZapisu: double;
 
 begin
-
   if not Vypis.isNavazujeNaRadu() then
     if Dialogs.MessageDlg('Èíslo dokladu ' + IntToStr(Vypis.poradoveCislo)
         + ' nenavazuje na existující øadu. Opravdu zapsat do Abry?',

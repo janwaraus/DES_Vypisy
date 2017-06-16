@@ -3,19 +3,49 @@ unit DesUtils;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, StrUtils, Dialogs, Forms, IniFiles; //, Grids, AdvObj, StdCtrls,;
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
+  //Windows, Messages, SysUtils, Variants, Classes, Dialogs, Forms,
+  StrUtils,  IniFiles, ComObj, //, Grids, AdvObj, StdCtrls,
+  IdHTTP, Data.DB, ZAbstractRODataset, ZAbstractDataset, ZDataset,
+  ZAbstractConnection, ZConnection;
 
 
-procedure nactiIni();
-function abraBoGet(abraBo : string) : string;
-//function abraBoGetByRowId(abraBo, rowId : string) : string;
-function abraBoGetById(abraBo, sId : string) : string;
-function abraBoCreate(abraBo, sJson : string) : string;
-function abraBoUpdate(abraBo, sJson : string) : string;
-function prevedCisloUctuNaText(cisloU : string) : string;
-procedure opravRadekVypisuPomociPDocument_ID(Vypis_ID, RadekVypisu_ID, PDocument_ID, PDocumentType : string);
-procedure opravRadekVypisuPomociVS(Vypis_ID, RadekVypisu_ID, VS : string);
+type
+  TDesU = class(TForm)
+    dbAbra: TZConnection;
+    qrAbra: TZQuery;
 
+
+
+    constructor create(createOptions : string);
+    function getAbraOLE() : variant;
+    function abraBoGet(abraBo : string) : string;
+    //function abraBoGetByRowId(abraBo, rowId : string) : string;
+    function abraBoGetById(abraBo, sId : string) : string;
+    function abraBoCreate(abraBo, sJson : string) : string;
+    function abraBoUpdate(abraBo, sJson : string) : string;
+    function prevedCisloUctuNaText(cisloU : string) : string;
+    procedure opravRadekVypisuPomociPDocument_ID(Vypis_ID, RadekVypisu_ID, PDocument_ID, PDocumentType : string);
+    procedure opravRadekVypisuPomociVS(Vypis_ID, RadekVypisu_ID, VS : string);
+    function getOleObjDataDisplay(abraOleObj_Data : variant) : ansistring;
+
+    public
+      PROGRAM_PATH,
+      abraWebApiUrl,
+      abraWebApiUN,
+      abraWebApiPW : string;
+      AbraOLE: variant;
+
+    private
+      function newAbraIdHttp(timeout : single; isJsonPost : boolean) : TIdHTTP;
+
+  end;
+
+
+
+
+procedure desUtilsInit(createOptions : string);
 function removeLeadingZeros(const Value: string): string;
 function LeftPad(value:integer; length:integer=8; pad:char='0'): string; overload;
 function LeftPad(value: string; length:integer=8; pad:char='0'): string; overload;
@@ -24,6 +54,7 @@ function IndexByName(DataObject: variant; Name: ShortString): integer;
 function pocetRadkuTxtSouboru(SName: string): integer;
 function RemoveSpaces(const s: string): string;
 function FindInFolder(sFolder, sFile: string; bUseSubfolders: Boolean): string;
+procedure writeToFile(pFileName, pContent : string);
 
 
 const
@@ -33,31 +64,51 @@ const
   sLineBreak = {$IFDEF LINUX} AnsiChar(#10) {$ENDIF}
                {$IFDEF MSWINDOWS} AnsiString(#13#10) {$ENDIF};
 
+
 var
-  abraWebApiUrl : string;
-  iniNacteno : integer;
+  DesU: TDesU;
+
+
 
 implementation
 
-uses IdHTTP, Superobject;
+{$R *.dfm}
+
+uses Superobject;
 
 {****************************************************************************}
 {**********************     ABRA common functions     ***********************}
 {****************************************************************************}
 
-procedure nactiIni();
+procedure desUtilsInit(createOptions : string);
 var
   adpIniFile: TIniFile;
   PROGRAM_PATH: string;
 begin
-  if iniNacteno > 0 then Exit;
+
+  //if iniNacteno > 0 then Exit;
+  if assigned(DesU) then
+     //ShowMessage('DesU objekt je již vytvoøen')
+  else begin
+     DesU := TDesU.Create(createOptions);
+     //ShowMessage('DesU objekt není vytvoøen, vytváøíme nyní');
+  end;
+
+end;
+
+constructor TDesU.create(createOptions : string);
+var
+  adpIniFile: TIniFile;
+begin
 
   PROGRAM_PATH := ExtractFilePath(ParamStr(0)) + '..\DE$_Common\';
   if FileExists(PROGRAM_PATH + 'abraDesProgramy.ini') then begin
-    iniNacteno := 1;
+
     adpIniFile := TIniFile.Create(PROGRAM_PATH + 'abraDesProgramy.ini');
     with adpIniFile do try
       abraWebApiUrl := ReadString('Preferences', 'AbraWebApiUrl', '');
+      abraWebApiUN := ReadString('Preferences', 'AbraWebApiUN', '');
+      abraWebApiPW := ReadString('Preferences', 'AbraWebApiPW', '');
     finally
       adpIniFile.Free;
     end;
@@ -68,9 +119,66 @@ begin
   end;
 end;
 
+function TDesU.getAbraOLE() : variant;
+begin
+  Result := null;
+  if VarIsEmpty(AbraOLE) then try
+    AbraOLE := CreateOLEObject('AbraOLE.Application');
+    if not AbraOLE.Connect('@DES') then begin
+      ShowMessage('Problém s Abrou (connect DES).');
+      Exit;
+    end;
+    //Zprava('Pøipojeno k Abøe (connect DES).');
+    if not AbraOLE.Login('Supervisor', '') then begin
+      ShowMessage('Problém s Abrou (login Supervisor).');
+      Exit;
+    end;
+    //Zprava('Pøihlášeno k Abøe (login Supervisor).');
+  except on E: exception do
+    begin
+      Application.MessageBox(PChar('Problém s Abrou.' + ^M + E.Message), 'Abra', MB_ICONERROR + MB_OK);
+      //Zprava('Problém s Abrou - ' + E.Message);
+      Exit;
+    end;
+  end;
+  Result := AbraOLE;
+end;
+
+{
+function TDesU.getQrAbra() : variant;
+begin
+
+end;
+}
+
+
+
+
+
 {*** ABRA WebApi IdHTTP functions ***}
 
-function abraBoGet(abraBo : string) : string;
+function TDesU.newAbraIdHttp(timeout : single; isJsonPost : boolean) : TIdHTTP;
+var
+  idHTTP: TIdHTTP;
+begin
+  idHTTP := TidHTTP.Create;
+
+  idHTTP.Request.BasicAuthentication := True;
+  idHTTP.Request.Username := 'Supervisor';
+  idHTTP.Request.Password := '';
+  idHTTP.ReadTimeout := Round (timeout * 1000); // ReadTimeout je v milisekundách
+
+  if (isJsonPost) then begin
+    idHTTP.Request.ContentType := 'application/json';
+    idHTTP.Request.CharSet := 'utf-8';
+    //idHTTP.Request.CharSet := 'cp1250';
+
+  end;
+
+  Result := idHTTP;
+end;
+
+function TDesU.abraBoGet(abraBo : string) : string;
 begin
   Result := abraBoGetById(abraBo, '');
 end;
@@ -82,19 +190,14 @@ begin
 end;
 }
 
-function abraBoGetById(abraBo, sId : string) : string;
+function TDesU.abraBoGetById(abraBo, sId : string) : string;
 var
   idHTTP: TIdHTTP;
   endpoint : string;
 begin
-  nactiIni();
-  idHTTP := TidHTTP.Create;
-  idHTTP.Request.BasicAuthentication := True;
-  idHTTP.Request.Username := 'Supervisor';
-  idHTTP.Request.Password := '';
+  idHTTP := newAbraIdHttp(900, false);
 
   endpoint := abraWebApiUrl + abraBo;
-
   if sId <> '' then
     endpoint := endpoint + '/' + sId;
 
@@ -110,26 +213,15 @@ begin
   end;
 end;
 
-function abraBoCreate(abraBo, sJson : string) : string;
+function TDesU.abraBoCreate(abraBo, sJson : string) : string;
 var
   idHTTP: TIdHTTP;
   sstreamJson: TStringStream;
-  endpoint : string;
 begin
-  nactiIni();
   //sstreamJson := TStringStream.Create(Utf8Encode(pJson)); // D2007 and earlier only
-  sstreamJson := TStringStream.Create(sJson, TEncoding.UTF8);
-
-  idHTTP := TidHTTP.Create;
-  idHTTP.Request.BasicAuthentication := True;
-  idHTTP.Request.Username := 'Supervisor';
-  idHTTP.Request.Password := '';
-
-  endpoint := abraWebApiUrl + abraBo;
-
+  sstreamJson := TStringStream.Create(sJson, TEncoding.ASCII);
+  idHTTP := newAbraIdHttp(900, true);
   try
-    idHTTP.Request.ContentType := 'application/json';
-    idHTTP.Request.CharSet := 'utf-8';
     try
       Result := idHTTP.Post(abraWebApiUrl + abraBo, sstreamJson);
     except
@@ -144,23 +236,15 @@ begin
   end;
 end;
 
-function abraBoUpdate(abraBo, sJson : string) : string;
+function TDesU.abraBoUpdate(abraBo, sJson : string) : string;
 var
   idHTTP: TIdHTTP;
   sstreamJson: TStringStream;
 begin
-  nactiIni();
   //sstreamJson := TStringStream.Create(Utf8Encode(pJson)); // D2007 and earlier only
   sstreamJson := TStringStream.Create(sJson, TEncoding.UTF8);
-
-  idHTTP := TidHTTP.Create;
-  idHTTP.Request.BasicAuthentication := True;
-  idHTTP.Request.Username := 'Supervisor';
-  idHTTP.Request.Password := '';
-
+  idHTTP := newAbraIdHttp(900, true);
   try
-    idHTTP.Request.ContentType := 'application/json';
-    idHTTP.Request.CharSet := 'utf-8';
     try
       Result := idHTTP.Put(abraWebApiUrl + abraBo, sstreamJson);
     except
@@ -177,7 +261,7 @@ end;
 
 {*** ABRA data manipulating functions ***}
 
-function prevedCisloUctuNaText(cisloU : string) : string;
+function TDesU.prevedCisloUctuNaText(cisloU : string) : string;
 begin
   Result := cisloU;
   if cisloU = '/0000' then Result := '0';
@@ -188,7 +272,7 @@ begin
   if cisloU = '160987123/0300' then Result := 'Èeská Pošta';
 end;
 
-procedure opravRadekVypisuPomociPDocument_ID(Vypis_ID, RadekVypisu_ID, PDocument_ID, PDocumentType : string);
+procedure TDesU.opravRadekVypisuPomociPDocument_ID(Vypis_ID, RadekVypisu_ID, PDocument_ID, PDocumentType : string);
 var
   JsonSO: ISuperObject;
   sResponse: string;
@@ -220,7 +304,7 @@ begin
 end;
 
 
-procedure opravRadekVypisuPomociVS(Vypis_ID, RadekVypisu_ID, VS : string);
+procedure TDesU.opravRadekVypisuPomociVS(Vypis_ID, RadekVypisu_ID, VS : string);
 var
   JsonSO: ISuperObject;
   sResponse: string;
@@ -246,6 +330,16 @@ begin
   JsonSO.S['VarSymbol'] := VS;
   sResponse := abraBoUpdate('bankstatements/' + Vypis_ID + '/rows/' + RadekVypisu_ID, JsonSO.AsJSon());
 
+end;
+
+function TDesU.getOleObjDataDisplay(abraOleObj_Data : variant) : ansistring;
+var
+  j : integer;
+begin
+  Result := '';
+  for j := 0 to abraOleObj_Data.Count - 1 do begin
+    Result := Result + inttostr(j) + 'r ' + abraOleObj_Data.Names[j] + ': ' + vartostr(abraOleObj_Data.Value[j]) + sLineBreak;
+  end;
 end;
 
 
@@ -323,14 +417,11 @@ begin
 
   pc := @s[1];
   p := 0;
-  while len > 0 do
-  begin
-  if not (pc^ in WhiteSpace) then
-  begin
-  inc(p);
-  Result[p] := pc^;
-  end;
-
+  while len > 0 do begin
+    if not (pc^ in WhiteSpace) then begin
+      inc(p);
+      Result[p] := pc^;
+    end;
   inc(pc);
   dec(len);
   end;
@@ -347,10 +438,10 @@ var
 begin
   Result := '';
   sFolder := IncludeTrailingPathDelimiter(sFolder);
-  if SysUtils.FindFirst(sFolder + sFile, faAnyFile - faDirectory, sr) = 0 then
+  if System.SysUtils.FindFirst(sFolder + sFile, faAnyFile - faDirectory, sr) = 0 then
   begin
     Result := sFolder + sr.Name;
-    SysUtils.FindClose(sr);
+    System.SysUtils.FindClose(sr);
     Exit;
   end;
 
@@ -358,7 +449,7 @@ begin
   if bUseSubfolders then
   begin
     //find first subfolder
-    if SysUtils.FindFirst(sFolder + '*.*', faDirectory, sr) = 0 then
+    if System.SysUtils.FindFirst(sFolder + '*.*', faDirectory, sr) = 0 then
     begin
       try
         repeat
@@ -370,13 +461,22 @@ begin
 
             if Length(Result) > 0 then Break; //found it ... escape
           end;
-        until SysUtils.FindNext(sr) <> 0;  //...next subfolder
+        until System.SysUtils.FindNext(sr) <> 0;  //...next subfolder
       finally
-        SysUtils.FindClose(sr);
+        System.SysUtils.FindClose(sr);
       end;
     end;
   end;
 end;
 
-end.
+procedure writeToFile(pFileName, pContent : string);
+var
+    OutputFile : TextFile;
+begin
+  AssignFile(OutputFile, pFileName);
+  ReWrite(OutputFile);
+  WriteLn(OutputFile, pContent);
+  CloseFile(OutputFile);
+end;
 
+end.

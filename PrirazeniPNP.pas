@@ -49,7 +49,7 @@ begin
   with asgPNP do begin
     if ACol = 13 then
     try
-      opravRadekVypisuPomociPDocument_ID(Cells[16, ARow], Cells[4, ARow], Cells[7, ARow], '03'); //DocumentType je vždy 03 pro faktury
+      DesU.opravRadekVypisuPomociPDocument_ID(Cells[16, ARow], Cells[4, ARow], Cells[7, ARow], '03'); //DocumentType je vždy 03 pro faktury
       RemoveButton(13, ARow);
       Cells[13, ARow] := 'pøiøaz. ok';
     except
@@ -172,7 +172,7 @@ begin
     for radek := 1 to RowCount - 1 do
     if Cells[6, radek] <> '' then begin
       try
-        opravRadekVypisuPomociPDocument_ID(Cells[16, radek], Cells[4, radek], Cells[7, radek], '03'); //DocumentType je vždy 03 pro faktury
+        DesU.opravRadekVypisuPomociPDocument_ID(Cells[16, radek], Cells[4, radek], Cells[7, radek], '03'); //DocumentType je vždy 03 pro faktury
         RemoveButton(13, radek);
         Cells[13, radek] := 'opr. ok';
       except
@@ -305,7 +305,6 @@ procedure TfmPrirazeniPnp.btnPriradPnpClick(Sender: TObject);
 begin
   priradPNP;
 end;
-
 
 
 procedure TfmPrirazeniPnp.asgPNPGetCellColor(Sender: TObject; ARow,

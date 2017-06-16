@@ -215,7 +215,6 @@ object fmPrirazeniPnp: TfmPrirazeniPnp
     Lines.Strings = (
       '')
     TabOrder = 3
-    ExplicitLeft = 1302
   end
   object btnNactiPnpInfo: TButton
     Left = 1240
