@@ -51,8 +51,8 @@ type
     PredchoziPlatbyVsList : TList;
     DokladyList : TList;
     
-    constructor create(castka : currency; qrAbra : TZQuery); overload;
-    constructor create(gpcLine : string; qrAbra : TZQuery); overload;
+    constructor create(castka : currency); overload;
+    constructor create(gpcLine : string); overload;
 
     procedure loadPredchoziPlatbyPodleVS(); overload;
     procedure loadPredchoziPlatbyPodleUctu(); overload;
@@ -90,9 +90,9 @@ type
 implementation
 
 
-constructor TPlatbaZVypisu.create(castka : currency; qrAbra : TZQuery);
+constructor TPlatbaZVypisu.create(castka : currency);
 begin
-  self.qrAbra := qrAbra;
+  self.qrAbra := DesU.qrAbra;
   self.castka := abs(castka);
   if castka >= 0 then self.kredit := true else self.kredit := false;
   self.debet := not self.kredit;
@@ -102,9 +102,9 @@ begin
   self.DokladyList := TList.Create;
 end;
 
-constructor TPlatbaZVypisu.create(gpcLine : string; qrAbra : TZQuery);
+constructor TPlatbaZVypisu.create(gpcLine : string);
 begin
-  self.qrAbra := qrAbra;
+  self.qrAbra := DesU.qrAbra;
 
   self.typZaznamu := copy(gpcLine, 1, 3);
   self.cisloUctuVlastni := removeLeadingZeros(copy(gpcLine, 4, 16));
@@ -252,7 +252,7 @@ begin
       SQL.Text := SQLiiSelect + SQLiiJoin + SQLiiJenNezaplacene + SQLiiWhere + SQLiiOrder;
     Open;
     while not Eof do begin
-      self.DokladyList.Add(TDoklad.Create(qrAbra));
+      self.DokladyList.Add(TDoklad.Create);
       Next;
     end;
     Close;
@@ -279,7 +279,7 @@ begin
       SQL.Text := SQLiiSelect + SQLiiJoin + SQLiiJenNezaplacene + SQLiiWhere + SQLiiOrder;
     Open;
     while not Eof do begin
-      self.DokladyList.Add(TDoklad.Create(qrAbra));
+      self.DokladyList.Add(TDoklad.Create);
       Next;
     end;
     Close;
@@ -304,7 +304,7 @@ begin
       SQL.Text := SQLStr;
       Open;
       while not Eof do begin
-        self.DokladyList.Add(TDoklad.Create(qrAbra));
+        self.DokladyList.Add(TDoklad.Create);
         Next;
       end;
       Close;

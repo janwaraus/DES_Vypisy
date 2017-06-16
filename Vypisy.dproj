@@ -76,6 +76,7 @@
         <DCC_Optimize>false</DCC_Optimize>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
+        <Debugger_DebugSourcePath>C:\Program Files (x86)\Embarcadero\RAD Studio\12.0\source\ZeosDBO\src\dbc\;$(Debugger_DebugSourcePath)</Debugger_DebugSourcePath>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <DCC_ExeOutput>C:\Develop\DES\Prg7\Vypisy\</DCC_ExeOutput>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>

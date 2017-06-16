@@ -25,7 +25,7 @@ type
     castkaDobropisovano  : Currency;
     castkaNezaplaceno  : Currency;
     cisloDokladu : string[20];
-    constructor create(qrAbra : TZQuery);
+    constructor create();
   end;
 
   TAbraBankAccount = class
@@ -36,7 +36,7 @@ type
     name : string[50];
     number : string[42];
     bankstatementDocqueueId : string[10];
-    constructor create(qrAbra : TZQuery);
+    constructor create();
   published
     procedure loadByNumber(baNumber : string);
     function getMaxPoradoveCisloVypisu(pYear : string) : integer;
@@ -54,17 +54,20 @@ type
     name : string[10];
     number : string[42];
     dateFrom, dateTo : double;
-    constructor create(pYear : string; qrAbra : TZQuery); overload;
-    constructor create(pDate : double; qrAbra : TZQuery); overload;
+    constructor create(pYear : string); overload;
+    constructor create(pDate : double); overload;
   end;
 
 implementation
 
+uses
+  DesUtils;
+
 {** class TDoklad **}
 
-constructor TDoklad.create(qrAbra : TZQuery);
+constructor TDoklad.create();
 begin
- with qrAbra do begin
+ with DesU.qrAbra do begin
   self.ID := FieldByName('ID').AsString;
   self.Firm_ID := FieldByName('Firm_ID').AsString;
   self.FirmName := FieldByName('FirmName').AsString;
@@ -81,14 +84,14 @@ end;
 
 {** class TAbraBankAccount **}
 
-constructor TAbraBankAccount.create(qrAbra : TZQuery);
+constructor TAbraBankAccount.create();
 begin
-  self.qrAbra := qrAbra;
+  self.qrAbra := DesU.qrAbra;
 end;
 
 procedure TAbraBankAccount.loadByNumber(baNumber : string);
 begin
-  with qrAbra do begin
+  with DesU.qrAbra do begin
 
     SQL.Text := 'SELECT ID, NAME, BANKACCOUNT, BANKSTATEMENT_ID '
               + 'FROM BANKACCOUNTS '
@@ -181,11 +184,10 @@ end;
 {** class TAbraPeriod **}
 
 
-constructor TAbraPeriod.create(pYear : string; qrAbra : TZQuery);
+constructor TAbraPeriod.create(pYear : string);
 begin
-  self.qrAbra := qrAbra;
 
-  with qrAbra do begin
+  with DesU.qrAbra do begin
 
     SQL.Text := 'SELECT ID, CODE, NAME, DATEFROM$DATE, DATETO$DATE'
               + ' FROM PERIODS'
@@ -203,11 +205,10 @@ begin
   end;
 end;
 
-constructor TAbraPeriod.create(pDate : double; qrAbra : TZQuery);
+constructor TAbraPeriod.create(pDate : double);
 begin
-  self.qrAbra := qrAbra;
 
-  with qrAbra do begin
+  with DesU.qrAbra do begin
 
     SQL.Text := 'SELECT ID, CODE, NAME, DATEFROM$DATE, DATETO$DATE '
               + ' FROM PERIODS'

@@ -878,28 +878,8 @@ object fmMain: TfmMain
       64
       172)
   end
-  object dbAbra: TZConnection
-    ControlsCodePage = cGET_ACP
-    Catalog = ''
-    Properties.Strings = (
-      'controls_cp=GET_ACP')
-    HostName = ''
-    Port = 0
-    Database = ''
-    User = ''
-    Password = ''
-    Protocol = 'firebirdd-2.1'
-    Left = 158
-    Top = 142
-  end
   object NactiGpcDialog: TOpenDialog
     Left = 276
-    Top = 142
-  end
-  object qrAbra: TZQuery
-    Connection = dbAbra
-    Params = <>
-    Left = 210
     Top = 142
   end
 end

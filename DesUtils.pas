@@ -18,7 +18,8 @@ type
 
 
 
-    constructor create(createOptions : string);
+    procedure desUtilsInit(createOptions : string);
+    //constructor create;
     function getAbraOLE() : variant;
     function abraBoGet(abraBo : string) : string;
     //function abraBoGetByRowId(abraBo, rowId : string) : string;
@@ -32,6 +33,7 @@ type
 
     public
       PROGRAM_PATH,
+      GPC_PATH,
       abraWebApiUrl,
       abraWebApiUN,
       abraWebApiPW : string;
@@ -45,7 +47,7 @@ type
 
 
 
-procedure desUtilsInit(createOptions : string);
+
 function removeLeadingZeros(const Value: string): string;
 function LeftPad(value:integer; length:integer=8; pad:char='0'): string; overload;
 function LeftPad(value: string; length:integer=8; pad:char='0'): string; overload;
@@ -80,35 +82,26 @@ uses Superobject;
 {**********************     ABRA common functions     ***********************}
 {****************************************************************************}
 
-procedure desUtilsInit(createOptions : string);
-var
-  adpIniFile: TIniFile;
-  PROGRAM_PATH: string;
-begin
-
-  //if iniNacteno > 0 then Exit;
-  if assigned(DesU) then
-     //ShowMessage('DesU objekt je již vytvoøen')
-  else begin
-     DesU := TDesU.Create(createOptions);
-     //ShowMessage('DesU objekt není vytvoøen, vytváøíme nyní');
-  end;
-
-end;
-
-constructor TDesU.create(createOptions : string);
+{
+constructor TDesU.create;
 var
   adpIniFile: TIniFile;
 begin
 
-  PROGRAM_PATH := ExtractFilePath(ParamStr(0)) + '..\DE$_Common\';
-  if FileExists(PROGRAM_PATH + 'abraDesProgramy.ini') then begin
+  PROGRAM_PATH := ExtractFilePath(ParamStr(0));
 
-    adpIniFile := TIniFile.Create(PROGRAM_PATH + 'abraDesProgramy.ini');
+  if FileExists(PROGRAM_PATH + '..\DE$_Common\abraDesProgramy.ini') then begin
+
+    adpIniFile := TIniFile.Create(PROGRAM_PATH + '..\DE$_Common\abraDesProgramy.ini');
     with adpIniFile do try
+      dbAbra.HostName := ReadString('Preferences', 'AbraHN', '');
+      dbAbra.Database := ReadString('Preferences', 'AbraDB', '');
+      dbAbra.User := ReadString('Preferences', 'AbraUN', '');
+      dbAbra.Password := ReadString('Preferences', 'AbraPW', '');
       abraWebApiUrl := ReadString('Preferences', 'AbraWebApiUrl', '');
       abraWebApiUN := ReadString('Preferences', 'AbraWebApiUN', '');
       abraWebApiPW := ReadString('Preferences', 'AbraWebApiPW', '');
+      GPC_PATH := ReadString('Preferences', 'GpcPath', '');
     finally
       adpIniFile.Free;
     end;
@@ -117,7 +110,65 @@ begin
       'abraDesProgramy.ini', MB_OK + MB_ICONERROR);
     Application.Terminate;
   end;
+  try
+    dbAbra.Connect;
+  except on E: exception do
+    begin
+      Application.MessageBox(PChar('Nedá se pøipojit k databázi Abry, program ukonèen.' + ^M + E.Message), 'Abra', MB_ICONERROR + MB_OK);
+      Application.Terminate;
+    end;
+  end;
+
 end;
+}
+
+procedure TDesU.desUtilsInit(createOptions : string);
+var
+  adpIniFile: TIniFile;
+begin
+
+  PROGRAM_PATH := ExtractFilePath(ParamStr(0));
+
+  if FileExists(PROGRAM_PATH + '..\DE$_Common\abraDesProgramy.ini') then begin
+
+    adpIniFile := TIniFile.Create(PROGRAM_PATH + '..\DE$_Common\abraDesProgramy.ini');
+    with adpIniFile do try
+      dbAbra.HostName := ReadString('Preferences', 'AbraHN', '');
+      dbAbra.Database := ReadString('Preferences', 'AbraDB', '');
+      dbAbra.User := ReadString('Preferences', 'AbraUN', '');
+      dbAbra.Password := ReadString('Preferences', 'AbraPW', '');
+      abraWebApiUrl := ReadString('Preferences', 'AbraWebApiUrl', '');
+      abraWebApiUN := ReadString('Preferences', 'AbraWebApiUN', '');
+      abraWebApiPW := ReadString('Preferences', 'AbraWebApiPW', '');
+      GPC_PATH := ReadString('Preferences', 'GpcPath', '');
+    finally
+      adpIniFile.Free;
+    end;
+  end else begin
+    Application.MessageBox(PChar('Nenalezen soubor ' + PROGRAM_PATH + 'abraDesProgramy.ini, program ukonèen'),
+      'abraDesProgramy.ini', MB_OK + MB_ICONERROR);
+    Application.Terminate;
+  end;
+  try
+    dbAbra.Connect;
+  except on E: exception do
+    begin
+      Application.MessageBox(PChar('Nedá se pøipojit k databázi Abry, program ukonèen.' + ^M + E.Message), 'Abra', MB_ICONERROR + MB_OK);
+      Application.Terminate;
+    end;
+  end;
+  {
+  //if iniNacteno > 0 then Exit;
+  if assigned(DesU) then
+     //ShowMessage('DesU objekt je již vytvoøen')
+  else begin
+     DesU := TDesU.Create(createOptions);
+     //ShowMessage('DesU objekt není vytvoøen, vytváøíme nyní');
+  end;
+  }
+end;
+
+
 
 function TDesU.getAbraOLE() : variant;
 begin

@@ -18,8 +18,6 @@ type
     Memo1: TMemo;
     asgMain: TAdvStringGrid;
     NactiGpcDialog: TOpenDialog;
-    dbAbra: TZConnection;
-    qrAbra: TZQuery;
     asgPredchoziPlatby: TAdvStringGrid;
     asgPredchoziPlatbyVs: TAdvStringGrid;
     asgNalezeneDoklady: TAdvStringGrid;
@@ -109,9 +107,6 @@ var
   fmMain : TfmMain;
   Vypis : TVypis;
   currPlatbaZVypisu : TPlatbaZVypisu;
-  PROGRAM_PATH: string;
-  GPC_PATH: string;
-  //AbraOLE: variant; //presunuto do DesUtils
   Parovatko : TParovatko;
 
 implementation
@@ -122,62 +117,11 @@ uses
 {$R *.dfm}
 
 procedure TfmMain.FormShow(Sender: TObject);
-var
-  FIIni: TIniFile;
 begin
-  desUtilsInit('');
+  DesU.desUtilsInit('');
 
-  PROGRAM_PATH := ExtractFilePath(ParamStr(0));
-  if FileExists(PROGRAM_PATH + 'FI.ini') then begin         // existuje FI.ini ?
-    FIIni := TIniFile.Create(PROGRAM_PATH + 'FI.ini');
-    with FIIni do try
-      dbAbra.HostName := ReadString('Preferences', 'AbraHN', '');
-      dbAbra.Database := ReadString('Preferences', 'AbraDB', '');
-      dbAbra.User := ReadString('Preferences', 'AbraUN', '');
-      dbAbra.Password := ReadString('Preferences', 'AbraPW', '');
-      GPC_PATH := ReadString('Preferences', 'GpcPath', '');
-    finally
-      FIIni.Free;
-    end;
-  end else begin
-    Application.MessageBox('Neeexistuje soubor FI.ini, program ukonèen', 'FI.ini', MB_OK + MB_ICONERROR);
-    Application.Terminate;
-  end;
-  try
-    dbAbra.Connect;
-  except on E: exception do
-    begin
-      Application.MessageBox(PChar('Nedá se pøipojit k databázi Abry, program ukonèen.' + ^M + E.Message), 'Abra', MB_ICONERROR + MB_OK);
-      Application.Terminate;
-    end;
-  end;
   asgMain.CheckFalse := '0';
   asgMain.CheckTrue := '1';
-
-{
-// pøipojení k Abøe
-  if VarIsEmpty(AbraOLE) then try
-    AbraOLE := CreateOLEObject('AbraOLE.Application');
-    if not AbraOLE.Connect('@DES') then begin
-      Zprava('Problém s Abrou (connect DES).');
-      Exit;
-    end;
-    Zprava('Pøipojeno k Abøe (connect DES).');
-    if not AbraOLE.Login('Supervisor', '') then begin
-      Zprava('Problém s Abrou (login Supervisor).');
-      Exit;
-    end;
-    Zprava('Pøihlášeno k Abøe (login Supervisor).');
-  except on E: exception do
-    begin
-      Application.MessageBox(PChar('Problém s Abrou.' + ^M + E.Message), 'Abra', MB_ICONERROR + MB_OK);
-      Zprava('Problém s Abrou - ' + E.Message);
-      Exit;
-    end;
-  end;
-}
-
-
   vyplnNacitaciButtony;
 
 end;
@@ -196,13 +140,13 @@ var
   abraBankaccount : TAbraBankaccount;
 begin
   fRok := IntToStr(SysUtils.CurrentYear);
-  abraBankAccount := TAbraBankaccount.create(qrAbra);
+  abraBankAccount := TAbraBankaccount.create();
 
   //Fio
   abraBankaccount.loadByNumber('2100098382/2010');
   maxCisloVypisu := abraBankaccount.getMaxPoradoveCisloVypisu(fRok);
   hledanyGpcSoubor := 'Vypis_z_uctu-2100098382_' + fRok + '*-' + IntToStr(maxCisloVypisu + 1) + '.gpc';
-  nalezenyGpcSoubor := FindInFolder(GPC_PATH, hledanyGpcSoubor, true);
+  nalezenyGpcSoubor := FindInFolder(DesU.GPC_PATH, hledanyGpcSoubor, true);
 
   if nalezenyGpcSoubor = '' then begin //nenašel se
     lblVypisFioGpc.caption := hledanyGpcSoubor + ' nenalezen';
@@ -224,7 +168,7 @@ begin
   abraBankaccount.loadByNumber('2800098383/2010');
   maxCisloVypisu := abraBankaccount.getMaxPoradoveCisloVypisu(fRok);
   hledanyGpcSoubor := 'Vypis_z_uctu-2800098383_' + fRok + '*-' + IntToStr(maxCisloVypisu + 1) + '.gpc';
-  nalezenyGpcSoubor := FindInFolder(GPC_PATH, hledanyGpcSoubor, true);
+  nalezenyGpcSoubor := FindInFolder(DesU.GPC_PATH, hledanyGpcSoubor, true);
 
   if nalezenyGpcSoubor = '' then begin //nenašel se
     lblVypisFioSporiciGpc.caption := hledanyGpcSoubor + ' nenalezen';
@@ -246,7 +190,7 @@ begin
   abraBankaccount.loadByNumber('171336270/0300');
   maxCisloVypisu := abraBankaccount.getMaxPoradoveCisloVypisu(fRok);
   hledanyGpcSoubor := 'BB117641_171336270_' + fRok + '*_' + IntToStr(maxCisloVypisu + 1) + '.gpc';
-  nalezenyGpcSoubor := FindInFolder(GPC_PATH, hledanyGpcSoubor, true);
+  nalezenyGpcSoubor := FindInFolder(DesU.GPC_PATH, hledanyGpcSoubor, true);
 
   if nalezenyGpcSoubor = '' then begin //nenašel se
     lblVypisCsobGpc.caption := hledanyGpcSoubor + ' nenalezen';
@@ -308,8 +252,8 @@ begin
       begin
         Inc(i);
         if copy(GpcFileLine, 1, 3) = '074' then begin
-          Vypis := TVypis.Create(GpcFileLine, qrAbra);
-          Parovatko := TParovatko.create(Vypis, DesU.getAbraOLE, qrAbra);
+          Vypis := TVypis.Create(GpcFileLine);
+          Parovatko := TParovatko.create(Vypis);
         end else begin
           MessageDlg('Neplatný GPC soubor, 1. øádek není hlavièka', mtInformation, [mbOk], 0);
           Break;
@@ -319,7 +263,7 @@ begin
       if copy(GpcFileLine, 1, 3) = '075' then //radek vypisu zacina 075
       begin
         Inc(i);
-        iPlatbaZVypisu := TPlatbaZVypisu.Create(GpcFileLine, qrAbra);
+        iPlatbaZVypisu := TPlatbaZVypisu.Create(GpcFileLine);
         iPlatbaZVypisu.init(StrToInt(editPocetPredchPlateb.text));
         Parovatko.sparujPlatbu(iPlatbaZVypisu);
         iPlatbaZVypisu.automatickyOpravVS();
@@ -451,7 +395,7 @@ procedure TfmMain.sparujVsechnyPrichoziPlatby;
 var
   i : integer;
 begin
-  Parovatko := TParovatko.create(Vypis, DesU.getAbraOLE, qrAbra); //todo na Parovatko := TParovatko.create(Vypis);
+  Parovatko := TParovatko.create(Vypis);
   for i := 0 to Vypis.Platby.Count - 1 do
     sparujPrichoziPlatbu(i);
 end;
@@ -603,7 +547,7 @@ begin
   Memo1.Lines.Add('Doba trvání: ' + floattostr(RoundTo(dobaZapisu, -2))
               + ' s (' + floattostr(RoundTo(dobaZapisu / 60, -2)) + ' min)');
 
-  dbAbra.Reconnect;
+  DesU.dbAbra.Reconnect;
   MessageDlg('Zápis do Abry dokonèen', mtInformation, [mbOk], 0);
   vyplnNacitaciButtony;
 
@@ -743,7 +687,7 @@ end;
 
 procedure TfmMain.btnReconnectClick(Sender: TObject);
 begin
-    dbAbra.Reconnect;
+    DesU.dbAbra.Reconnect;
 end;
 
 

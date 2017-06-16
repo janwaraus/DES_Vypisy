@@ -7,7 +7,7 @@ uses
   Dialogs, StdCtrls, Grids, AdvObj, BaseGrid, AdvGrid, StrUtils,
   DB, ComObj, AdvEdit, DateUtils, Math, ExtCtrls,
   ZAbstractRODataset, ZAbstractDataset, ZDataset, ZAbstractConnection, ZConnection,
-  uTPlatbaZVypisu, AbraEntities, DesUtils;
+  uTPlatbaZVypisu, AbraEntities;
 
 type
 
@@ -26,7 +26,7 @@ type
     maxExistujiciPoradoveCislo : integer;
     maxExistujiciExtPoradoveCislo : integer;
 
-    constructor create(gpcLine : string; qrAbra : TZQuery);
+    constructor create(gpcLine : string);
   published
     procedure init();
     procedure setridit();    
@@ -36,12 +36,14 @@ type
 
 implementation
 
+uses
+  DesUtils;
 
-constructor TVypis.create(gpcLine : string; qrAbra : TZQuery);
+constructor TVypis.create(gpcLine : string);
 begin
-  self.qrAbra := qrAbra;
+  self.qrAbra := DesU.qrAbra;
   self.Platby := TList.create;
-  self.AbraBankAccount := TAbraBankaccount.create(qrAbra);
+  self.AbraBankAccount := TAbraBankaccount.Create;
 
   self.poradoveCislo := StrToInt(copy(gpcLine, 106, 3));
   self.cisloUctuVlastni := removeLeadingZeros(copy(gpcLine, 4, 16));
@@ -119,7 +121,7 @@ begin
 
   if payuProvize > 0 then
   begin
-    payuProvizePP := TPlatbaZVypisu.Create(-payuProvize, qrAbra);
+    payuProvizePP := TPlatbaZVypisu.Create(-payuProvize);
     payuProvizePP.datum := self.datum;
     payuProvizePP.nazevKlienta := formatdatetime('myy', payuProvizePP.datum) + ' suma provize';
     self.Platby.Add(payuProvizePP);

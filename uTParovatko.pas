@@ -27,7 +27,7 @@ type
     qrAbra: TZQuery;
     AbraOLE: variant;
     listPlatbaDokladPar : TList;//<TPlatbaDokladPar>;
-    constructor create(Vypis: TVypis; AbraOLE: variant; qrAbra : TZQuery);
+    constructor create(Vypis: TVypis);
   published
     procedure sparujPlatbu(Platba : TPlatbaZVypisu);
     procedure odparujPlatbu(currPlatba : TPlatbaZVypisu);
@@ -51,10 +51,9 @@ uses
   DesUtils, Superobject;
 
 
-constructor TParovatko.create(Vypis: TVypis; AbraOLE: variant; qrAbra : TZQuery);
+constructor TParovatko.create(Vypis: TVypis);
 begin
-  self.qrAbra := qrAbra;
-  //self.qrAbra := DesU.getQrAbra; todo takhle by mìlo být
+  self.qrAbra := DesU.qrAbra;
   self.AbraOLE := DesU.getAbraOLE;
   self.Vypis := Vypis;
   self.listPlatbaDokladPar := TList.Create();
@@ -311,7 +310,7 @@ begin
 
   Result := 'Zápis pomocí ABRA WebApi výpisu pro úèet ' + self.Vypis.abraBankaccount.name + '.';
 
-  abraPeriod := TAbraPeriod.create(self.Vypis.Datum, qrAbra);
+  abraPeriod := TAbraPeriod.create(self.Vypis.Datum);
 
 
   jsonBo := SO;

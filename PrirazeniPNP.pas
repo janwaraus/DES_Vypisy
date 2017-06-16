@@ -93,7 +93,7 @@ begin
   ;
 
 
-  with fmMain.qrAbra, asgPNP do begin
+  with DesU.qrAbra, asgPNP do begin
     ClearNormalCells;
     RowCount := 2;
     radek := 0;
@@ -167,7 +167,7 @@ var
   Radek: integer;
 begin
 
-  with fmMain.qrAbra, asgPNP do begin
+  with DesU.qrAbra, asgPNP do begin
 
     for radek := 1 to RowCount - 1 do
     if Cells[6, radek] <> '' then begin
@@ -182,7 +182,7 @@ begin
       Application.ProcessMessages;
     end;
 
-    fmMain.dbAbra.Reconnect;
+    DesU.dbAbra.Reconnect;
     for radek := 1 to RowCount - 1 do begin
       SQLStr :=   'SELECT'
       + ' (ii.LOCALPAIDAMOUNT - ii.LOCALPAIDCREDITAMOUNT) as Zaplaceno,'
@@ -254,7 +254,7 @@ begin
   ;
 
 
-  with fmMain.qrAbra, asgPNP do begin
+  with DesU.qrAbra, asgPNP do begin
     ClearNormalCells;
     RowCount := 2;
     Radek := 0;
