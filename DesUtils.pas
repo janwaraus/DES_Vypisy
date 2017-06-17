@@ -30,6 +30,7 @@ type
     procedure opravRadekVypisuPomociPDocument_ID(Vypis_ID, RadekVypisu_ID, PDocument_ID, PDocumentType : string);
     procedure opravRadekVypisuPomociVS(Vypis_ID, RadekVypisu_ID, VS : string);
     function getOleObjDataDisplay(abraOleObj_Data : variant) : ansistring;
+    procedure FormCreate(Sender: TObject);
 
     public
       PROGRAM_PATH,
@@ -122,6 +123,11 @@ begin
 end;
 }
 
+procedure TDesU.FormCreate(Sender: TObject);
+begin
+  desUtilsInit('');
+end;
+
 procedure TDesU.desUtilsInit(createOptions : string);
 var
   adpIniFile: TIniFile;
@@ -145,7 +151,7 @@ begin
       adpIniFile.Free;
     end;
   end else begin
-    Application.MessageBox(PChar('Nenalezen soubor ' + PROGRAM_PATH + 'abraDesProgramy.ini, program ukonèen'),
+    Application.MessageBox(PChar('Nenalezen soubor ' + PROGRAM_PATH + '..\DE$_Common\abraDesProgramy.ini, program ukonèen'),
       'abraDesProgramy.ini', MB_OK + MB_ICONERROR);
     Application.Terminate;
   end;
@@ -169,7 +175,6 @@ begin
 end;
 
 
-
 function TDesU.getAbraOLE() : variant;
 begin
   Result := null;
@@ -180,7 +185,8 @@ begin
       Exit;
     end;
     //Zprava('Pøipojeno k Abøe (connect DES).');
-    if not AbraOLE.Login('Supervisor', '') then begin
+    if not AbraOLE.Login('SW', '') then begin
+//    if not AbraOLE.Login(abraWebApiUN, abraWebApiPW) then begin
       ShowMessage('Problém s Abrou (login Supervisor).');
       Exit;
     end;
@@ -215,8 +221,8 @@ begin
   idHTTP := TidHTTP.Create;
 
   idHTTP.Request.BasicAuthentication := True;
-  idHTTP.Request.Username := 'Supervisor';
-  idHTTP.Request.Password := '';
+  idHTTP.Request.Username := abraWebApiUN;
+  idHTTP.Request.Password := abraWebApiPW;
   idHTTP.ReadTimeout := Round (timeout * 1000); // ReadTimeout je v milisekundách
 
   if (isJsonPost) then begin
@@ -529,5 +535,6 @@ begin
   WriteLn(OutputFile, pContent);
   CloseFile(OutputFile);
 end;
+
 
 end.

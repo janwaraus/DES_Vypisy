@@ -150,7 +150,7 @@ object fmPrirazeniPnp: TfmPrirazeniPnp
     RowHeaders.Strings = (
       ' ')
     ScrollWidth = 16
-    SearchFooter.ColorTo = 15790320
+    SearchFooter.ColorTo = 13160660
     SearchFooter.FindNextCaption = 'Find &next'
     SearchFooter.FindPrevCaption = 'Find &previous'
     SearchFooter.Font.Charset = DEFAULT_CHARSET

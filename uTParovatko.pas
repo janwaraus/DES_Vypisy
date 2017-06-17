@@ -132,6 +132,7 @@ begin
             Platba.problemLevel := 0 //bylo 1
           else
             Platba.problemLevel := 0;
+          zbyvaCastka := 0;
           Break;
         end;
 
@@ -141,6 +142,7 @@ begin
           Platba.zprava := 'èásteèná úhrada';
           Platba.castecnaUhrada := 1;
           Platba.problemLevel := 1;
+          zbyvaCastka := 0;
           Break;
         end;
 
@@ -161,7 +163,8 @@ begin
       Platba.problemLevel := 1;
     end;
 
-    if Platba.getPocetPredchozichPlatebZeStejnehoUctu() = 0 then
+    if (Platba.getPocetPredchozichPlatebZeStejnehoUctu() = 0)
+      AND (Platba.PredchoziPlatbyVsList.Count > 3) then
     begin
       Platba.zprava := 'nový/neznámý úèet - ' + Platba.zprava;
       Platba.problemLevel := 2;

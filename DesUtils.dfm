@@ -2,8 +2,8 @@ object DesU: TDesU
   Left = 0
   Top = 0
   Caption = 'DesU'
-  ClientHeight = 412
-  ClientWidth = 852
+  ClientHeight = 75
+  ClientWidth = 223
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -11,6 +11,7 @@ object DesU: TDesU
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
   object dbAbra: TZConnection

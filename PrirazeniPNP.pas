@@ -7,7 +7,7 @@ uses
   Dialogs, StdCtrls, Grids, AdvObj, BaseGrid, AdvGrid, StrUtils,
   DB, ComObj, AdvEdit, DateUtils, Math, ExtCtrls,
   ZAbstractRODataset, ZAbstractDataset, ZDataset, ZAbstractConnection, ZConnection,
-  VypisyMain, DesUtils;
+  VypisyMain;
 
 type
   TfmPrirazeniPnp = class(TForm)
@@ -41,7 +41,7 @@ implementation
 {$R *.dfm}
 
 uses
-  Superobject;
+  DesUtils, Superobject;
 
 
 procedure TfmPrirazeniPnp.asgPNPButtonClick(Sender: TObject; ACol, ARow: Integer);

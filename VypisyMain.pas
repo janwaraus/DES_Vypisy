@@ -118,13 +118,13 @@ uses
 
 procedure TfmMain.FormShow(Sender: TObject);
 begin
-  DesU.desUtilsInit('');
-
+  //DesU.desUtilsInit('');
   asgMain.CheckFalse := '0';
   asgMain.CheckTrue := '1';
   vyplnNacitaciButtony;
 
 end;
+
 
 procedure TfmMain.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
