@@ -347,6 +347,7 @@ begin
     0: asgMain.Colors[2, i+1] := $AAFFAA;
     1: asgMain.Colors[2, i+1] := $CDFAFF;
     2: asgMain.Colors[2, i+1] := $60A4F4;
+    3: asgMain.Colors[2, i+1] := $FFFACD;
     5: asgMain.Colors[2, i+1] := $BBBBFF;
   end;
 
@@ -687,7 +688,10 @@ end;
 
 procedure TfmMain.btnReconnectClick(Sender: TObject);
 begin
-    DesU.dbAbra.Reconnect;
+  DesU.dbAbra.Reconnect;
+  //Memo2.Lines.Add(DesU.getAbracodeByVs('2016000004'));
+  //Memo2.Lines.Add(DesU.getFirmIdByCode(DesU.getAbracodeByVs('2016000004')));
+  //DesU.getFirmIdByCode();
 end;
 
 

@@ -2,8 +2,8 @@ object DesU: TDesU
   Left = 0
   Top = 0
   Caption = 'DesU'
-  ClientHeight = 75
-  ClientWidth = 223
+  ClientHeight = 140
+  ClientWidth = 224
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -19,6 +19,7 @@ object DesU: TDesU
     Catalog = ''
     Properties.Strings = (
       'controls_cp=GET_ACP')
+    ReadOnly = True
     HostName = ''
     Port = 0
     Database = ''
@@ -33,5 +34,26 @@ object DesU: TDesU
     Params = <>
     Left = 56
     Top = 8
+  end
+  object dbZakos: TZConnection
+    ControlsCodePage = cGET_ACP
+    Catalog = ''
+    Properties.Strings = (
+      'controls_cp=GET_ACP')
+    ReadOnly = True
+    HostName = ''
+    Port = 0
+    Database = ''
+    User = ''
+    Password = ''
+    Protocol = 'mysql-5'
+    Left = 8
+    Top = 80
+  end
+  object qrZakos: TZQuery
+    Connection = dbZakos
+    Params = <>
+    Left = 56
+    Top = 80
   end
 end
