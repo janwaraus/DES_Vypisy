@@ -39,6 +39,7 @@ type
     Datum: double;
     kredit, debet: boolean;
     znamyPripad: boolean;
+    isVoipKredit: boolean;
     zprava : string;
     vsechnyDoklady: boolean;
     pocetNacitanychPP: integer;
@@ -122,14 +123,18 @@ begin
   //self.kodMeny := copy(gpcLine, 119, 4);
   self.Datum := Str6digitsToDate(copy(gpcLine, 123, 6));
 
+  self.isVoipKredit := false;
   self.znamyPripad := false;
   self.pocetNacitanychPP := 5;
   self.vsechnyDoklady := false;
   self.VS_orig := self.VS;
 
   if (self.kodUctovani = '1') OR (self.kodUctovani = '5') then self.kredit := false; //1 je debet, 5 je storno kreditu
-  if (self.kodUctovani = '2') OR (self.kodUctovani = '4') then self.kredit := true; //2 je kredit, 4 je storno debetu (nemuselo by být, default je strue
+  if (self.kodUctovani = '2') OR (self.kodUctovani = '4') then self.kredit := true; //2 je kredit, 4 je storno debetu
   self.debet := not self.kredit;
+
+  if (copy(self.VS, 5, 1) = '9') OR (self.SS = '8888') then
+    self.isVoipKredit := true;
 
   self.cisloUctuKZobrazeni := removeLeadingZeros(self.cisloUctu);
   if kredit AND (cisloUctuKZobrazeni = '2100098382/2010') then setZnamyPripad('z BÚ');

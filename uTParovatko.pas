@@ -85,7 +85,20 @@ begin
       vytvorPDPar(Platba, iDoklad, Platba.Castka, '', false);
   end   // end platba je debet
   else
+
   begin //platba je kredit
+
+    if Platba.isVoipKredit then
+    begin
+      vytvorPDPar(Platba, nil, Platba.Castka, '', false);
+      Platba.zprava := 'VoIP kredit';
+      Platba.problemLevel := 2;
+      Exit;
+    end;
+
+
+
+
 
     // vyrobÌm si list jen nezaplacen˝ch doklad˘
     nezaplaceneDoklady := TList.Create;
@@ -93,28 +106,31 @@ begin
       if TDoklad(Platba.DokladyList[i]).CastkaNezaplaceno <> 0 then
         nezaplaceneDoklady.Add(Platba.DokladyList[i]);
 
-
-    zbyvaCastka := Platba.Castka;
-
-    if (nezaplaceneDoklady.Count = 0) then begin
-      if Platba.znamyPripad then begin
-        vytvorPDPar(Platba, iDoklad, zbyvaCastka, '', false);
+    if (nezaplaceneDoklady.Count = 0) then
+    begin
+      if Platba.znamyPripad then
+      begin
+        vytvorPDPar(Platba, iDoklad, Platba.Castka, '', false);
         Platba.zprava := 'zn·m˝ kredit';
         Platba.problemLevel := 0;
-      end else begin
+      end
+      else
+      begin
         if Platba.getProcentoPredchozichPlatebZeStejnehoUctu() > 0.5 then begin
-          vytvorPDPar(Platba, iDoklad, zbyvaCastka, 'p¯epl. | ' + Platba.VS + ' |', false);
-          Platba.zprava := 'zn·m˝ p¯ep. ' + FloatToStr(zbyvaCastka) + ' KË';
+          vytvorPDPar(Platba, iDoklad, Platba.Castka, 'p¯epl. | ' + Platba.VS + ' |', false);
+          Platba.zprava := 'zn·m˝ p¯ep. ' + FloatToStr(Platba.Castka) + ' KË';
           Platba.problemLevel := 1;
         end else begin
-          vytvorPDPar(Platba, iDoklad, zbyvaCastka, 'p¯epl. | ' + Platba.VS + ' |', false);
-          Platba.zprava := 'nezn·m˝ p¯ep. ' + FloatToStr(zbyvaCastka) + ' KË';
+          vytvorPDPar(Platba, iDoklad, Platba.Castka, 'p¯epl. | ' + Platba.VS + ' |', false);
+          Platba.zprava := 'nezn·m˝ p¯ep. ' + FloatToStr(Platba.Castka) + ' KË';
           Platba.problemLevel := 5;
         end;
       end;
       Exit;
     end;
 
+
+    zbyvaCastka := Platba.Castka;
 
     for i := nezaplaceneDoklady.Count - 1 downto 0 do
     // begin existujÌ nezaplacenÈ doklady
@@ -255,27 +271,51 @@ begin
     BStatementRow_Data.ValueByName('Amount') := iPDPar.CastkaPouzita;
     BStatementRow_Data.ValueByName('Credit') := IfThen(iPDPar.Platba.Kredit,'1','0');
     BStatementRow_Data.ValueByName('BankAccount') := iPDPar.Platba.cisloUctu;
-    BStatementRow_Data.ValueByName('Text') := iPDPar.popis + ' ' + iPDPar.Platba.nazevKlienta;
+    BStatementRow_Data.ValueByName('Text') := Trim(iPDPar.popis + ' ' + iPDPar.Platba.nazevKlienta);
     BStatementRow_Data.ValueByName('SpecSymbol') := iPDPar.Platba.SS;
     BStatementRow_Data.ValueByName('DocDate$DATE') := iPDPar.Platba.Datum;
     BStatementRow_Data.ValueByName('AccDate$DATE') := iPDPar.Platba.Datum;
 
-    if Assigned(iPDPar.Doklad) then
-      BStatementRow_Data.ValueByName('Firm_ID') := iPDPar.Doklad.Firm_ID
-    else
-      BStatementRow_Data.ValueByName('Firm_ID') := '3Y90000101';  // pokud nenÌ doklad, tak aù je firma DES. jinak se tam d· jako default "drobn˝ n·kup"
 
-    if iPDPar.vazbaNaDoklad AND Assigned(iPDPar.Doklad) then //Doklad vyplnime jen jestli chceme vazbu. Doklad m·me i kdyû vazbu nechceme - kv˘li Firm_ID
+    if Assigned(iPDPar.Doklad) then
+      if iPDPar.vazbaNaDoklad then //Doklad vyplnime jen pokud chceme vazbu (vazbaNaDoklad je true). Doklad m·me naËten˝ i v situaci kdy vazbu nechceme - kv˘li Firm_ID
+      begin
+        BStatementRow_Data.ValueByName('PDocumentType') := iPDPar.Doklad.DocumentType;
+        BStatementRow_Data.ValueByName('PDocument_ID') := iPDPar.Doklad.ID;
+      end
+      else
+      begin
+        BStatementRow_Data.ValueByName('Firm_ID') := iPDPar.Doklad.Firm_ID;
+      end
+    else //nenÌ Assigned(iPDPar.Doklad)
+      if not(iPDPar.Platba.isVoipKredit) then
+        BStatementRow_Data.ValueByName('Firm_ID') := '3Y90000101'; //aù je firma DES. jinak se tam d· jako default "drobn˝ n·kup" then
+
+
+    { p¯epsal jsem logiku viz v˝öe
+    if Assigned(iPDPar.Doklad) AND not(iPDPar.vazbaNaDoklad) then //pokud necheme vazvu na konkrÈtnÌ doklad (vazbaNaDoklad), tak jen vyplnÌme Firm_id
+      BStatementRow_Data.ValueByName('Firm_ID') := iPDPar.Doklad.Firm_ID
+
+    if not(Assigned(iPDPar.Doklad)) AND not(iPDPar.Platba.isVoipKredit) then
+      BStatementRow_Data.ValueByName('Firm_ID') := '3Y90000101'; //aù je firma DES. jinak se tam d· jako default "drobn˝ n·kup"
+
+    if Assigned(iPDPar.Doklad) AND iPDPar.vazbaNaDoklad then //Doklad vyplnime jen pokud chceme vazbu (vazbaNaDoklad je true). Doklad m·me naËten˝ i v situaci kdy vazbu nechceme - kv˘li Firm_ID
     begin
       BStatementRow_Data.ValueByName('PDocumentType') := iPDPar.Doklad.DocumentType;
       BStatementRow_Data.ValueByName('PDocument_ID') := iPDPar.Doklad.ID;
+    end;
+    }
+
+    if iPDPar.Platba.isVoipKredit then
+    begin
+      BStatementRow_Data.ValueByName('PDocumentType') := '03'; // je to vûdy faktura
+      BStatementRow_Data.ValueByName('PDocument_ID') := DesU.vytvorFaZaVoipKredit(iPDPar.Platba.VS, iPDPar.CastkaPouzita, iPDPar.Platba.Datum);
     end;
 
     if iPDPar.Platba.Debet then
       BStatementRow_Data.ValueByName('VarSymbol') := iPDPar.Platba.VS; //pro debety aby vûdy z˘stal VS
 
     BStatement_Data_Coll.Add(BStatementRow_Data);
-
 
     //MessageDlg(DesU.getOleObjDataDisplay(BStatementRow_Data), mtInformation, [mbOk], 0);
     //writeToFile(DesU.PROGRAM_PATH + '!OLE'+inttostr(i)+'.txt', DesU.getOleObjDataDisplay(BStatementRow_Data));
@@ -296,14 +336,11 @@ begin
 end;
 
 
-
-
 function TParovatko.zapisDoAbryWebApi() : string;
 var
   i, j : integer;
   iPDPar : TPlatbaDokladPar;
-  newBankstatement : ansistring;
-  abraPeriod : TAbraPeriod;
+  newBankstatement : string;
   jsonBo,
   jsonBoRow,
   newJsonBo: ISuperObject;
@@ -313,18 +350,14 @@ begin
 
   Result := 'Z·pis pomocÌ ABRA WebApi v˝pisu pro ˙Ëet ' + self.Vypis.abraBankaccount.name + '.';
 
-  abraPeriod := TAbraPeriod.create(self.Vypis.Datum);
-
-
   jsonBo := SO;
   jsonBo.S['DocQueue_ID'] := self.Vypis.abraBankaccount.bankStatementDocqueueId;
-  jsonBo.S['Period_ID'] := abraPeriod.id;
+  jsonBo.S['Period_ID'] := DesU.getAbraPeriodId(self.Vypis.Datum);
   jsonBo.S['BankAccount_ID'] := self.Vypis.abraBankaccount.id;
   jsonBo.I['ExternalNumber'] := self.Vypis.PoradoveCislo;
   jsonBo.D['DocDate$DATE'] := self.Vypis.Datum;
   //jsonBo.D['CreatedAt$DATE'] := Trunc(Date); //nefunkËnÌ, abra tam d· vûdy aktu·lnÌ Ëas
   jsonBo.O['rows'] := SA([]);
-
 
 
   for i := 0 to listPlatbaDokladPar.Count - 1 do
@@ -336,7 +369,7 @@ begin
     jsonBoRow.D['Amount'] := iPDPar.CastkaPouzita;
     jsonBoRow.I['Credit'] := StrToInt(IfThen(iPDPar.Platba.Kredit,'1','0'));
     jsonBoRow.S['BankAccount'] := iPDPar.Platba.cisloUctu;
-    jsonBoRow.S['Text'] := iPDPar.popis + ' ' + iPDPar.Platba.nazevKlienta;
+    jsonBoRow.S['Text'] := Trim(iPDPar.popis + ' ' + iPDPar.Platba.nazevKlienta);
     jsonBoRow.S['SpecSymbol'] := iPDPar.Platba.SS;
     jsonBoRow.D['DocDate$DATE'] := iPDPar.Platba.Datum;
     jsonBoRow.D['AccDate$DATE'] := iPDPar.Platba.Datum;
@@ -348,11 +381,13 @@ begin
     else
       jsonBoRow.S['Firm_ID'] := '3Y90000101';  // pokud nenÌ doklad, tak aù je firma DES. jinak se tam d· jako default "drobn˝ n·kup"
 
-    if iPDPar.vazbaNaDoklad AND Assigned(iPDPar.Doklad) then //Doklad vyplnime jen jestli chceme vazbu. Doklad m·me i kdyû vazbu nechceme - kv˘li Firm_ID
+    if iPDPar.vazbaNaDoklad AND Assigned(iPDPar.Doklad) then //Doklad vyplnime jen pokud chceme vazbu (vazbaNaDoklad je true). Doklad m·me naËten˝ i v situaci kdy vazbu nechceme - kv˘li Firm_ID
     begin
       jsonBoRow.S['PDocumentType'] := iPDPar.Doklad.DocumentType;
       jsonBoRow.S['PDocument_ID'] := iPDPar.Doklad.ID;
     end;
+
+    //todo p¯i¯azenÌ pr·vÏ vygenerovanÈ VoIP faktury z AbraOLE z·pisu
 
     if iPDPar.Platba.Debet then
       jsonBoRow.S['VarSymbol'] := iPDPar.Platba.VS; //pro debety aby vûdy z˘stal VS

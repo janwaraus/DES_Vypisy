@@ -17,9 +17,9 @@ type
     qrAbra: TZQuery;
 
 
-
+    procedure FormCreate(Sender: TObject);
     procedure desUtilsInit(createOptions : string);
-    //constructor create;
+
     function getAbraOLE() : variant;
     function abraBoGet(abraBo : string) : string;
     //function abraBoGetByRowId(abraBo, rowId : string) : string;
@@ -30,7 +30,8 @@ type
     procedure opravRadekVypisuPomociPDocument_ID(Vypis_ID, RadekVypisu_ID, PDocument_ID, PDocumentType : string);
     procedure opravRadekVypisuPomociVS(Vypis_ID, RadekVypisu_ID, VS : string);
     function getOleObjDataDisplay(abraOleObj_Data : variant) : ansistring;
-    procedure FormCreate(Sender: TObject);
+    function vytvorFaZaVoipKredit(VS : string; castka : currency; datum : double) : string;
+
 
     public
       PROGRAM_PATH,
@@ -39,6 +40,13 @@ type
       abraWebApiUN,
       abraWebApiPW : string;
       AbraOLE: variant;
+
+      function getAbraPeriodId(pYear : string) : string; overload;
+      function getAbraPeriodId(pDate : double) : string; overload;
+      function getAbraDocqueueId(code, documentType : string) : string;
+      function getAbraVatrateId(code : string) : string;
+      function getAbraVatindexId(code : string) : string;
+      function getAbraIncometypeId(code : string) : string;
 
     private
       function newAbraIdHttp(timeout : single; isJsonPost : boolean) : TIdHTTP;
@@ -77,7 +85,7 @@ implementation
 
 {$R *.dfm}
 
-uses Superobject;
+uses Superobject, AbraEntities;
 
 {****************************************************************************}
 {**********************     ABRA common functions     ***********************}
@@ -398,6 +406,134 @@ begin
     Result := Result + inttostr(j) + 'r ' + abraOleObj_Data.Names[j] + ': ' + vartostr(abraOleObj_Data.Value[j]) + sLineBreak;
   end;
 end;
+
+function TDesU.vytvorFaZaVoipKredit(VS : string; castka : currency; datum : double) : string;
+var
+  newIssuedInvoice : string;
+  jsonBo,
+  jsonBoRow,
+  newJsonBo: ISuperObject;
+begin
+
+  jsonBo := SO;
+  jsonBo.S['DocQueue_ID'] := self.getAbraDocqueueId('FO2', '03');
+  jsonBo.S['Period_ID'] := self.getAbraPeriodId(datum);
+  jsonBo.D['DocDate$DATE'] := datum;
+  jsonBo.D['AccDate$DATE'] := datum;
+  jsonBo.S['Firm_ID'] := 'todfo';
+  jsonBo.S['Description'] := VS + ' služby ';
+  jsonBo.S['Varsymbol'] := VS;
+  jsonBo.B['PricesWithVat'] := true;
+
+  jsonBo.O['rows'] := SA([]);
+
+  // 1. øádek
+    jsonBoRow := SO;
+    jsonBoRow.I['Rowtype'] := 0;
+    jsonBoRow.S['Text'] := 'Fakturujeme Vám:';
+    jsonBo.A['rows'].Add(jsonBoRow);
+
+ //2. øádek
+    jsonBoRow := SO;
+    jsonBoRow.I['Rowtype'] := 1;
+    jsonBoRow.D['Totalprice'] := castka;
+    jsonBoRow.S['Text'] := 'Kredit VoIP';
+    jsonBoRow.S['Vatrate_Id'] := self.getAbraVatrateId('Výst21');
+    //jsonBoRow.S['Vatindex_Id'] := self.getAbraVatindexId('Výst21'); //je potøeba?
+    jsonBoRow.S['Incometype_Id'] := self.getAbraIncometypeId('SL'); // nebo  self.getAbraIncometypeId('VoIP') ?
+    jsonBoRow.S['Division_Id'] := '1000000101';
+    jsonBo.A['rows'].Add(jsonBoRow);
+
+
+  writeToFile(ExtractFilePath(ParamStr(0)) + '!json.txt', jsonBo.AsJSon(true));
+
+  try begin
+    newIssuedInvoice := DesU.abraBoCreate('issuedinvoices', jsonBo.AsJSon());
+    Result := SO(newIssuedInvoice).S['id'];
+  end;
+  except on E: exception do
+    begin
+      Application.MessageBox(PChar('Problem ' + ^M + E.Message), 'Vytvoøení fa');
+      Result := 'Chyba pøi vytváøení faktury';
+    end;
+  end;
+
+end;
+
+
+function TDesU.getAbraPeriodId(pYear : string) : string;
+var
+    abraPeriod : TAbraPeriod;
+begin
+  abraPeriod := TAbraPeriod.create(pYear);
+  Result := abraPeriod.id;
+end;
+
+function TDesU.getAbraPeriodId(pDate : double) : string;
+var
+    abraPeriod : TAbraPeriod;
+begin
+  abraPeriod := TAbraPeriod.create(pDate);
+  Result := abraPeriod.id;
+end;
+
+
+function TDesU.getAbraDocqueueId(code, documentType : string) : string;
+begin
+
+  with DesU.qrAbra do begin
+    SQL.Text := 'SELECT Id FROM DocQueues'
+              + ' WHERE Code = ''' + code  + ''' AND DocumentType = ''' + documentType + '''';
+    Open;
+    if not Eof then begin
+      Result := FieldByName('Id').AsString;
+    end;
+    Close;
+  end;
+end;
+
+function TDesU.getAbraVatrateId(code : string) : string;
+begin
+
+  with DesU.qrAbra do begin
+    SQL.Text := 'SELECT VatRate_Id FROM VatIndexes'
+              + ' WHERE Code = ''' + code + '''';
+    Open;
+    if not Eof then begin
+      Result := FieldByName('VatRate_Id').AsString;
+    end;
+    Close;
+  end;
+end;
+
+function TDesU.getAbraVatindexId(code : string) : string;
+begin
+
+  with DesU.qrAbra do begin
+    SQL.Text := 'SELECT Id FROM VatIndexes'
+              + ' WHERE Code = ''' + code  + '''';
+    Open;
+    if not Eof then begin
+      Result := FieldByName('Id').AsString;
+    end;
+    Close;
+  end;
+end;
+
+function TDesU.getAbraIncometypeId(code : string) : string;
+begin
+
+  with DesU.qrAbra do begin
+    SQL.Text := 'SELECT Id FROM IncomeTypes'
+              + ' WHERE Code = ''' + code + '''';
+    Open;
+    if not Eof then begin
+      Result := FieldByName('VatRate_Id').AsString;
+    end;
+    Close;
+  end;
+end;
+
 
 
 {***************************************************************************}
