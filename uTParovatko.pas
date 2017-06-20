@@ -92,7 +92,7 @@ begin
     begin
       vytvorPDPar(Platba, nil, Platba.Castka, '', false);
       Platba.zprava := 'VoIP kredit';
-      Platba.problemLevel := 2;
+      Platba.problemLevel := 3;
       Exit;
     end;
 

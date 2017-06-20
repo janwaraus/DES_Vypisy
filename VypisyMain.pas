@@ -689,8 +689,8 @@ end;
 procedure TfmMain.btnReconnectClick(Sender: TObject);
 begin
   DesU.dbAbra.Reconnect;
-  //Memo2.Lines.Add(DesU.getAbracodeByVs('2016000004'));
-  //Memo2.Lines.Add(DesU.getFirmIdByCode(DesU.getAbracodeByVs('2016000004')));
+  Memo2.Lines.Add('Abracode: ' + DesU.getAbracodeByContractNumber('20179001'));
+  Memo2.Lines.Add('FirmId: ' + DesU.getFirmIdByCode(DesU.getAbracodeByContractNumber('20179001')));
   //DesU.getFirmIdByCode();
 end;
 

@@ -184,7 +184,7 @@ begin
       Application.Terminate;
     end;
   end;
-
+  {
   if not dbZakos.Connected then try
     dbZakos.Connect;
   except on E: exception do
@@ -193,7 +193,7 @@ begin
       Application.Terminate;
     end;
   end;
-
+  }
 
   {
   //if iniNacteno > 0 then Exit;
